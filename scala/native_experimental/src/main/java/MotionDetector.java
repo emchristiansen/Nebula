@@ -1,3 +1,5 @@
+package nebula.experimental;
+
 /* 
  * I developed some code for recognize motion detections with JavaCV.
  * Actually, it works with an array of Rect, performing, every cicle, an

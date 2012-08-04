@@ -1,3 +1,5 @@
+package nebula
+
 import java.awt.image._
 
 case class NNRecognizer[A](val distances: List[Tuple2[Int, NNRecognizer.ImageDistance]],

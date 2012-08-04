@@ -1,3 +1,9 @@
+package nebula.native.experimental
+
+import nebula._
+import nebula.native._
+import nebula.experimental._
+
 import java.io.File
 import javax.imageio.ImageIO
 import scala.sys.process.Process
@@ -146,7 +152,7 @@ object Distance {
   }  
   
   def l1lumExperiment(train: List[Tuple3[String, String, Boolean]], test: List[Tuple2[String, String]]): List[Double] = {
-    val matcher = LUM.l1LUM(8, 2)
+    val matcher = nebula.LUM.l1LUM(8, 2)
     for ((left, right) <- test) yield {
       matcher.distance(ImageIO.read(new File(left)), ImageIO.read(new File(right)))
     }

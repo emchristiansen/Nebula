@@ -1,3 +1,5 @@
+package nebula
+
 import xml._
 
 object XMLUtil {

@@ -1,3 +1,9 @@
+package nebula.native.experimental
+
+import nebula._
+import nebula.native._
+import nebula.experimental._
+
 //import scalacl._
 //import scalacl.impl._
 //import com.nativelibs4java.opencl._

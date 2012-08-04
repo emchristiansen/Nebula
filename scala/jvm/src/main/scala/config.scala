@@ -1,3 +1,5 @@
+package nebula
+
 import java.io.File
 import xml._
 

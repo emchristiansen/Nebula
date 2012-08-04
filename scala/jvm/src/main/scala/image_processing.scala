@@ -1,3 +1,5 @@
+package nebula
+
 import java.awt.Rectangle
 import java.awt.geom._
 import java.awt.image._

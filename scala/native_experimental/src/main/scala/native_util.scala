@@ -1,3 +1,9 @@
+package nebula.native.experimental
+
+import nebula._
+import nebula.native._
+import nebula.experimental._
+
 import java.awt.image._
 import com.googlecode.javacv.cpp.opencv_contrib._
 import com.googlecode.javacv.cpp.opencv_core._

@@ -1,3 +1,5 @@
+package nebula
+
 import java.awt.image._
 
 case class LM[A <: DescriptorTrait[_]](val extractor: DescriptorExtractor[A], 
@@ -88,15 +90,6 @@ object LUM {
   def l0LUM(patchWidth: Int, radius: Int): LM[SortDescriptor] = {
     val extractor = new SortExtractor(patchWidth)
     val distance = LBM.indexifyDistance(DescriptorDistance.l0[Int] _)
-    val matchScorer = Match.unconstrainedMatchScore[Tuple2[Int, Int]] _
-    LM(extractor, distance, radius, matchScorer)
-  }
-  
-  def l0LUMOCL(patchWidth: Int, radius: Int): LM[SortDescriptor] = {
-    val extractor = new SortExtractorOCL(patchWidth)
-//    val extractor = new SortExtractor(patchWidth)
-//    val distance = LBM.indexifyDistance(DescriptorDistance.l0[Int] _)    
-    val distance = DescriptorDistance.l0OCL _
     val matchScorer = Match.unconstrainedMatchScore[Tuple2[Int, Int]] _
     LM(extractor, distance, radius, matchScorer)
   }

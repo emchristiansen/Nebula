@@ -1,3 +1,5 @@
+package nebula
+
 import java.io.File
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.math3.linear._
@@ -107,14 +109,8 @@ object Geometry {
       new Array2DRowRealMatrix(data).transpose
     }
     
-//    println("fitaffine")
-//    println(lhs)
-//    println(rhs)
-    
     val solver = new SingularValueDecomposition(rhs).getSolver
     val transformation = solver.solve(lhs).transpose
-    
-//    println(transformation)
     
     assert(transformation.getRowDimension == 2)
     assert(transformation.getColumnDimension == 3)

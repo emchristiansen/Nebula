@@ -1,3 +1,5 @@
+package nebula
+
 import java.io.File
 
 case class ROC(val resultsData: ResultsData) {

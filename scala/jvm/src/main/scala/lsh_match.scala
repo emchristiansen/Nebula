@@ -1,3 +1,5 @@
+package nebula
+
 object LSHMatch {
   type BinaryHistogram = Tuple2[Int, Int]
   

@@ -1,3 +1,5 @@
+package nebula
+
 import java.awt.image.BufferedImage
 
 case class WeightedEdge[A](val left: A, val right: A, val weight: Double)
