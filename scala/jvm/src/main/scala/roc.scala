@@ -56,7 +56,7 @@ case class ROC(val resultsData: ResultsData) {
   }
 }
 
-case class ExperimentNamer(experiments: List[Experiment]) {
+case class ExperimentNamer(experiments: List[MPIEExperiment]) {
   // Drop the first value, the time the experiment was performed.
   val parameterSets = experiments.map(_.filenameParts).transpose.map(_.toSet).tail
   
@@ -66,8 +66,8 @@ case class ExperimentNamer(experiments: List[Experiment]) {
   
   val variableParameters = parameterSets.map(_.size > 1)
   
-  def curveName(experiment: Experiment): String = {
-    val nameValuePairs = Experiment.parameterAbbreviations.zip(experiment.filenameParts).tail
+  def curveName(experiment: MPIEExperiment): String = {
+    val nameValuePairs = MPIEExperiment.parameterAbbreviations.zip(experiment.filenameParts).tail
     val namedParameters = nameValuePairs.map({case (n, v) => n + ":" + v})
       
     // We only care about parameters which vary.
@@ -90,12 +90,12 @@ object MeanROC {
     allFPRs.zip(allTPRs)
   }
 
-  def drawCompletedExperiments(experiments: List[Experiment]) {
+  def drawCompletedExperiments(experiments: List[MPIEExperiment]) {
     val namer = ExperimentNamer(experiments)
 
-    val results = experiments.map(ExperimentResults.fromCompletedExperiment)
+    val results = experiments.map(MPIEExperimentResults.fromCompletedExperiment)
 
-    def curveInfo(result: ExperimentResults) = {
+    def curveInfo(result: MPIEExperimentResults) = {
       val name = namer.curveName(result.experiment)
       val (fprs, tprs) = meanROCCurve(result.resultsDataList).unzip
       val fprString = fprs.mkString(" ")
@@ -134,15 +134,15 @@ object EER {
     eer
   }
 
-  def calculate(experiment: Experiment): Tuple2[Double, Double] = {
-    val results = ExperimentResults.fromCompletedExperiment(experiment)
+  def calculate(experiment: MPIEExperiment): Tuple2[Double, Double] = {
+    val results = MPIEExperimentResults.fromCompletedExperiment(experiment)
     val eers = results.resultsDataList.map(ROC).map(r => calculateSingleCurve(r.curve))
     val stats = new org.apache.commons.math.stat.descriptive.DescriptiveStatistics(eers.toArray)
     (stats.getMean, stats.getStandardDeviation / math.sqrt(eers.size))
   }
 
-  def eerTable(experiments: List[Experiment]): String = {
-    val header = (Experiment.parameterNames ++ List("eer")).mkString("\t")
+  def eerTable(experiments: List[MPIEExperiment]): String = {
+    val header = (MPIEExperiment.parameterNames ++ List("eer")).mkString("\t")
     val rows = for (experiment <- experiments.par) yield {
       val (mean, std) = EER.calculate(experiment)
       (experiment.filenameParts ++ List(mean, std)).mkString("\t")
@@ -150,12 +150,12 @@ object EER {
     (header :: rows.toList).mkString("\n")
   }
 
-  def writeEERTableAtPath(experiments: List[Experiment], path: String) {
+  def writeEERTableAtPath(experiments: List[MPIEExperiment], path: String) {
     val table = eerTable(experiments)
     org.apache.commons.io.FileUtils.writeStringToFile(new File(path), table)
   }
 
-  def writeEERTable(experiments: List[Experiment]) {
+  def writeEERTable(experiments: List[MPIEExperiment]) {
     val namer = ExperimentNamer(experiments)
     val filename = namer.title.replace(" ", "_") + ".csv"
     val tablePath = "%s/results/eer_tables/%s".format(Global.run.sfsRoot, filename)

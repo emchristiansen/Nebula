@@ -47,7 +47,7 @@ object ResultsData {
   }
 }
 
-case class ExperimentResults(val experiment: Experiment, val resultsDataList: List[ResultsData]) {
+case class MPIEExperimentResults(val experiment: MPIEExperiment, val resultsDataList: List[ResultsData]) {
   def toXML: Node = {
     val list = resultsDataList.map(_.toXML)
     <experimentResults>
@@ -63,14 +63,14 @@ case class ExperimentResults(val experiment: Experiment, val resultsDataList: Li
   }
 }
 
-object ExperimentResults {
-  def fromXML(node: Node): ExperimentResults = {
-    val experiment = Experiment.fromXML((node \ "experiment").head)
+object MPIEExperimentResults {
+  def fromXML(node: Node): MPIEExperimentResults = {
+    val experiment = MPIEExperiment.fromXML((node \ "experiment").head)
     val resultsDataList = (node \ "resultsData").map(ResultsData.fromXML).toList
-    ExperimentResults(experiment, resultsDataList)
+    MPIEExperimentResults(experiment, resultsDataList)
   }
 
-  def fromTxtFile(path: String): ExperimentResults = {
+  def fromTxtFile(path: String): MPIEExperimentResults = {
     println(path)
     val contents = io.Source.fromFile(path).mkString.split("\n").filter(_.size > 0).map(_.split(" "))
 
@@ -96,9 +96,9 @@ object ExperimentResults {
     val backgroundLeft = newName(checker(9, "background:")(0))
     val backgroundRight = newName(checker(9, "background:")(1))
 
-    val leftCondition = Condition(poseLeft, illuminationLeft, blurLeft, noiseLeft, jpegLeft, misalignmentLeft, backgroundLeft)
-    val rightCondition = Condition(poseRight, illuminationRight, blurRight, noiseRight, jpegRight, misalignmentRight, backgroundRight)
-    val experiment = Experiment(roi, distance, leftCondition, rightCondition)
+    val leftCondition = MPIECondition(poseLeft, illuminationLeft, blurLeft, noiseLeft, jpegLeft, misalignmentLeft, backgroundLeft)
+    val rightCondition = MPIECondition(poseRight, illuminationRight, blurRight, noiseRight, jpegRight, misalignmentRight, backgroundRight)
+    val experiment = MPIEExperiment(roi, distance, leftCondition, rightCondition)
 
     def processFoldBlock(index: Int): ResultsData = {
       val predictions = contents(index + 1).map(_.toDouble).toList
@@ -110,13 +110,13 @@ object ExperimentResults {
     assert(indices.size == 5);
     val resultsDataList: List[ResultsData] = for (i <- indices) yield {processFoldBlock(i)}
     
-    ExperimentResults(experiment, resultsDataList)
+    MPIEExperimentResults(experiment, resultsDataList)
   }
 
-  def fromCompletedExperiment(experiment: Experiment): ExperimentResults = {
+  def fromCompletedExperiment(experiment: MPIEExperiment): MPIEExperimentResults = {
     assert(experiment.alreadyRun)
     fromXML(XML.loadFile(experiment.existingResultsPath))
   }
 
-  def fromFile(path: String): ExperimentResults = fromXML(XML.loadFile(path))
+  def fromFile(path: String): MPIEExperimentResults = fromXML(XML.loadFile(path))
 }

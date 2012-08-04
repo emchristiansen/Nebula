@@ -1,3 +1,5 @@
+import nebula._
+
 import org.scalatest.FunSuite
  
 class TestPyramidHistogram extends FunSuite {

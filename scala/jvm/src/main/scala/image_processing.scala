@@ -7,7 +7,7 @@ import java.awt.image.AffineTransformOp._
 import java.io.File
 import javax.imageio.ImageIO
 
-class LazyImage(originalPath: String, condition: Condition, roiString: String) {
+class LazyImage(originalPath: String, condition: MPIECondition, roiString: String) {
   private val mpieProperties = MPIEProperties.parseMPIEPath(originalPath)
 
   val id = mpieProperties.id

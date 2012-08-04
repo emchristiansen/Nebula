@@ -22,12 +22,12 @@ import javax.imageio.ImageIO
 object Global {
   val homeDirectory = System.getProperty("user.home")
 
-  var run: RuntimeConfig = _
+  var run: MPIERuntimeConfig = _
 
   val random = new Random(0)
 
   def loadRuntimeConfig(path: String) {
-    run = RuntimeConfig.fromFile(path)
+    run = MPIERuntimeConfig.fromFile(path)
     println(run)
   }
 }

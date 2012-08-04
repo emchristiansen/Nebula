@@ -1,4 +1,4 @@
-package nebula.experimental;
+package nebula;
 
 /*
  * Created on Apr 25, 2005

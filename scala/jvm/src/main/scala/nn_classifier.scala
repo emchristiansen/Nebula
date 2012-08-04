@@ -2,9 +2,9 @@ package nebula
 
 import java.awt.image._
 
-case class NNRecognizer[A](val distances: List[Tuple2[Int, NNRecognizer.ImageDistance]],
+case class NNClassifier[A](val distances: List[Tuple2[Int, NNClassifier.ImageDistance]],
                            val trainData: List[Tuple2[A, BufferedImage]]) {
-  def neighbors(distances: List[Tuple2[Int, NNRecognizer.ImageDistance]],
+  def neighbors(distances: List[Tuple2[Int, NNClassifier.ImageDistance]],
                 candidates: List[Tuple2[A, BufferedImage]],
                 query: BufferedImage): List[Tuple2[A, BufferedImage]] = {
     distances match {
@@ -39,6 +39,6 @@ case class NNRecognizer[A](val distances: List[Tuple2[Int, NNRecognizer.ImageDis
   }
 }
 
-object NNRecognizer {
+object NNClassifier {
   type ImageDistance = (BufferedImage, BufferedImage) => Double
 }
