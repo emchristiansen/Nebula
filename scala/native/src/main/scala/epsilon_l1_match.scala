@@ -1,4 +1,6 @@
-package nebula
+package nebula.experimental
+
+import nebula._
 
 object EpsilonL1Match {
   type Point = List[Double]

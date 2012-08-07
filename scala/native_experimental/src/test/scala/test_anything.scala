@@ -7,11 +7,11 @@ import java.io.File
 
 import com.codahale.jerkson.Json._
 
-case class Person(firstName: String, lastName: String)
+case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
 class TestAnything extends FunSuite { 
   test("anything") {
-    val p = Person("Eric", "Bob")
+    val p = Person("Eric", "Bob", 42, 3.14)
 
     val j = generate(p)
 

@@ -115,7 +115,7 @@ object FaceCom {
   } 
 
   def fiducialsFromImage(image: BufferedImage): Tuple2[Photo, Option[FaceComFiducials]] = {
-    val tempPath = Util.createTempFile("demo", ".jpg")
+    val tempPath = IO.createTempFile("demo", ".jpg")
     ImageIO.write(image, "jpg", tempPath)
     val photo = detect(tempPath)
     if (goodPhoto(photo)) {
