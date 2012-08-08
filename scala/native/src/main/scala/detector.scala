@@ -12,7 +12,7 @@ trait DetectorMethod extends CorrespondenceMethod {
 }
 
 object DetectorMethod {
-  val instances = List(classOf[FASTDetector])
+  val instances: List[java.lang.Class[_]] = List(classOf[FASTDetector])
 }
 
 case class FASTDetector(val maxKeyPoints: Int) extends DetectorMethod {

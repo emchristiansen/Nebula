@@ -10,7 +10,9 @@ trait DescriptorTrait[A] {
 
 case class Descriptor[A](override val values: IndexedSeq[A]) extends DescriptorTrait[A]
 
-case class SortDescriptor(override val values: IndexedSeq[Int]) extends DescriptorTrait[Int]
+case class SortDescriptor(override val values: IndexedSeq[Int]) extends DescriptorTrait[Int] {
+  assert(values.sorted == (0 until values.size))
+}
 
 // class SortExtractor(override val patchWidth: Int) extends DescriptorExtractor[SortDescriptor] {
 //   protected def extractUnsafe(image: BufferedImage) = {
@@ -85,7 +87,7 @@ trait ExtractorMethod[D <: DescriptorTrait[_]] extends CorrespondenceMethod {
 }
 
 object ExtractorMethod {
-  val instances = List(classOf[SortExtractor])
+  val instances: List[java.lang.Class[_]] = List(classOf[SortExtractor])
 }
 
 case class SortExtractor(val normalizeRotation: Boolean,

@@ -24,10 +24,13 @@ import com.googlecode.javacv.cpp.opencv_features2d._
 object Global {
   val random = new Random(0)
   val homeDirectory = System.getProperty("user.home")
-  var runVar: Option[RuntimeConfig] = None
-  // TODO: Make this play well with various runtime config types.
-  def run: RuntimeConfig = runVar match {
-    case Some(config) => config
+  var runVar: Option[RuntimeConfigTrait] = None
+  // TODO: This asInstanceOf stuff has bad code smell.
+  def run[R <: RuntimeConfigTrait](implicit manifest: Manifest[R]): R = runVar match {
+    case Some(config) => {
+      assert(manifest.erasure.isInstance(config))
+      config.asInstanceOf[R]
+    }
     case None => throw new Exception("Global.run not initialized")
   }
 }
@@ -135,7 +138,7 @@ object Util {
   }
 
   def parallelize[A](seq: Seq[A]) = {
-    if (Global.run.parallel) seq.par else seq
+    if (Global.run[RuntimeConfig].parallel) seq.par else seq
   }
 
   def truncate(list: List[Double]): String = { 

@@ -122,10 +122,14 @@ object IO {
 
   def readObjectFromFilename[A](filename: String)(implicit m: Manifest[A]) = readObjectFromFile[A](new File(filename))
 
-  def fromJSONFile[A <: AnyRef](file: File)(implicit manifest: Manifest[A]): A = {
+  def fromJSONFileAbstract[A <: AnyRef](subclasses: List[java.lang.Class[_]], file: File)(implicit manifest: Manifest[A]): A = {
     val json = org.apache.commons.io.FileUtils.readFileToString(file)
-    implicit val formats = Serialization.formats(ShortTypeHints(List(manifest.erasure)))
+    implicit val formats = Serialization.formats(ShortTypeHints(subclasses))
     read[A](json)
+  }
+
+  def fromJSONFile[A <: AnyRef](file: File)(implicit manifest: Manifest[A]): A = {
+    fromJSONFileAbstract[A](List(manifest.erasure), file)
   }
 
   def toJSONFile[A <: AnyRef](item: A, file: File)(implicit manifest: Manifest[A]) {
@@ -154,10 +158,10 @@ object IO {
 
   def createTempFile(prefix: String, suffix: String) = {
     val file = {
-      if (Global.run.tempDirectory.size == 0) File.createTempFile(prefix, suffix)
-      else File.createTempFile(prefix, suffix, new File(Global.run.tempDirectory))
+      if (Global.run[RuntimeConfig].tempDirectory.size == 0) File.createTempFile(prefix, suffix)
+      else File.createTempFile(prefix, suffix, new File(Global.run[RuntimeConfig].tempDirectory))
     }
-    if (Global.run.deleteTemporaryFiles) file.deleteOnExit
+    if (Global.run[RuntimeConfig].deleteTemporaryFiles) file.deleteOnExit
     file
   }
 }

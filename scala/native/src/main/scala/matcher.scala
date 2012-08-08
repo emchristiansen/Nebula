@@ -9,7 +9,7 @@ trait MatcherMethod[D <: DescriptorTrait[_]] extends CorrespondenceMethod {
 }
 
 object MatcherMethod {
-  val instances = List(classOf[KendallTauMatcher])
+  val instances: List[java.lang.Class[_]] = List(classOf[KendallTauMatcher])
 }
 
 case class KendallTauMatcher() extends MatcherMethod[SortDescriptor] {

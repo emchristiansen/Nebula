@@ -24,7 +24,7 @@ trait CorrespondenceMethod {
     // admittedly roundabout.
 
     // This is needed to include class information in the json.
-    implicit val formats = Serialization.formats(ShortTypeHints(List(this.getClass())))
+    implicit val formats = Serialization.formats(ShortTypeHints(List(this.getClass)))
 
     val string = write(this)
     val json = parse(string)

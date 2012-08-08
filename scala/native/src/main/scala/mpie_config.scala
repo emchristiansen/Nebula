@@ -4,14 +4,21 @@ import java.io.File
 
 import org.apache.commons.io.FilenameUtils
 
+// TODO: Duplication. Grr.
 case class MPIERuntimeConfig (
+  override val projectRoot: String,
+  override val parallel: Boolean,
+  override val tempDirectory: String,
+  override val deleteTemporaryFiles: Boolean,
+  override val skipCompletedExperiments: Boolean,
+  override val maxSimultaneousExperiments: Int,
   val runtimeConfig: RuntimeConfig,
   val piSliceRoot: String,
   val lfwRoot: String,
   val backgroundRoot: String,
   val scaleFactor: Double,
   val numFolds: Int,
-  val numIdentities: Int)
+  val numIdentities: Int) extends RuntimeConfigTrait
 
 case class MPIEExperimentConfig(
   val roi: List[String], 
