@@ -21,14 +21,27 @@ trait CorrespondenceMethod {
     // produces an abbreviation like
     // "AwesomeDetector-TFP-helloWorld-S-42".
     // Implementation uses lift-json for introspection, which is
-    // admittedly roundabout.
+    // admittedly roundabout. It is also likely brittle; I'm guessing it will
+    // fail for nested structures.
+    // TODO: Use introspection directly instead of lift-json.
 
     // This is needed to include class information in the json.
     implicit val formats = Serialization.formats(ShortTypeHints(List(this.getClass)))
 
     val string = write(this)
     val json = parse(string)
-    val map = json.extract[Map[String, String]]
+    
+    import scala.text.{Document, DocText}
+    def documentToString(document: Document): String = document match {
+      case DocText(string) => string.replace("\"", "")
+      case _ => throw new Exception
+    }
+
+    val JObject(jObject) = json
+    val jStrings = jObject.map({case JField(key, value) => JField(key, JString(documentToString(render(value))))})
+    val jsonString = JObject(jStrings)
+
+    val map = jsonString.extract[Map[String, String]]
 
     def camelCaseToAbbreviation(camelCase: String): String = {
       // Assume camelCase for parameter names. Otherwise
@@ -46,5 +59,3 @@ trait CorrespondenceMethod {
     parts.mkString("-")
   }
 }
-
-

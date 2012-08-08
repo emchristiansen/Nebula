@@ -2,7 +2,9 @@ package nebula
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
-trait MatcherMethod[D <: DescriptorTrait[_]] extends CorrespondenceMethod {
+sealed trait MatcherMethodAbstract extends CorrespondenceMethod
+
+trait MatcherMethod[D <: DescriptorTraitAbstract] extends MatcherMethodAbstract {
   def apply(allPairs: Boolean, 
 	    leftDescriptors: List[D], 
 	    rightDescriptors: List[D]): List[DMatch]
@@ -21,11 +23,11 @@ case class KendallTauMatcher() extends MatcherMethod[SortDescriptor] {
 }
 
 object Matcher {
-  def l0[A](left: DescriptorTrait[A], right: DescriptorTrait[A]): Int = {
-    left.values.zip(right.values).count({case (l, r) => l != r})
-  }
+  // def l0[A](left: DescriptorTrait, right: DescriptorTrait): Int = {
+  //   left.values.zip(right.values).count({case (l, r) => l != r})
+  // }
 
-  def l1(left: DescriptorTrait[Int], right: DescriptorTrait[Int]): Int = {
+  def l1(left: Descriptor[Int], right: Descriptor[Int]): Int = {
     left.values.zip(right.values).map({case (l, r) => (l - r).abs}).sum
   }
 

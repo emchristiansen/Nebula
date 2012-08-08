@@ -4,7 +4,9 @@ import java.awt.image._
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
-trait DescriptorTrait[A] {
+sealed trait DescriptorTraitAbstract
+
+trait DescriptorTrait[A] extends DescriptorTraitAbstract {
   val values: IndexedSeq[A]
 }
 
@@ -77,7 +79,9 @@ case class BRIEFExtractor(val numPairs: Int, val patchWidth: Int)  {
 
 //------------------------------------------------------------------------------
 
-trait ExtractorMethod[D <: DescriptorTrait[_]] extends CorrespondenceMethod {
+sealed trait ExtractorMethodAbstract extends CorrespondenceMethod
+
+trait ExtractorMethod[D <: DescriptorTrait[_]] extends ExtractorMethodAbstract {
   def apply(image: BufferedImage, keyPoint: KeyPoint): Option[D]
 
   def apply(image: BufferedImage,

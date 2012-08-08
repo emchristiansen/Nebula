@@ -27,18 +27,19 @@ case class RuntimeConfig (
   override val skipCompletedExperiments: Boolean,
   override val maxSimultaneousExperiments: Int) extends RuntimeConfigTrait
 
-trait Experiment {
+abstract class Experiment {
   val parameterAbbreviations: List[String]
   val parameterValues: List[String]
 
-  val filenameNoTime: String = {
+  lazy val filenameNoTime: String = {
+    println(parameterAbbreviations.size)
     assert(parameterAbbreviations.size == parameterValues.size)
     val parts = (parameterAbbreviations, parameterValues).zipped.map(_ + "-" + _)
     parts.mkString("_") + ".json"
   }
 
-  val unixEpoch = System.currentTimeMillis / 1000L
-  val filename: String = unixEpoch + "_" + filenameNoTime
+  lazy val unixEpoch = System.currentTimeMillis / 1000L
+  lazy val filename: String = unixEpoch + "_" + filenameNoTime
 
   lazy val outDirectory: File = Global.run[RuntimeConfig].childPath("results/experiment_data")
 
