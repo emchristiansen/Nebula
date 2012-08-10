@@ -1,6 +1,20 @@
-// package nebula
+package nebula
 
-// import java.io.File
+import java.io.File
+
+import com.googlecode.javacv.cpp.opencv_features2d._
+
+object Summary {
+  def recognitionRate(dmatches: List[DMatch]): Double = {
+    // The base image feature index is |queryIdx|, and the other 
+    // image is |trainIdx|. This weirdness is caused by a convention
+    // clash.
+    val groupedByLeft = dmatches.groupBy(_.queryIdx)
+    val groups = groupedByLeft.values.map(_.sortBy(_.distance))
+    val numCorrect = groups.count(group => group.head.queryIdx == group.head.trainIdx)
+    numCorrect.toDouble / groups.size
+  }
+}
 
 // case class TwoDimensionalTable(experimentGrid: List[List[MPIEExperiment]])
 

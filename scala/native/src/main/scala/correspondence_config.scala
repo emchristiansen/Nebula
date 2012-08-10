@@ -3,75 +3,39 @@ package nebula
 import java.io.File
 import javax.imageio.ImageIO
 
+import net.liftweb.json._
+import net.liftweb.json.Serialization.{read, write}
+
 case class CorrespondenceExperimentConfig(
   val imageClasses: List[String],
   val otherImages: List[Int],
   val detectors: List[DetectorMethod],
-  val extractors: List[ExtractorMethodAbstract],
-  val matchers: List[MatcherMethodAbstract])
-
-// // TODO: Remove this. See below.
-// case class CorrespondenceExperimentConfigOpaque(
-//   val imageClasses: List[String],
-//   val otherImages: List[Int],
-//   val detectors: List[DetectorMethod],
-//   val extractors: List[CorrespondenceMethod],
-//   val matchers: List[CorrespondenceMethod])
+  val extractors: List[ExtractorMethod],
+  val matchers: List[MatcherMethod])
 
 object CorrespondenceExperimentConfig {
-  val instances = classOf[CorrespondenceExperimentConfig] :: DetectorMethod.instances ++ ExtractorMethod.instances ++ MatcherMethod.instances
+  val instances = classOf[CorrespondenceExperimentConfig] :: classOf[CorrespondenceExperiment] :: classOf[CorrespondenceExperimentResults] :: DetectorMethod.instances ++ ExtractorMethod.instances ++ MatcherMethod.instances
+  val extraSerializers = List(new DMatchSerializer)
+
+  val formats = Serialization.formats(ShortTypeHints(instances)) ++ extraSerializers
 
   def fromJSONFile(file: File): CorrespondenceExperimentConfig = {
-    IO.fromJSONFileAbstract[CorrespondenceExperimentConfig](instances, file)
+    IO.fromJSONFileAbstract[CorrespondenceExperimentConfig](formats, file)
   }
-
-
-
-  // def fromJSONFile(file: File): List[CorrespondenceExperiment[_]] = {
-  //   // This is a bit of a disaster. I like the CorrespondenceExperimentConfig
-  //   // construct because it statically ensures the descriptor type agrees
-  //   // between the extractors and matchers. However, I'm having trouble
-  //   // deserializing from json things with type parameters. So we have this
-  //   // ugly solution.
-  //   val opaque = IO.fromJSONFileAbstract[CorrespondenceExperimentConfigOpaque](instances, file)
-  //   val CorrespondenceExperimentConfigOpaque(imageClasses,
-  // 					     otherImages,
-  // 					     detectors,
-  // 					     extractors,
-  // 					     matchers) = opaque
-
-  //   val (resolvedExtractors, resolvedMatchers) = extractors.zip(matchers).head match {
-  //     case _: Tuple2[ExtractorMethod[SortDescriptor], MatcherMethod[SortDescriptor]] => {
-  // 	(extractors.asInstanceOf[List[ExtractorMethod[SortDescriptor]]],
-  // 	 matchers.asInstanceOf[List[MatcherMethod[SortDescriptor]]])
-  //     }
-  //     case _ => throw new Exception
-  //   }
-
-  //   val config = CorrespondenceExperimentConfig(imageClasses,
-  // 						otherImages,
-  // 						detectors,
-  // 						resolvedExtractors,
-  // 						resolvedMatchers)
-  //   CorrespondenceExperiment.fromConfig(config)
-  //   throw new Exception
-  // }
-
-
 }
 
 case class CorrespondenceExperiment(
   val imageClass: String,
   val otherImage: Int,
   val detector: DetectorMethod,
-  val extractor: ExtractorMethodAbstract,
-  val matcher: MatcherMethodAbstract) extends Experiment {
+  val extractor: ExtractorMethod,
+  val matcher: MatcherMethod) extends Experiment {
   val parameterAbbreviations: List[String] = "IC OI D E M".split(" ").toList
   val parameterValues: List[String] = List(imageClass, 
-						    otherImage.toString, 
-						    detector.abbreviation, 
-						    extractor.abbreviation, 
-						    matcher.abbreviation)
+					   otherImage.toString, 
+					   detector.abbreviation, 
+					   extractor.abbreviation, 
+					   matcher.abbreviation)
 
   lazy val leftImageFile = Global.run[RuntimeConfig].childPath("data/%s/images/img1.bmp".format(imageClass))
   def leftImage = ImageIO.read(leftImageFile)
@@ -82,7 +46,6 @@ case class CorrespondenceExperiment(
 }
 
 object CorrespondenceExperiment{
-  // def fromConfig[D <: DescriptorTrait[_]](config: CorrespondenceExperimentConfig[D]): List[CorrespondenceExperiment[D]] = {
   def fromConfig(config: CorrespondenceExperimentConfig): List[CorrespondenceExperiment] = {
     for (ic <- config.imageClasses;
 	 oi <- config.otherImages;

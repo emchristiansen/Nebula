@@ -4,9 +4,9 @@ import java.awt.image._
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
-sealed trait DescriptorTraitAbstract
+// sealed trait DescriptorTraitAbstract
 
-trait DescriptorTrait[A] extends DescriptorTraitAbstract {
+trait DescriptorTrait[A] {
   val values: IndexedSeq[A]
 }
 
@@ -15,27 +15,6 @@ case class Descriptor[A](override val values: IndexedSeq[A]) extends DescriptorT
 case class SortDescriptor(override val values: IndexedSeq[Int]) extends DescriptorTrait[Int] {
   assert(values.sorted == (0 until values.size))
 }
-
-// class SortExtractor(override val patchWidth: Int) extends DescriptorExtractor[SortDescriptor] {
-//   protected def extractUnsafe(image: BufferedImage) = {
-//     val pixels: List[Int] = Pixel.getPixels(image)
-//     SortExtractor.extractFromPixels(pixels)
-//   }
-// }
-
-// class GraySortExtractor(override val patchWidth: Int) extends DescriptorExtractor[SortDescriptor] {
-//   protected def extractUnsafe(image: BufferedImage) = {
-//     val pixels: List[Int] = Pixel.getPixelsGray(image)
-//     SortExtractor.extractFromPixels(pixels)
-//   }
-// }
-
-// object SortExtractor {
-//   def extractFromPixels(pixels: List[Int]): SortDescriptor = {
-//     val permutation = pixels.zipWithIndex.sortBy(_._1).map(_._2)
-//     new SortDescriptor(permutation.toIndexedSeq)
-//   }
-// }
 
 case class ImagePoint(val x: Int, val y: Int, val z: Int)
 
@@ -79,13 +58,12 @@ case class BRIEFExtractor(val numPairs: Int, val patchWidth: Int)  {
 
 //------------------------------------------------------------------------------
 
-sealed trait ExtractorMethodAbstract extends CorrespondenceMethod
-
-trait ExtractorMethod[D <: DescriptorTrait[_]] extends ExtractorMethodAbstract {
-  def apply(image: BufferedImage, keyPoint: KeyPoint): Option[D]
+trait ExtractorMethod extends CorrespondenceMethod {
+  // TODO: Allow descriptors that are not SortDescriptor.
+  def apply(image: BufferedImage, keyPoint: KeyPoint): Option[SortDescriptor]
 
   def apply(image: BufferedImage,
-	    keyPoints: List[KeyPoint]): List[Option[D]] = {
+	    keyPoints: List[KeyPoint]): List[Option[SortDescriptor]] = {
     keyPoints.map(k => apply(image, k))
   }
 }
@@ -98,10 +76,17 @@ case class SortExtractor(val normalizeRotation: Boolean,
 			 val normalizeScale: Boolean,
 			 val patchWidth: Int,
 			 val blurWidth: Int,
-			 val color: Boolean) extends ExtractorMethod[SortDescriptor] {
+			 val color: Boolean) extends ExtractorMethod {
   def apply(image: BufferedImage, keyPoint: KeyPoint): Option[SortDescriptor] = {
     val blurred = ImageProcessing.boxBlur(blurWidth, image)
-    // TODO
-    throw new Exception
+    val patchOption = ImageProcessing.extractPatch(blurred, patchWidth, keyPoint)
+    patchOption match {
+      case Some(patch) => {
+	val pixels = Pixel.getPixels(patch)
+	val permutation = pixels.zipWithIndex.sortBy(_._1).map(_._2)
+	Some(SortDescriptor(permutation.toIndexedSeq))
+      }
+      case None => None
+    }
   }
 }

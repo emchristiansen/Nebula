@@ -5,7 +5,10 @@ import org.scalatest.FunSuite
 import javax.imageio.ImageIO
 import java.io.File
 
-import com.codahale.jerkson.Json._
+import com.googlecode.javacv.cpp.opencv_features2d._
+
+import net.liftweb.json._
+import net.liftweb.json.Serialization.{read, write}
 
 case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
@@ -13,12 +16,13 @@ class TestAnything extends FunSuite {
   test("anything") {
     val p = Person("Eric", "Bob", 42, 3.14)
 
-    val j = generate(p)
+    val dmatch = new DMatch(1, 2, 3.14f)
 
-    println(j)
+    implicit val formats = Serialization.formats(ShortTypeHints(List(classOf[DMatch]))) + new DMatchSerializer
+    val json = write(dmatch)
+    println(json)
 
-    val p2 = parse[Person](j)
-
-    println(p2)
+    val loaded = read[DMatch](json)
+    println(loaded.distance)
   }
 }

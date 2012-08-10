@@ -2,19 +2,19 @@ package nebula
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
-sealed trait MatcherMethodAbstract extends CorrespondenceMethod
-
-trait MatcherMethod[D <: DescriptorTraitAbstract] extends MatcherMethodAbstract {
+trait MatcherMethod extends CorrespondenceMethod {
   def apply(allPairs: Boolean, 
-	    leftDescriptors: List[D], 
-	    rightDescriptors: List[D]): List[DMatch]
+	    leftDescriptors: List[SortDescriptor], 
+	    rightDescriptors: List[SortDescriptor]): List[DMatch]
 }
 
 object MatcherMethod {
-  val instances: List[java.lang.Class[_]] = List(classOf[KendallTauMatcher])
+  val instances: List[java.lang.Class[_]] = 
+    List(classOf[KendallTauMatcher],
+         classOf[L0Matcher])
 }
 
-case class KendallTauMatcher() extends MatcherMethod[SortDescriptor] {
+case class KendallTauMatcher() extends MatcherMethod {
   def apply(allPairs: Boolean,
 	    leftDescriptors: List[SortDescriptor],
 	    rightDescriptors: List[SortDescriptor]): List[DMatch] = {
@@ -22,10 +22,29 @@ case class KendallTauMatcher() extends MatcherMethod[SortDescriptor] {
   }
 }
 
+case class L0Matcher() extends MatcherMethod {
+  def apply(allPairs: Boolean,
+	    leftDescriptors: List[SortDescriptor],
+	    rightDescriptors: List[SortDescriptor]): List[DMatch] = {
+    if (allPairs) {
+      for ((left, leftIndex) <- leftDescriptors.zipWithIndex;
+	   (right, rightIndex) <- rightDescriptors.zipWithIndex) yield {
+        val distance = Matcher.l0(left, right)
+	new DMatch(leftIndex, rightIndex, distance)
+      }
+    } else {
+      for (((left, right), index) <- leftDescriptors.zip(rightDescriptors).zipWithIndex) yield {
+	val distance = Matcher.l0(left, right)
+	new DMatch(index, index, distance)
+      }
+    }
+  }  
+}
+
 object Matcher {
-  // def l0[A](left: DescriptorTrait, right: DescriptorTrait): Int = {
-  //   left.values.zip(right.values).count({case (l, r) => l != r})
-  // }
+  def l0[A](left: DescriptorTrait[A], right: DescriptorTrait[A]): Int = {
+    left.values.zip(right.values).count({case (l, r) => l != r})
+  }
 
   def l1(left: Descriptor[Int], right: Descriptor[Int]): Int = {
     left.values.zip(right.values).map({case (l, r) => (l - r).abs}).sum

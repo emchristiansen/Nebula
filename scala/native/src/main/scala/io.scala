@@ -122,20 +122,28 @@ object IO {
 
   def readObjectFromFilename[A](filename: String)(implicit m: Manifest[A]) = readObjectFromFile[A](new File(filename))
 
-  def fromJSONFileAbstract[A <: AnyRef](subclasses: List[java.lang.Class[_]], file: File)(implicit manifest: Manifest[A]): A = {
+  def fromJSONFileAbstract[A <: AnyRef](formats: Formats, file: File)(implicit manifest: Manifest[A]): A = {
     val json = org.apache.commons.io.FileUtils.readFileToString(file)
-    implicit val formats = Serialization.formats(ShortTypeHints(subclasses))
+    // TODO: There must be a better way to make |formats| implicit.
+    implicit val implicitFormats = formats
     read[A](json)
   }
 
   def fromJSONFile[A <: AnyRef](file: File)(implicit manifest: Manifest[A]): A = {
-    fromJSONFileAbstract[A](List(manifest.erasure), file)
+    val formats = Serialization.formats(ShortTypeHints(List(manifest.erasure)))
+    fromJSONFileAbstract[A](formats, file)
+  }
+
+  def toJSONFileAbstract[A <: AnyRef](formats: Formats, item: A, file: File)(implicit manifest: Manifest[A]) {
+    // TODO: There must be a better way to make |formats| implicit.
+    implicit val implicitFormats = formats
+    val json = pretty(render(parse(write(item))))
+    org.apache.commons.io.FileUtils.writeStringToFile(file, json)
   }
 
   def toJSONFile[A <: AnyRef](item: A, file: File)(implicit manifest: Manifest[A]) {
-    implicit val formats = Serialization.formats(ShortTypeHints(List(manifest.erasure)))
-    val json = write(item)
-    org.apache.commons.io.FileUtils.writeStringToFile(file, json)
+    val formats = Serialization.formats(ShortTypeHints(List(manifest.erasure)))
+    toJSONFileAbstract(formats, item, file)
   }
 
   def runSystemCommand(command: String): String = {

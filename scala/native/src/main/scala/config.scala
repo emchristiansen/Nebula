@@ -10,7 +10,7 @@ trait RuntimeConfigTrait {
   val skipCompletedExperiments: Boolean
   val maxSimultaneousExperiments: Int
   def childPath(child: String): File = {
-    val path = new File(projectRoot, child)
+    val path = new File(new File(Global.homeDirectory, projectRoot), child)
     if (!path.exists) throw new Exception("Path does not exist: %s".format(path))
     path
   }
@@ -32,7 +32,6 @@ abstract class Experiment {
   val parameterValues: List[String]
 
   lazy val filenameNoTime: String = {
-    println(parameterAbbreviations.size)
     assert(parameterAbbreviations.size == parameterValues.size)
     val parts = (parameterAbbreviations, parameterValues).zipped.map(_ + "-" + _)
     parts.mkString("_") + ".json"

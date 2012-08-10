@@ -3,6 +3,8 @@ package nebula
 import java.io.File
 import xml._
 
+import com.googlecode.javacv.cpp.opencv_features2d._
+
 case class PredictionAndTruth(val prediction: Double, val truth: Boolean)
 
 case class ResultsData(val predictionsAndTruths: List[PredictionAndTruth])
@@ -16,7 +18,13 @@ object ResultsData {
   }
 }
 
-trait Results
-
-case class ExperimentResults(experiment: Experiment, results: Results)
+case class CorrespondenceExperimentResults(experiment: CorrespondenceExperiment,
+					   dmatches: List[DMatch]) {
+  def save {
+    println("Writing to %s".format(experiment.path))
+    IO.toJSONFileAbstract(CorrespondenceExperimentConfig.formats,
+			  this, 
+			  experiment.path)
+  }
+}
 

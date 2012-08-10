@@ -8,7 +8,10 @@ import com.googlecode.javacv.cpp.opencv_features2d._
 
 trait DetectorMethod extends CorrespondenceMethod {
   val maxKeyPoints: Int
-  def apply(image: BufferedImage): List[KeyPoint]
+  def applyImpl(image: BufferedImage): List[KeyPoint]
+  def apply(image: BufferedImage): List[KeyPoint] = {
+    applyImpl(image).take(maxKeyPoints)
+  }
 }
 
 object DetectorMethod {
@@ -16,11 +19,11 @@ object DetectorMethod {
 }
 
 case class FASTDetector(val maxKeyPoints: Int) extends DetectorMethod {
-  def apply(image: BufferedImage): List[KeyPoint] = {
+  def applyImpl(image: BufferedImage): List[KeyPoint] = {
     val detector = FeatureDetector.create("FAST")
     val matImage = OpenCVUtil.bufferedImageToCvMat(image)
     val keyPoints = new KeyPoint()
     detector.get().detect(matImage, keyPoints, null)
-    KeyPointUtil.keyPointsToList(keyPoints)
+    KeyPointUtil.keyPointsToList(keyPoints).sortBy(_.response).reverse
   }
 }
