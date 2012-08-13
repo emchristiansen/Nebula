@@ -21,6 +21,9 @@ import javax.imageio.ImageIO
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
+import net.liftweb.json._
+import net.liftweb.json.Serialization.{read, write}
+
 object Global {
   val random = new Random(0)
   val homeDirectory = System.getProperty("user.home")
@@ -36,6 +39,29 @@ object Global {
 }
 
 object Util { 
+  def caseClassToStringMap[A <: AnyRef](caseClass: A): Map[String, String] = {
+    // Implementation uses lift-json for introspection, which is
+    // admittedly roundabout. It is also likely brittle; I'm guessing it will
+    // fail for nested structures.
+    // TODO: Use introspection directly instead of lift-json.
+    implicit val formats = Serialization.formats(ShortTypeHints(List(caseClass.getClass)))
+
+    val string = write(caseClass)
+    val json = parse(string)
+    
+    import scala.text.{Document, DocText}
+    def documentToString(document: Document): String = document match {
+      case DocText(string) => string.replace("\"", "")
+      case _ => throw new Exception
+    }
+
+    val JObject(jObject) = json
+    val jStrings = jObject.map({case JField(key, value) => JField(key, JString(documentToString(render(value))))})
+    val jsonString = JObject(jStrings)
+
+    jsonString.extract[Map[String, String]]
+  }
+
   def pruneKeyPoints(
     leftImage: BufferedImage, 
     rightImage: BufferedImage, 
@@ -122,6 +148,7 @@ object Util {
   }.reverse
   }
   
+  // Uses a linear time algorithm, but is in fact quite a slow implementation.
   def permutation(input: Array[Int], max: Int): Array[Int] = {
     val histogram = Array.fill(max + 1)(List[Int]())
     input.zipWithIndex.foreach({x => histogram(x._1) = x._2 :: histogram(x._1)})

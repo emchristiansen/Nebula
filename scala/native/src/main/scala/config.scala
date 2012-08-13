@@ -10,9 +10,12 @@ trait RuntimeConfigTrait {
   val skipCompletedExperiments: Boolean
   val maxSimultaneousExperiments: Int
   def childPath(child: String): File = {
-    val path = new File(new File(Global.homeDirectory, projectRoot), child)
+    val path = childPathNew(child)
     if (!path.exists) throw new Exception("Path does not exist: %s".format(path))
     path
+  }
+  def childPathNew(child: String): File = {
+    new File(new File(Global.homeDirectory, projectRoot), child)
   }
 }
 
@@ -47,7 +50,7 @@ abstract class Experiment {
   }
 
   def existingResultsFiles: List[File] = {
-    val allPaths = outDirectory.list.toList.map(_.toString)
+    val allPaths = outDirectory.list.toList.map(path => outDirectory + "/" + path.toString)
     val matchingPaths = allPaths.filter(_.contains(filenameNoTime))
     matchingPaths.sortBy(identity).reverse.map(path => new File(path))
   }
@@ -61,4 +64,3 @@ abstract class Experiment {
 
   def alreadyRun: Boolean = !existingResultsFile.isEmpty
 }
-

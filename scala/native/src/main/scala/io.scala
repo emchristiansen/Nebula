@@ -51,6 +51,13 @@ object XMLUtil {
   }
 }
 
+object ExperimentIO {
+  val instances = classOf[CorrespondenceExperimentConfig] :: classOf[CorrespondenceExperiment] :: classOf[CorrespondenceExperimentResults] :: DetectorMethod.instances ++ ExtractorMethod.instances ++ MatcherMethod.instances
+  val extraSerializers = List(new DMatchSerializer)
+
+  val formats = Serialization.formats(ShortTypeHints(instances)) ++ extraSerializers
+}
+
 object AtomicIO {
   val lockPath = "/tmp/eric_demo_lock"
 

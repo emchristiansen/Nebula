@@ -12,8 +12,51 @@ trait DescriptorTrait[A] {
 
 case class Descriptor[A](override val values: IndexedSeq[A]) extends DescriptorTrait[A]
 
+// Hmm, maybe I can use implicits cleverly. See below.
+case class Permutation(values: IndexedSeq[Int]) {
+  assert(values.sorted == (0 until values.size))
+}
+
+object Permutation {
+  implicit def permutationToIndexedSeq(permutation: Permutation): IndexedSeq[Int] = 
+    permutation.values
+}
+
+// TODO: This duplicates |Permutation|.
 case class SortDescriptor(override val values: IndexedSeq[Int]) extends DescriptorTrait[Int] {
   assert(values.sorted == (0 until values.size))
+}
+
+object SortDescriptor {
+  def fromOrdered[A <% Ordered[A]](values: Seq[A]): SortDescriptor = {
+    val permutation = values.zipWithIndex.sortBy(_._1).map(_._2)
+    SortDescriptor(permutation.toIndexedSeq)
+  }
+
+  // TODO: This manual boxing and unboxing is dumb.
+  def invert(permutation: SortDescriptor): SortDescriptor = {
+    val values = permutation.values.zipWithIndex.sortBy(_._1).map(_._2)
+    SortDescriptor(values)
+  }
+
+  def compose(left: SortDescriptor, right: SortDescriptor): SortDescriptor = {
+    val values = for (r <- right.values) yield left.values(r)
+    SortDescriptor(values)
+  }
+
+  def numCycles(permutation: SortDescriptor): Int = {
+    val seen = collection.mutable.Set[Int]()
+    var numCycles = 0
+    for (start <- permutation.values) {
+      numCycles += {if (seen.contains(start)) 0 else 1}
+      var current = permutation.values(start)
+      while (current != start) {
+	seen += current
+	current = permutation.values(current)
+      }
+    }
+    numCycles
+  }  
 }
 
 case class ImagePoint(val x: Int, val y: Int, val z: Int)
@@ -77,16 +120,18 @@ case class SortExtractor(val normalizeRotation: Boolean,
 			 val patchWidth: Int,
 			 val blurWidth: Int,
 			 val color: Boolean) extends ExtractorMethod {
+  // TODO
+  assert(!normalizeRotation)
+  assert(!normalizeScale)
+
   def apply(image: BufferedImage, keyPoint: KeyPoint): Option[SortDescriptor] = {
     val blurred = ImageProcessing.boxBlur(blurWidth, image)
     val patchOption = ImageProcessing.extractPatch(blurred, patchWidth, keyPoint)
-    patchOption match {
-      case Some(patch) => {
-	val pixels = Pixel.getPixels(patch)
-	val permutation = pixels.zipWithIndex.sortBy(_._1).map(_._2)
-	Some(SortDescriptor(permutation.toIndexedSeq))
-      }
-      case None => None
+    for (
+      patch <- patchOption
+    ) yield {
+      val pixels = if (color) Pixel.getPixels(patch) else Pixel.getPixelsGray(patch)
+      SortDescriptor.fromOrdered(pixels)
     }
   }
 }

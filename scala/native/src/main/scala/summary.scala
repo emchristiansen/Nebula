@@ -4,6 +4,7 @@ import java.io.File
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
+
 object Summary {
   def recognitionRate(dmatches: List[DMatch]): Double = {
     // The base image feature index is |queryIdx|, and the other 
@@ -13,6 +14,70 @@ object Summary {
     val groups = groupedByLeft.values.map(_.sortBy(_.distance))
     val numCorrect = groups.count(group => group.head.queryIdx == group.head.trainIdx)
     numCorrect.toDouble / groups.size
+  }
+
+  def resultsTable(
+    baseExperiment: CorrespondenceExperiment,
+    rowMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment],
+    columnMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment]): Seq[Seq[CorrespondenceExperimentResults]] = {
+    (for (row <- Util.parallelize(rowMutations)) yield {
+      (for (column <- Util.parallelize(columnMutations)) yield {
+        val experiment = column(row(baseExperiment))
+        CorrespondenceExperimentResults.fromExperiment(experiment)
+      }).toList
+    }).toList
+  }
+}
+
+object SummaryUtil {
+  // Turns Set(
+  // Map(1 -> 12, 2 -> 13),
+  // Map(1 -> 10, 3 -> 10, 2 -> 13))
+  // into
+  // Map(1 -> Set(12, 10), 2 -> Set(13), 3 -> Set(10))
+  def mapUnion[A, B](maps: Set[Map[A, B]]): Map[A, Set[B]] = {
+    val set = maps.map(_.toSeq).flatten.toSet
+    val groups = set.groupBy(_._1)
+    groups.mapValues(_.map(_._2))
+  }
+
+  // Turns Seq(
+  // Map(1 -> 10, 2 -> 20),
+  // Map(1 -> 10, 2 -> 30))
+  // into
+  // Seq(Map(2 -> 20), Map(2 -> 30)).
+  def changingFields[A, B](maps: Seq[Map[A, B]]): Seq[Map[A, B]] = {
+    val fields = mapUnion(maps.toSet).filter(_._2.size > 1).keys.toSet
+    maps.map(_.filterKeys(fields))
+  }
+
+  def summarizeStructure(maps: Set[Map[String, String]]): String = {
+    val union = mapUnion(maps)
+    val constantPairs = union.filter(_._2.size == 1).mapValues(_.head).toSet
+    val variablePairs = {
+      val keys = union.filter(_._2.size > 1).keys.toSet
+      keys.map(k => k -> "*").toMap
+    }
+    val summaryMap = constantPairs ++ variablePairs
+    val components = summaryMap.toSeq.sortBy(_._1).map({ case (k, v) => "%s-%s".format(k, v) })
+    components.mkString("_")
+  }
+
+  def tableTitle(experiments: Seq[CorrespondenceExperiment]): String = {
+    val maps = experiments.map(_.stringMap).toSet
+    summarizeStructure(maps)
+  }
+
+  def tableEntryTitles(experiments: Seq[CorrespondenceExperiment]): Seq[String] = {
+    val experimentMaps = experiments.map(_.stringMap)
+    val union = mapUnion(experimentMaps.toSet)
+    val variableKeys = union.filter(_._2.size > 1).keys.toSet
+
+    def entryTitle(experimentMap: Map[String, String]): String = {
+      experimentMap.filterKeys(variableKeys).toSeq.map({ case(k, v) => "%s-%s".format(k, v) }).mkString("_")
+    }
+
+    experimentMaps.map(entryTitle)
   }
 }
 
@@ -54,13 +119,13 @@ object Summary {
 
 // case class ROC(val resultsData: ResultsData) {
 //   val (predictions, truths) = resultsData.predictionsAndTruths.map({case PredictionAndTruth(p, t) => (p, t)}).unzip
- 
+
 //   assert(predictions.sorted == predictions)
 //   assert(predictions.size == truths.size)
 
 //   lazy val curve: List[Tuple2[Double, Double]] = {
 //     val truthInts = truths.map(b => if (b) 1 else 0)
-    
+
 //     def heads[A](list: List[A]): List[List[A]] = list.inits.toList.reverse
 
 //     val pairs = for (guessPositive <- heads(truthInts)) yield {
@@ -97,7 +162,7 @@ object Summary {
 
 //       val smallerDistance = fpr - smallerFPR
 //       val biggerDistance = biggerFPR - fpr
-      
+
 //       val smallerWeight = biggerDistance / (biggerFPR - smallerFPR)
 //       val biggerWeight = 1 - smallerWeight
 
@@ -109,17 +174,17 @@ object Summary {
 // case class ExperimentNamer(experiments: List[MPIEExperiment]) {
 //   // Drop the first value, the time the experiment was performed.
 //   val parameterSets = experiments.map(_.filenameParts).transpose.map(_.toSet).tail
-  
+
 //   def setToString(set: Set[String]) = set.toList.mkString("-")
-  
+
 //   val title = parameterSets.map(setToString).mkString(" ")
-  
+
 //   val variableParameters = parameterSets.map(_.size > 1)
-  
+
 //   def curveName(experiment: MPIEExperiment): String = {
 //     val nameValuePairs = MPIEExperiment.parameterAbbreviations.zip(experiment.filenameParts).tail
 //     val namedParameters = nameValuePairs.map({case (n, v) => n + ":" + v})
-      
+
 //     // We only care about parameters which vary.
 //     val name = variableParameters.zip(namedParameters).filter(_._1).map(_._2).mkString(" ")
 //     if (name.size > 0) name else "no comparison"
@@ -131,7 +196,7 @@ object Summary {
 //     val rocList = resultsDataList.map(ROC)
 
 //     val allFPRs = rocList.map(_.curve).flatten.map(_._1).distinct.sorted
-    
+
 //     def meanTPR(fpr: Double) = { 
 //       rocList.map(_.tprFromFPR(fpr)).sum / rocList.size
 //     }
@@ -285,7 +350,7 @@ object Summary {
 //   def mkTable(cullFilter: (TableEntry => Boolean), conditionFilter: ((String, TableEntry) => Boolean), conditions: List[String], outFilename: String) {
 //     val lines = io.Source.fromFile(EER.fullTablePath).mkString.split("\n").filter(_.size > 0).tail
 //     val entries = lines.map(TableEntry.fromLine)
-    
+
 //     // TODO
 //     val culled = entries.filter(cullFilter)//.filter(_.distance != "LBPWolf")
 
@@ -382,7 +447,6 @@ object Summary {
 //     mkTable(cullFilter, conditionFilter, conditions, outFilename)
 //   }
 
-
 //   def illuminationProfileBestDistance {
 //     def cullFilter(e: TableEntry): Boolean = e.pose == "240x240" && e.blur == "0x0" && e.jpeg == "0x0" && e.noise == "0x0" && e.misalignment == "0x0"
 //     def conditionFilter(value: String, e: TableEntry): Boolean = e.illumination == value
@@ -390,7 +454,6 @@ object Summary {
 //     val outFilename = "illuminationProfileBestDistance"
 //     mkTable(cullFilter, conditionFilter, conditions, outFilename)
 //   }
-
 
 //   def jpegBestDistance {
 //     def cullFilter(e: TableEntry): Boolean = e.illumination == "00x00" && e.pose == "051x051" && e.blur == "0x0" && e.noise == "0x0" && e.misalignment == "0x0"
@@ -407,7 +470,6 @@ object Summary {
 //     val outFilename = "lbpRoiScores"
 //     mkTable(cullFilter, conditionFilter, conditions, outFilename)
 //   }
-
 
 //   def eigenfaceNeutralRoiScores {
 //     def cullFilter(e: TableEntry): Boolean = e.illumination == "00x00" && e.distance == "Eigenface" && e.blur == "0x0" && e.jpeg == "0x0" && e.noise == "0x0" && e.misalignment == "0x0"
@@ -460,7 +522,7 @@ object Summary {
 //   def mkPerDistanceTable(cullFilter: (TableEntry => Boolean), conditionFilter: ((String, TableEntry) => Boolean), conditions: List[String], outFilename: String) {
 //     val lines = io.Source.fromFile(EER.fullTablePath).mkString.split("\n").filter(_.size > 0).tail
 //     val entries = lines.map(TableEntry.fromLine)
-    
+
 //     // TODO
 //     val culled = entries.filter(cullFilter)//.filter(_.distance != "LBPWolf")
 
@@ -486,8 +548,6 @@ object Summary {
 //     val outString = List(backgrounds.mkString(" "), conditions.mkString(" "), rois.mkString(" "), tableString).mkString("\n")
 //     org.apache.commons.io.FileUtils.writeStringToFile(new File(outPath), outString)    
 //   }
-
-
 
 //   def formatEightRowMulticolumnTableLatex(table: List[List[String]]): String = {
 //     assert(table.size == 8)

@@ -14,13 +14,8 @@ case class CorrespondenceExperimentConfig(
   val matchers: List[MatcherMethod])
 
 object CorrespondenceExperimentConfig {
-  val instances = classOf[CorrespondenceExperimentConfig] :: classOf[CorrespondenceExperiment] :: classOf[CorrespondenceExperimentResults] :: DetectorMethod.instances ++ ExtractorMethod.instances ++ MatcherMethod.instances
-  val extraSerializers = List(new DMatchSerializer)
-
-  val formats = Serialization.formats(ShortTypeHints(instances)) ++ extraSerializers
-
   def fromJSONFile(file: File): CorrespondenceExperimentConfig = {
-    IO.fromJSONFileAbstract[CorrespondenceExperimentConfig](formats, file)
+    IO.fromJSONFileAbstract[CorrespondenceExperimentConfig](ExperimentIO.formats, file)
   }
 }
 
@@ -36,6 +31,8 @@ case class CorrespondenceExperiment(
 					   detector.abbreviation, 
 					   extractor.abbreviation, 
 					   matcher.abbreviation)
+  
+  def stringMap = parameterAbbreviations.zip(parameterValues).toMap
 
   lazy val leftImageFile = Global.run[RuntimeConfig].childPath("data/%s/images/img1.bmp".format(imageClass))
   def leftImage = ImageIO.read(leftImageFile)
