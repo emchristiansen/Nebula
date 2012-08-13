@@ -12,6 +12,10 @@ import net.liftweb.json.Serialization.{read, write}
 
 class TestAnything extends FunSuite { 
   test("anything") {
+    val d = IndexedSeq(1, 2, 3)
+    CompileTest.foo(d)
 
+    val s = MySortDescriptor(IndexedSeq(0, 2, 1))
+    CompileTest.foo(s)
   }
 }

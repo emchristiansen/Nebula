@@ -4,7 +4,30 @@ import java.awt.image._
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
-// sealed trait DescriptorTraitAbstract
+trait DescriptorLike[A, B] {
+  def values(descriptor: A): IndexedSeq[B]
+}
+
+case class MySortDescriptor(val values: IndexedSeq[Int]) {
+  assert(values.sorted == (0 until values.size))
+}
+
+object DescriptorLike {
+  implicit def indexedSeq[B] = new DescriptorLike[IndexedSeq[B], B] {
+    override def values(descriptor: IndexedSeq[B]) = descriptor
+  }
+
+  implicit def sortDescriptor = new DescriptorLike[MySortDescriptor, Int] {
+    override def values(descriptor: MySortDescriptor) = descriptor.values
+  }
+}
+
+object CompileTest {
+  def foo[D](descriptor: D)(implicit descriptorLike: DescriptorLike[D, Int]) {
+    val values: IndexedSeq[Int] = descriptorLike.values(descriptor)
+    println(values)
+  }
+}
 
 trait DescriptorTrait[A] {
   val values: IndexedSeq[A]
