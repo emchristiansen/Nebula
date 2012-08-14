@@ -91,7 +91,7 @@ object Util {
     leftImage: BufferedImage, 
     rightImage: BufferedImage, 
     homography: Homography, 
-    leftKeyPoints: List[KeyPoint]): List[Tuple2[KeyPoint, KeyPoint]] = {
+    leftKeyPoints: Seq[KeyPoint]): Seq[Tuple2[KeyPoint, KeyPoint]] = {
     val leftWidth = leftImage.getWidth
     val leftHeight = leftImage.getHeight
     val insideLeft = 
@@ -114,7 +114,7 @@ object Util {
     (width.toInt, height.toInt)
   }
 
-  def linesFromFile(file: File): List[String] = {
+  def linesFromFile(file: File): Seq[String] = {
     io.Source.fromFile(file).mkString.split("\n").map(_.trim).filter(_.size > 0).filter(_.take(2) != "//").toList
   }
 
@@ -182,7 +182,7 @@ object Util {
     out
   }
   
-  def recursiveListFiles(f: File): List[File] = { 
+  def recursiveListFiles(f: File): Seq[File] = { 
     if (!f.exists) throw new Exception("path does not exists: %s".format(f.toString))
 
     val these = f.listFiles.toList
@@ -193,11 +193,11 @@ object Util {
     if (Global.run[RuntimeConfig].parallel) seq.par else seq
   }
 
-  def truncate(list: List[Double]): String = { 
+  def truncate(list: Seq[Double]): String = { 
     list.map(l => "%.4f".format(l)).mkString(" ")
   }
 
-  def gaussianKernel(std: Double): List[List[Double]] = {
+  def gaussianKernel(std: Double): Seq[Seq[Double]] = {
     val width = (4 * std).ceil.toInt
     
     def density(pixel: Int): Double = {

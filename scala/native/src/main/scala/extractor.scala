@@ -125,16 +125,16 @@ trait ExtractorLike[E, D] {
 
   def apply(extractor: E): ExtractorAction[D]
 
-  def apply(
-    extractor: E,
+  def extractMany(
+    extractor: E)(
     image: BufferedImage,
-    keyPoints: List[KeyPoint]): List[Option[D]] = {
+    keyPoints: Seq[KeyPoint]): Seq[Option[D]] = {
     keyPoints.map(k => apply(extractor)(image, k))
   }  
 }
 
 object ExtractorLike {
-  val instances: List[Class[_]] = List(classOf[SortExtractor])
+  val instances: Seq[Class[_]] = Seq(classOf[SortExtractor])
 
   implicit def raw = new ExtractorLike[RawExtractor, IndexedSeq[Int]] {
     override def apply(extractor: RawExtractor) = extractor.apply

@@ -6,22 +6,6 @@ import javax.imageio.ImageIO
 import net.liftweb.json._
 import net.liftweb.json.Serialization.{read, write}
 
-case class CorrespondenceExperimentConfig[T, D, E, M](
-  val imageClasses: Seq[String],
-  val otherImages: Seq[Int],
-  val detectors: Seq[T],
-  val extractors: Seq[E],
-  val matchers: Seq[M])(
-  implicit detectorLike: DetectorLike[T],
-  extractorLike: ExtractorLike[E, D],
-  matcherLike: MatcherLike[M, D])
-
-object CorrespondenceExperimentConfig {
-  def fromJSONFile(file: File): CorrespondenceExperimentConfig[_, _, _, _] = {
-    IO.fromJSONFileAbstract[CorrespondenceExperimentConfig[_, _, _, _]](ExperimentIO.formats, file)
-  }
-}
-
 case class CorrespondenceExperiment[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
   val imageClass: String,
   val otherImage: Int,
@@ -49,18 +33,6 @@ case class CorrespondenceExperiment[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
   def homography = Homography.fromFile(homographyFile)
 }
 
-object CorrespondenceExperiment{
-  def fromConfig[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
-    config: CorrespondenceExperimentConfig[T, D, E, M])(
-    implicit detectorLike: DetectorLike[T],
-    extractorLike: ExtractorLike[E, D],
-    matcherLike: MatcherLike[M, D]): Seq[CorrespondenceExperiment[T, D, E, M]] = {
-    for (ic <- config.imageClasses;
-	 oi <- config.otherImages;
-	 d <- config.detectors;
-	 e <- config.extractors;
-	 m <- config.matchers) yield {
-      CorrespondenceExperiment(ic, oi, d, e, m)
-    }
-  }
+object CorrespondenceExperiment {
+  type CorrespondenceExperimentAbstract = CorrespondenceExperiment[_, _, _, _]
 }

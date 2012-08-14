@@ -7,10 +7,10 @@ import com.googlecode.javacv.cpp.opencv_features2d._
 
 case class PredictionAndTruth(val prediction: Double, val truth: Boolean)
 
-case class ResultsData(val predictionsAndTruths: List[PredictionAndTruth])
+case class ResultsData(val predictionsAndTruths: Seq[PredictionAndTruth])
 
 object ResultsData { 
-  def sorted(predictions: List[Double], truths: List[Boolean]): ResultsData = {
+  def sorted(predictions: Seq[Double], truths: Seq[Boolean]): ResultsData = {
     val sortedPairs = predictions.zip(truths).sortBy(_._1)
     val predictionsAndTruths = 
       sortedPairs.map(e => PredictionAndTruth(e._1, e._2))
@@ -20,11 +20,11 @@ object ResultsData {
 
 case class CorrespondenceExperimentResults[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
   experiment: CorrespondenceExperiment[T, D, E, M],
-  dmatches: List[DMatch])(
+  dmatches: Seq[DMatch])(
   implicit detectorLike: DetectorLike[T],
   extractorLike: ExtractorLike[E, D],
   matcherLike: MatcherLike[M, D]) {
-  // def save {
+  // def save(implicit manifest: Manifest[CorrespondenceExperimentResults[T, D, E, M]]) {
   //   println("Writing to %s".format(experiment.path))
   //   IO.toJSONFileAbstract(ExperimentIO.formats,
   // 			  this, 
@@ -32,48 +32,66 @@ case class CorrespondenceExperimentResults[T <: AnyRef, D, E <: AnyRef, M <: Any
   // }
 }
 
-// object CorrespondenceExperimentResults {
-//   def runExperiment(experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
-//     println("Running %s".format(experiment))
+object CorrespondenceExperimentResults {
+  def runExperiment[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
+    experiment: CorrespondenceExperiment[T, D, E, M])(
+    implicit detectorLike: DetectorLike[T],
+    extractorLike: ExtractorLike[E, D],
+    matcherLike: MatcherLike[M, D]): CorrespondenceExperimentResults[T, D, E, M] = {
+    println("Running %s".format(experiment))
 
-//     val leftImage = experiment.leftImage
-//     val rightImage = experiment.rightImage
+    val detector = detectorLike(experiment.detector)
+    val extractor = extractorLike.extractMany(experiment.extractor) _
+    val matcher = matcherLike(experiment.matcher)
 
-//     val (leftKeyPoints, rightKeyPoints) = {
-//       val leftKeyPoints = experiment.detector(leftImage)
-//       Util.pruneKeyPoints(leftImage,
-//                           rightImage,
-//                           experiment.homography,
-//                           leftKeyPoints).unzip
-//     }
+    val leftImage = experiment.leftImage
+    val rightImage = experiment.rightImage
 
-//     println("Number of KeyPoints: %s".format(leftKeyPoints.size))
+    val (leftKeyPoints, rightKeyPoints) = {
+      val leftKeyPoints =  detector(leftImage)
+      Util.pruneKeyPoints(leftImage,
+                          rightImage,
+                          experiment.homography,
+                          leftKeyPoints).unzip
+    }
 
-//     val (leftDescriptors, rightDescriptors) = {
-//       val leftDescriptors = experiment.extractor(leftImage, leftKeyPoints)
-//       val rightDescriptors = experiment.extractor(rightImage, rightKeyPoints)
+    println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 
-//       for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
-//     } unzip
+    val (leftDescriptors, rightDescriptors) = {
+      val leftDescriptors = extractor(leftImage, leftKeyPoints)
+      val rightDescriptors = extractor(rightImage, rightKeyPoints)
 
-//     println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
+      for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
+    } unzip
 
-//     val dmatches = experiment.matcher(true, leftDescriptors, rightDescriptors)
+    println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
 
-//     val results = CorrespondenceExperimentResults(experiment, dmatches)
-//     results.save
-//     results
-//   }
+    val dmatches = matcher(true, leftDescriptors, rightDescriptors)
 
-//   def fromExperiment(experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
-//     if (experiment.alreadyRun) {
-//       println("Loading completed experiment: %s".format(experiment))
-//       IO.fromJSONFileAbstract[CorrespondenceExperimentResults](
-// 	ExperimentIO.formats,
-//         experiment.existingResultsFile.get)
-//     } else {
-//       runExperiment(experiment)
-//     }
-//   }
-// }
+    val results = CorrespondenceExperimentResults(experiment, dmatches)
+    // TODO
+//    results.save
+    results
+  }
+
+  def runAbstractExperiment(experiment: CorrespondenceExperiment[_, _, _, _]): CorrespondenceExperimentResults[_, _, _, _] = {
+    import shapeless.Typeable._
+
+    experiment match {
+      case resolved: CorrespondenceExperiment[FASTDetector, SortDescriptor, SortExtractor, L0Matcher] if experiment.cast[CorrespondenceExperiment[FASTDetector, SortDescriptor, SortExtractor, L0Matcher]].isDefined => runExperiment(resolved)
+      case _ => sys.error("TODO")
+    }
+  }
+
+  // def fromExperiment(experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
+  //   if (experiment.alreadyRun) {
+  //     println("Loading completed experiment: %s".format(experiment))
+  //     IO.fromJSONFileAbstract[CorrespondenceExperimentResults](
+  // 	ExperimentIO.formats,
+  //       experiment.existingResultsFile.get)
+  //   } else {
+  //     runExperiment(experiment)
+  //   }
+  // }
+}
 

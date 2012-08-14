@@ -6,7 +6,7 @@ import com.googlecode.javacv.cpp.opencv_features2d._
 
 
 object Summary {
-  def recognitionRate(dmatches: List[DMatch]): Double = {
+  def recognitionRate(dmatches: Seq[DMatch]): Double = {
     // The base image feature index is |queryIdx|, and the other 
     // image is |trainIdx|. This weirdness is caused by a convention
     // clash.
@@ -24,8 +24,8 @@ object Summary {
   //     (for (column <- Util.parallelize(columnMutations)) yield {
   //       val experiment = column(row(baseExperiment))
   //       CorrespondenceExperimentResults.fromExperiment(experiment)
-  //     }).toList
-  //   }).toList
+  //     }).toSeq
+  //   }).toSeq
   // }
 }
 
