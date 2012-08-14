@@ -2,12 +2,54 @@ package nebula
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
-trait MatcherMethod extends CorrespondenceMethod {
-  protected def applyIndividual(
-    distanceMethod: (SortDescriptor, SortDescriptor) => Double,
+trait MatcherLike[M, D] {
+  import MatcherImpl._
+
+  def apply(matcher: M): MatcherAction[D]
+}
+
+object MatcherLike {
+  val instances: List[java.lang.Class[_]] = List(
+    classOf[L0Matcher],
+    classOf[L1Matcher],
+    classOf[L2Matcher],
+    classOf[KendallTauMatcher],
+    classOf[CayleyMatcher])  
+
+  implicit def l0 = new MatcherLike[L0Matcher, IndexedSeq[Any]] {
+    override def apply(matcher: L0Matcher) = matcher.apply[IndexedSeq[Any], Any]
+  }
+
+  // TODO: Can I avoid this extra implicit def?
+  implicit def l0Sort = new MatcherLike[L0Matcher, SortDescriptor] {
+    override def apply(matcher: L0Matcher) = matcher.apply[SortDescriptor, Int]
+  }
+
+  implicit def l1 = new MatcherLike[L1Matcher, IndexedSeq[Int]] {
+    override def apply(matcher: L1Matcher) = matcher.apply[IndexedSeq[Int]]
+  }
+
+  implicit def l2 = new MatcherLike[L2Matcher, IndexedSeq[Int]] {
+    override def apply(matcher: L2Matcher) = matcher.apply[IndexedSeq[Int]]
+  }
+
+  implicit def kendallTau = new MatcherLike[KendallTauMatcher, SortDescriptor] {
+    override def apply(matcher: KendallTauMatcher) = matcher.apply
+  }
+
+  implicit def cayley = new MatcherLike[CayleyMatcher, SortDescriptor] {
+    override def apply(matcher: CayleyMatcher) = matcher.apply
+  }
+}
+
+object MatcherImpl {
+  type MatcherAction[D] = (Boolean, Seq[D], Seq[D]) => Seq[DMatch]
+
+  def applyIndividual[D](
+    distanceMethod: (D, D) => Double,
     allPairs: Boolean,
-    leftDescriptors: List[SortDescriptor],
-    rightDescriptors: List[SortDescriptor]): List[DMatch] = {
+    leftDescriptors: Seq[D],
+    rightDescriptors: Seq[D]): Seq[DMatch] = {
     if (allPairs) {
       for ((left, leftIndex) <- leftDescriptors.zipWithIndex;
 	   (right, rightIndex) <- rightDescriptors.zipWithIndex) yield {
@@ -21,61 +63,63 @@ trait MatcherMethod extends CorrespondenceMethod {
       }
     }    
   }
-
-  def apply(allPairs: Boolean, 
-	    leftDescriptors: List[SortDescriptor], 
-	    rightDescriptors: List[SortDescriptor]): List[DMatch]
 }
 
-object MatcherMethod {
-  val instances: List[java.lang.Class[_]] = 
-    List(classOf[KendallTauMatcher],
-	 classOf[CayleyMatcher],
-         classOf[L0Matcher],
-	 classOf[L1Matcher],
-	 classOf[L2Matcher])
-}
+case class L0Matcher() {
+  import MatcherImpl._
 
-case class L0Matcher() extends MatcherMethod {
-  def apply(allPairs: Boolean,
-	    leftDescriptors: List[SortDescriptor],
-	    rightDescriptors: List[SortDescriptor]): List[DMatch] = {
+  def apply[D, E](
+    allPairs: Boolean,
+    leftDescriptors: Seq[D],
+    rightDescriptors: Seq[D])(
+    implicit descriptorLike: DescriptorLike[D, E]): Seq[DMatch] = {
     applyIndividual(
-      (x, y) => Matcher.l0[SortDescriptor](x, y).toDouble,
+      (x: D, y: D) => Matcher.l0(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
   }  
 }
 
-case class L1Matcher() extends MatcherMethod {
-  def apply(allPairs: Boolean,
-	    leftDescriptors: List[SortDescriptor],
-	    rightDescriptors: List[SortDescriptor]): List[DMatch] = {
+case class L1Matcher() {
+  import MatcherImpl._
+
+  def apply[D](
+    allPairs: Boolean,
+    leftDescriptors: Seq[D],
+    rightDescriptors: Seq[D])(
+    implicit descriptorLike: DescriptorLike[D, Int]): Seq[DMatch] = {
     applyIndividual(
-      (x, y) => Matcher.l1(x, y).toDouble,
+      (x: D, y: D) => Matcher.l1(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
   }  
 }
 
-case class L2Matcher() extends MatcherMethod {
-  def apply(allPairs: Boolean,
-	    leftDescriptors: List[SortDescriptor],
-	    rightDescriptors: List[SortDescriptor]): List[DMatch] = {
+case class L2Matcher() {
+  import MatcherImpl._
+
+  def apply[D](
+    allPairs: Boolean,
+    leftDescriptors: Seq[D],
+    rightDescriptors: Seq[D])(
+    implicit descriptorLike: DescriptorLike[D, Int]): Seq[DMatch] = {
     applyIndividual(
-      Matcher.l2 _,
+      (x: D, y: D) => Matcher.l2(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
   }  
 }
 
-case class KendallTauMatcher() extends MatcherMethod {
-  def apply(allPairs: Boolean,
-	    leftDescriptors: List[SortDescriptor],
-	    rightDescriptors: List[SortDescriptor]): List[DMatch] = {
+case class KendallTauMatcher() {
+  import MatcherImpl._
+
+  def apply(
+    allPairs: Boolean,
+    leftDescriptors: Seq[SortDescriptor],
+    rightDescriptors: Seq[SortDescriptor]): Seq[DMatch] = {
     applyIndividual(
       Matcher.kendallTau _,
       allPairs,
@@ -84,10 +128,13 @@ case class KendallTauMatcher() extends MatcherMethod {
   }
 }
 
-case class CayleyMatcher() extends MatcherMethod {
-  def apply(allPairs: Boolean,
-	    leftDescriptors: List[SortDescriptor],
-	    rightDescriptors: List[SortDescriptor]): List[DMatch] = {
+case class CayleyMatcher() {
+  import MatcherImpl._
+
+  def apply(
+    allPairs: Boolean,
+    leftDescriptors: Seq[SortDescriptor],
+    rightDescriptors: Seq[SortDescriptor]): Seq[DMatch] = {
     applyIndividual(
       Matcher.cayley _,
       allPairs,
@@ -97,16 +144,31 @@ case class CayleyMatcher() extends MatcherMethod {
 }
 
 object Matcher {
-  def l0[A <: DescriptorTrait[_]](left: A, right: A): Int = {
-    left.values.zip(right.values).count({case (l, r) => l != r})
+  def l0[D, E](
+    left: D, 
+    right: D)(
+    implicit descriptorLike: DescriptorLike[D, E]): Int = {
+    val leftValues = descriptorLike.values(left)
+    val rightValues = descriptorLike.values(right)
+    leftValues.zip(rightValues).count({case (l, r) => l != r})
   }
 
-  def l1(left: SortDescriptor, right: SortDescriptor): Int = {
-    left.values.zip(right.values).map({case (l, r) => (l - r).abs}).sum
+  def l1[D](
+    left: D, 
+    right: D)(
+    implicit descriptorLike: DescriptorLike[D, Int]): Int = {
+    val leftValues = descriptorLike.values(left)
+    val rightValues = descriptorLike.values(right)
+    leftValues.zip(rightValues).map({case (l, r) => (l - r).abs}).sum
   }
 
-  def l2(left: SortDescriptor, right: SortDescriptor): Double = {
-    math.sqrt(left.values.zip(right.values).map({case (l, r) => math.pow(l - r, 2)}).sum)
+  def l2[D](
+    left: D, 
+    right: D)(
+    implicit descriptorLike: DescriptorLike[D, Int]): Double = {
+    val leftValues = descriptorLike.values(left)
+    val rightValues = descriptorLike.values(right)
+    math.sqrt(leftValues.zip(rightValues).map({case (l, r) => math.pow(l - r, 2)}).sum)
   }
 
   def kendallTau(left: SortDescriptor, right: SortDescriptor): Int = {

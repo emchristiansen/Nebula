@@ -31,8 +31,8 @@ case class RuntimeConfig (
   override val maxSimultaneousExperiments: Int) extends RuntimeConfigTrait
 
 abstract class Experiment {
-  val parameterAbbreviations: List[String]
-  val parameterValues: List[String]
+  val parameterAbbreviations: Seq[String]
+  val parameterValues: Seq[String]
 
   lazy val filenameNoTime: String = {
     assert(parameterAbbreviations.size == parameterValues.size)
@@ -49,7 +49,7 @@ abstract class Experiment {
     new File(outDirectory, filename)
   }
 
-  def existingResultsFiles: List[File] = {
+  def existingResultsFiles: Seq[File] = {
     val allPaths = outDirectory.list.toList.map(path => outDirectory + "/" + path.toString)
     val matchingPaths = allPaths.filter(_.contains(filenameNoTime))
     matchingPaths.sortBy(identity).reverse.map(path => new File(path))

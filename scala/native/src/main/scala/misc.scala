@@ -62,6 +62,31 @@ object Util {
     jsonString.extract[Map[String, String]]
   }
 
+  def abbreviate[A <: AnyRef](caseClass: A): String = {
+    // For a case class like
+    // > case class AwesomeDetector(theFirstParameter: String, second: Int)
+    // and 
+    // > val ad = AwesomeDetector("helloWorld", 42)
+    // produces an abbreviation like
+    // "AwesomeDetector-TFP-helloWorld-S-42".
+    val map = Util.caseClassToStringMap(caseClass)
+
+    def camelCaseToAbbreviation(camelCase: String): String = {
+      // Assume camelCase for parameter names. Otherwise
+      // the abbreviations will be weird.
+      // Example: "myCoolValue" becomes "MCV".
+      camelCase.head.toUpper + camelCase.filter(_.isUpper)
+    }
+
+    val parameters = map.filterKeys(_ != "jsonClass").toList.sortBy(_._1)
+    val parameterNames = parameters.map(p => camelCaseToAbbreviation(p._1))
+    val parameterValues = parameters.map(p => p._2)
+
+    val parameterParts = List(parameterNames, parameterValues).transpose.flatten
+    val parts = map("jsonClass") :: parameterParts
+    parts.mkString("-")
+  }
+
   def pruneKeyPoints(
     leftImage: BufferedImage, 
     rightImage: BufferedImage, 

@@ -111,19 +111,19 @@ object Pixel {
     Pixel(alpha, red, green, blue)
   }
 
-  def getPixels(image: BufferedImage): List[Int] = {
+  def getPixels(image: BufferedImage): IndexedSeq[Int] = {
     (for (h <- 0 until image.getHeight;
 	  w <- 0 until image.getWidth) yield { 
       val Pixel(_, red, green, blue) = getPixel(image, w, h)
       List(red, green, blue)
-    }).flatten.toList
+    }).flatten.toIndexedSeq
   }
 
-  def getPixelsGray(image: BufferedImage): List[Int] = {
+  def getPixelsGray(image: BufferedImage): IndexedSeq[Int] = {
     (for (h <- 0 until image.getHeight;
 	  w <- 0 until image.getWidth) yield { 
       getPixel(image, w, h).gray
-    }).toList
+    }).toIndexedSeq
   }
   
   def fromUnclipped(a: Int, r: Int, g: Int, b: Int): Pixel = {

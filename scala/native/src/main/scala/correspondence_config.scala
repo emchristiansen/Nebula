@@ -6,31 +6,38 @@ import javax.imageio.ImageIO
 import net.liftweb.json._
 import net.liftweb.json.Serialization.{read, write}
 
-case class CorrespondenceExperimentConfig(
-  val imageClasses: List[String],
-  val otherImages: List[Int],
-  val detectors: List[DetectorMethod],
-  val extractors: List[ExtractorMethod],
-  val matchers: List[MatcherMethod])
+case class CorrespondenceExperimentConfig[T, D, E, M](
+  val imageClasses: Seq[String],
+  val otherImages: Seq[Int],
+  val detectors: Seq[T],
+  val extractors: Seq[E],
+  val matchers: Seq[M])(
+  implicit detectorLike: DetectorLike[T],
+  extractorLike: ExtractorLike[E, D],
+  matcherLike: MatcherLike[M, D])
 
 object CorrespondenceExperimentConfig {
-  def fromJSONFile(file: File): CorrespondenceExperimentConfig = {
-    IO.fromJSONFileAbstract[CorrespondenceExperimentConfig](ExperimentIO.formats, file)
+  def fromJSONFile(file: File): CorrespondenceExperimentConfig[_, _, _, _] = {
+    IO.fromJSONFileAbstract[CorrespondenceExperimentConfig[_, _, _, _]](ExperimentIO.formats, file)
   }
 }
 
-case class CorrespondenceExperiment(
+case class CorrespondenceExperiment[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
   val imageClass: String,
   val otherImage: Int,
-  val detector: DetectorMethod,
-  val extractor: ExtractorMethod,
-  val matcher: MatcherMethod) extends Experiment {
-  val parameterAbbreviations: List[String] = "IC OI D E M".split(" ").toList
-  val parameterValues: List[String] = List(imageClass, 
-					   otherImage.toString, 
-					   detector.abbreviation, 
-					   extractor.abbreviation, 
-					   matcher.abbreviation)
+  val detector: T,
+  val extractor: E,
+  val matcher: M)(
+  implicit detectorLike: DetectorLike[T],
+  extractorLike: ExtractorLike[E, D],
+  matcherLike: MatcherLike[M, D]) extends Experiment {
+  val parameterAbbreviations: Seq[String] = "IC OI D E M".split(" ").toList
+  val parameterValues: Seq[String] = List(
+    imageClass, 
+    otherImage.toString, 
+    Util.abbreviate(detector),
+    Util.abbreviate(extractor),
+    Util.abbreviate(matcher))
   
   def stringMap = parameterAbbreviations.zip(parameterValues).toMap
 
@@ -43,7 +50,11 @@ case class CorrespondenceExperiment(
 }
 
 object CorrespondenceExperiment{
-  def fromConfig(config: CorrespondenceExperimentConfig): List[CorrespondenceExperiment] = {
+  def fromConfig[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
+    config: CorrespondenceExperimentConfig[T, D, E, M])(
+    implicit detectorLike: DetectorLike[T],
+    extractorLike: ExtractorLike[E, D],
+    matcherLike: MatcherLike[M, D]): Seq[CorrespondenceExperiment[T, D, E, M]] = {
     for (ic <- config.imageClasses;
 	 oi <- config.otherImages;
 	 d <- config.detectors;

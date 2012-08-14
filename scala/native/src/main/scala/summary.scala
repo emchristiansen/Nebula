@@ -16,17 +16,17 @@ object Summary {
     numCorrect.toDouble / groups.size
   }
 
-  def resultsTable(
-    baseExperiment: CorrespondenceExperiment,
-    rowMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment],
-    columnMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment]): Seq[Seq[CorrespondenceExperimentResults]] = {
-    (for (row <- Util.parallelize(rowMutations)) yield {
-      (for (column <- Util.parallelize(columnMutations)) yield {
-        val experiment = column(row(baseExperiment))
-        CorrespondenceExperimentResults.fromExperiment(experiment)
-      }).toList
-    }).toList
-  }
+  // def resultsTable(
+  //   baseExperiment: CorrespondenceExperiment,
+  //   rowMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment],
+  //   columnMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment]): Seq[Seq[CorrespondenceExperimentResults]] = {
+  //   (for (row <- Util.parallelize(rowMutations)) yield {
+  //     (for (column <- Util.parallelize(columnMutations)) yield {
+  //       val experiment = column(row(baseExperiment))
+  //       CorrespondenceExperimentResults.fromExperiment(experiment)
+  //     }).toList
+  //   }).toList
+  // }
 }
 
 object SummaryUtil {
@@ -63,22 +63,22 @@ object SummaryUtil {
     components.mkString("_")
   }
 
-  def tableTitle(experiments: Seq[CorrespondenceExperiment]): String = {
-    val maps = experiments.map(_.stringMap).toSet
-    summarizeStructure(maps)
-  }
+  // def tableTitle(experiments: Seq[CorrespondenceExperiment]): String = {
+  //   val maps = experiments.map(_.stringMap).toSet
+  //   summarizeStructure(maps)
+  // }
 
-  def tableEntryTitles(experiments: Seq[CorrespondenceExperiment]): Seq[String] = {
-    val experimentMaps = experiments.map(_.stringMap)
-    val union = mapUnion(experimentMaps.toSet)
-    val variableKeys = union.filter(_._2.size > 1).keys.toSet
+  // def tableEntryTitles(experiments: Seq[CorrespondenceExperiment]): Seq[String] = {
+  //   val experimentMaps = experiments.map(_.stringMap)
+  //   val union = mapUnion(experimentMaps.toSet)
+  //   val variableKeys = union.filter(_._2.size > 1).keys.toSet
 
-    def entryTitle(experimentMap: Map[String, String]): String = {
-      experimentMap.filterKeys(variableKeys).toSeq.map({ case(k, v) => "%s-%s".format(k, v) }).mkString("_")
-    }
+  //   def entryTitle(experimentMap: Map[String, String]): String = {
+  //     experimentMap.filterKeys(variableKeys).toSeq.map({ case(k, v) => "%s-%s".format(k, v) }).mkString("_")
+  //   }
 
-    experimentMaps.map(entryTitle)
-  }
+  //   experimentMaps.map(entryTitle)
+  // }
 }
 
 // case class TwoDimensionalTable(experimentGrid: List[List[MPIEExperiment]])
