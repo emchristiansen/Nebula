@@ -52,7 +52,7 @@ object XMLUtil {
 }
 
 object ExperimentIO {
-  val instances = Seq(classOf[CorrespondenceExperiment[_, _, _, _]], classOf[CorrespondenceExperimentResults[_, _, _, _]]) ++ DetectorLike.instances ++ ExtractorLike.instances ++ MatcherLike.instances
+  val instances = Seq(classOf[Detector], classOf[Extractor], classOf[Matcher], classOf[CorrespondenceExperiment], classOf[CorrespondenceExperimentResults]) ++ DetectorLike.instances ++ ExtractorLike.instances ++ MatcherLike.instances
   val extraSerializers = List(new DMatchSerializer)
 
   val formats = Serialization.formats(ShortTypeHints(instances.toList)) ++ extraSerializers

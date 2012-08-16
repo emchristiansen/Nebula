@@ -9,7 +9,7 @@ import com.googlecode.javacv.cpp.opencv_features2d._
 trait DetectorLike[T] {
   import DetectorImpl._
 
-  def apply(detector: T): DetectorAction[T]
+  def apply(detector: T): DetectorAction
 }
 
 object DetectorLike {
@@ -21,10 +21,12 @@ object DetectorLike {
 }
 
 object DetectorImpl {
-  type DetectorAction[T] = BufferedImage => Seq[KeyPoint]
+  type DetectorAction = BufferedImage => Seq[KeyPoint]
 }
 
-case class FASTDetector(val maxKeyPoints: Int) {
+sealed trait Detector
+
+case class FASTDetector(val maxKeyPoints: Int) extends Detector {
   def apply(image: BufferedImage): Seq[KeyPoint] = {
     val detector = FeatureDetector.create("FAST")
     val matImage = OpenCVUtil.bufferedImageToCvMat(image)

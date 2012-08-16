@@ -18,80 +18,119 @@ object ResultsData {
   }
 }
 
-case class CorrespondenceExperimentResults[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
-  experiment: CorrespondenceExperiment[T, D, E, M],
-  dmatches: Seq[DMatch])(
-  implicit detectorLike: DetectorLike[T],
-  extractorLike: ExtractorLike[E, D],
-  matcherLike: MatcherLike[M, D]) {
-  // def save(implicit manifest: Manifest[CorrespondenceExperimentResults[T, D, E, M]]) {
-  //   println("Writing to %s".format(experiment.path))
-  //   IO.toJSONFileAbstract(ExperimentIO.formats,
-  // 			  this, 
-  // 			  experiment.path)
-  // }
+case class CorrespondenceExperimentResults(
+  experiment: CorrespondenceExperiment,
+  dmatches: Seq[DMatch]) {
+  def save {
+    println("Writing to %s".format(experiment.path))
+    IO.toJSONFileAbstract(ExperimentIO.formats,
+  			  this, 
+  			  experiment.path)
+  }
 }
 
-object CorrespondenceExperimentResults {
-  def runExperiment[T <: AnyRef, D, E <: AnyRef, M <: AnyRef](
-    experiment: CorrespondenceExperiment[T, D, E, M])(
-    implicit detectorLike: DetectorLike[T],
-    extractorLike: ExtractorLike[E, D],
-    matcherLike: MatcherLike[M, D]): CorrespondenceExperimentResults[T, D, E, M] = {
-    println("Running %s".format(experiment))
+object CorrespondenceExperimentResults { 
+  def runExperiment(
+    experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
+    import DetectorImpl._
+    import ExtractorImpl._
+    import MatcherImpl._
 
-    val detector = detectorLike(experiment.detector)
-    val extractor = extractorLike.extractMany(experiment.extractor) _
-    val matcher = matcherLike(experiment.matcher)
-
-    val leftImage = experiment.leftImage
-    val rightImage = experiment.rightImage
-
-    val (leftKeyPoints, rightKeyPoints) = {
-      val leftKeyPoints =  detector(leftImage)
-      Util.pruneKeyPoints(leftImage,
-                          rightImage,
-                          experiment.homography,
-                          leftKeyPoints).unzip
+    val detector = experiment.detector match {
+      case detector: FASTDetector => implicitly[DetectorLike[FASTDetector]].apply(detector)
     }
 
-    println("Number of KeyPoints: %s".format(leftKeyPoints.size))
+    def runWithActions[D <: Descriptor](
+      extractor: ExtractorAction[D],
+      matcher: MatcherAction[D]): CorrespondenceExperimentResults = {
+      println("Running %s".format(experiment))
 
-    val (leftDescriptors, rightDescriptors) = {
-      val leftDescriptors = extractor(leftImage, leftKeyPoints)
-      val rightDescriptors = extractor(rightImage, rightKeyPoints)
+      val leftImage = experiment.leftImage
+      val rightImage = experiment.rightImage
 
-      for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
-    } unzip
+      val (leftKeyPoints, rightKeyPoints) = {
+	val leftKeyPoints = detector(leftImage)
+	Util.pruneKeyPoints(leftImage,
+                            rightImage,
+                            experiment.homography,
+                            leftKeyPoints).unzip
+      }
 
-    println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
+      println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 
-    val dmatches = matcher(true, leftDescriptors, rightDescriptors)
+      val (leftDescriptors, rightDescriptors) = {
+	val leftDescriptors = extractor(leftImage, leftKeyPoints)
+	val rightDescriptors = extractor(rightImage, rightKeyPoints)
 
-    val results = CorrespondenceExperimentResults(experiment, dmatches)
-    // TODO
-//    results.save
-    results
-  }
+	for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
+      } unzip
 
-  def runAbstractExperiment(experiment: CorrespondenceExperiment[_, _, _, _]): CorrespondenceExperimentResults[_, _, _, _] = {
-    import shapeless.Typeable._
+      println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
 
-    experiment match {
-      case resolved: CorrespondenceExperiment[FASTDetector, SortDescriptor, SortExtractor, L0Matcher] if experiment.cast[CorrespondenceExperiment[FASTDetector, SortDescriptor, SortExtractor, L0Matcher]].isDefined => runExperiment(resolved)
-      case _ => sys.error("TODO")
+      val dmatches = matcher(true, leftDescriptors, rightDescriptors)
+
+      val results = CorrespondenceExperimentResults(experiment, dmatches)
+      results.save
+      results
+    }
+
+    // TODO: This explicit enumeration is really irritating, but I'm not
+    // sure how to avoid something like this when using type classes, since
+    // they provide only compile-time polymorphism. A better solution might
+    // use inheritance and dynamic dispatch (sigh), though type erasure might
+    // pose a problem with that approach.
+    (experiment.extractor, experiment.matcher) match {
+      case (extractor: RawExtractor, matcher: L0Matcher) => {
+	val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Int]]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case (extractor: RawExtractor, matcher: L1Matcher) => {
+	val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[L1Matcher, RawDescriptor[Int]]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case (extractor: RawExtractor, matcher: L2Matcher) => {
+	val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[L2Matcher, RawDescriptor[Int]]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case (extractor: SortExtractor, matcher: L0Matcher) => {
+	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[L0Matcher, SortDescriptor]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case (extractor: SortExtractor, matcher: L1Matcher) => {
+	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[L1Matcher, SortDescriptor]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case (extractor: SortExtractor, matcher: L2Matcher) => {
+	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[L2Matcher, SortDescriptor]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case (extractor: SortExtractor, matcher: KendallTauMatcher) => {
+	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[KendallTauMatcher, SortDescriptor]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case (extractor: SortExtractor, matcher: CayleyMatcher) => {
+	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[CayleyMatcher, SortDescriptor]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case _ => sys.error("You must manually add the experiment to this list")
     }
   }
 
-  // def fromExperiment(experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
-  //   if (experiment.alreadyRun) {
-  //     println("Loading completed experiment: %s".format(experiment))
-  //     IO.fromJSONFileAbstract[CorrespondenceExperimentResults](
-  // 	ExperimentIO.formats,
-  //       experiment.existingResultsFile.get)
-  //   } else {
-  //     runExperiment(experiment)
-  //   }
-  // }
+  def fromExperiment(
+    experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
+    if (experiment.alreadyRun) {
+      val Some(file) = experiment.existingResultsFile
+      println("Reading %s".format(file))
+      IO.fromJSONFileAbstract[CorrespondenceExperimentResults](ExperimentIO.formats, file)
+    } else runExperiment(experiment)
+  }
 }
 

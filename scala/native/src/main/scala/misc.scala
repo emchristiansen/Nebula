@@ -189,6 +189,8 @@ object Util {
     these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
 
+  // TODO: This doesn't actually work. It always returns what are effectively
+  // serial collections.
   def parallelize[A](seq: Seq[A]) = {
     if (Global.run[RuntimeConfig].parallel) seq.par else seq
   }

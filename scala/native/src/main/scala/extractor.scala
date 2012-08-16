@@ -7,18 +7,23 @@ import com.googlecode.javacv.cpp.opencv_features2d._
 // TODO: Given |D|, |E| can be determined statically. Figure
 // out how to reduce this to one parameter.
 trait DescriptorLike[D, E] {
+  // TODO: Make this interface consistent: It should have an apply
+  // function which returns a function which returns the values.
   def values(descriptor: D): IndexedSeq[E]
 }
 
 object DescriptorLike {
-  implicit def indexedSeq[E] = new DescriptorLike[IndexedSeq[E], E] {
-    override def values(descriptor: IndexedSeq[E]) = descriptor
+  implicit def raw[E] = new DescriptorLike[RawDescriptor[E], E] {
+    override def values(descriptor: RawDescriptor[E]) = descriptor.values
   }
 
-  implicit def sortDescriptor = new DescriptorLike[SortDescriptor, Int] {
+  implicit def sort = new DescriptorLike[SortDescriptor, Int] {
     override def values(descriptor: SortDescriptor) = descriptor.values
   }
 }
+
+sealed trait Descriptor
+case class RawDescriptor[A](val values: IndexedSeq[A]) extends Descriptor
 
 trait PermutationLike[A] {
   def invert(permutation: A): A
@@ -39,7 +44,7 @@ object PermutationLike {
   }
 }
 
-case class SortDescriptor(val values: IndexedSeq[Int]) {
+case class SortDescriptor(val values: IndexedSeq[Int]) extends Descriptor {
   assert(values.sorted == (0 until values.size))
 }
 
@@ -123,30 +128,29 @@ case class ImagePoint(val x: Int, val y: Int, val z: Int)
 trait ExtractorLike[E, D] {
   import ExtractorImpl._
 
-  def apply(extractor: E): ExtractorAction[D]
+  def extractSingle(extractor: E): ExtractorActionSingle[D]
 
-  def extractMany(
-    extractor: E)(
-    image: BufferedImage,
-    keyPoints: Seq[KeyPoint]): Seq[Option[D]] = {
-    keyPoints.map(k => apply(extractor)(image, k))
-  }  
+  def apply(extractor: E): ExtractorAction[D] = 
+    (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
+      keyPoints.map(k => extractSingle(extractor)(image, k))
 }
 
 object ExtractorLike {
-  val instances: Seq[Class[_]] = Seq(classOf[SortExtractor])
+  val instances: Seq[Class[_]] = Seq(classOf[RawExtractor], classOf[SortExtractor])
 
-  implicit def raw = new ExtractorLike[RawExtractor, IndexedSeq[Int]] {
-    override def apply(extractor: RawExtractor) = extractor.apply
+  implicit def raw = new ExtractorLike[RawExtractor, RawDescriptor[Int]] {
+    override def extractSingle(extractor: RawExtractor) = extractor.extractSingle
   }
 
   implicit def sort = new ExtractorLike[SortExtractor, SortDescriptor] {
-    override def apply(extractor: SortExtractor) = extractor.apply
+    override def extractSingle(extractor: SortExtractor) = extractor.extractSingle
   }
 }
 
 object ExtractorImpl {
-  type ExtractorAction[D] = (BufferedImage, KeyPoint) => Option[D]
+  type ExtractorActionSingle[D] = (BufferedImage, KeyPoint) => Option[D]
+
+  type ExtractorAction[D] = (BufferedImage, Seq[KeyPoint]) => Seq[Option[D]]
 
   def rawPixels(
     normalizeRotation: Boolean,
@@ -155,7 +159,7 @@ object ExtractorImpl {
     blurWidth: Int,
     color: Boolean)(
     image: BufferedImage,
-    keyPoint: KeyPoint): Option[IndexedSeq[Int]] = {
+    keyPoint: KeyPoint): Option[RawDescriptor[Int]] = {
     // TODO
     assert(!normalizeRotation)
     assert(!normalizeScale)
@@ -165,21 +169,25 @@ object ExtractorImpl {
     for (
       patch <- patchOption
     ) yield {
-      if (color) Pixel.getPixels(patch) else Pixel.getPixelsGray(patch)
+      val values = if (color) Pixel.getPixels(patch) 
+		   else Pixel.getPixelsGray(patch)
+      RawDescriptor(values)
     }    
   }
 }
+
+sealed trait Extractor
 
 case class RawExtractor(
   val normalizeRotation: Boolean,
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: Boolean) {
+  val color: Boolean) extends Extractor {
   import ExtractorImpl._
 
   // TODO: It's dumb I have to pass these parameters explicitly.
-  def apply: ExtractorAction[IndexedSeq[Int]] = rawPixels(
+  def extractSingle: ExtractorActionSingle[RawDescriptor[Int]] = rawPixels(
     normalizeRotation,
     normalizeScale,
     patchWidth,
@@ -192,14 +200,20 @@ case class SortExtractor(
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: Boolean) {
+  val color: Boolean) extends Extractor {
   import ExtractorImpl._
 
-  def apply: ExtractorAction[SortDescriptor] = error("TODO")
-    // SortDescriptor.fromUnsorted(rawPixels(
-    //   normalizeRotation,
-    //   normalizeScale,
-    //   patchWidth,
-    //   blurWidth,
-    //   color))
+  def extractSingle: ExtractorActionSingle[SortDescriptor] = 
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      val unsortedOption = rawPixels(
+	normalizeRotation,
+	normalizeScale,
+	patchWidth,
+	blurWidth,
+	color)(image, keyPoint)
+      for (unsorted <- unsortedOption) yield {
+	val descriptorLike = implicitly[DescriptorLike[RawDescriptor[Int], Int]]
+	SortDescriptor.fromUnsorted(descriptorLike.values(unsorted))
+      }
+    }
 }

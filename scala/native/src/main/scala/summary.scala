@@ -4,7 +4,6 @@ import java.io.File
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
-
 object Summary {
   def recognitionRate(dmatches: Seq[DMatch]): Double = {
     // The base image feature index is |queryIdx|, and the other 
@@ -16,17 +15,52 @@ object Summary {
     numCorrect.toDouble / groups.size
   }
 
-  // def resultsTable(
-  //   baseExperiment: CorrespondenceExperiment,
-  //   rowMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment],
-  //   columnMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment]): Seq[Seq[CorrespondenceExperimentResults]] = {
-  //   (for (row <- Util.parallelize(rowMutations)) yield {
-  //     (for (column <- Util.parallelize(columnMutations)) yield {
-  //       val experiment = column(row(baseExperiment))
-  //       CorrespondenceExperimentResults.fromExperiment(experiment)
-  //     }).toSeq
-  //   }).toSeq
-  // }
+  def experimentTable(
+    baseExperiment: CorrespondenceExperiment,
+    rowMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment],
+    columnMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment]): Seq[Seq[CorrespondenceExperiment]] = {
+    for (row <- rowMutations) yield {
+      for (column <- columnMutations) yield {
+        column(row(baseExperiment))
+      }
+    }
+  }
+}
+
+case class Table(
+  title: String,
+  rowLabels: Seq[String],
+  columnLabels: Seq[String],
+  entries: Seq[Seq[String]]) {
+  def toTSV: String = {
+    val topRow = Seq(title) ++ columnLabels
+    val otherRows = rowLabels.zip(entries).map({case (title, entries) => Seq(title) ++ entries})
+    val stringsTable = Seq(topRow) ++ otherRows
+
+    stringsTable.map(_.mkString("\t")).mkString("\n")
+  }
+
+  def path: File = Global.run[RuntimeConfig].childPathNew("summary/%s.csv".format(title))
+}
+
+object Table {
+  def apply(experiments: Seq[Seq[CorrespondenceExperiment]]): Table = {
+    // TODO: Replace with |everywhere| from shapeless when Scala 2.10 comes out.
+    // val results = Util.parallelize(experiments).map(
+    //   x => Util.parallelize(x).map(CorrespondenceExperimentResults.fromExperiment).toList).toList
+    val results = experiments.par.map(_.par.map(CorrespondenceExperimentResults.fromExperiment).toList).toList
+
+    val experimentsFirstRow = experiments.head
+    val experimentsFirstColumn = experiments.map(_.head)
+
+    val title = SummaryUtil.tableTitle(experiments.flatten)
+    val rowLabels = SummaryUtil.tableEntryTitles(experimentsFirstColumn)
+    val columnLabels = SummaryUtil.tableEntryTitles(experimentsFirstRow)
+
+    val entries = results.map(_.map(r => Summary.recognitionRate(r.dmatches).formatted("%.2f")))
+
+    Table(title, rowLabels, columnLabels, entries)
+  }
 }
 
 object SummaryUtil {
@@ -63,22 +97,22 @@ object SummaryUtil {
     components.mkString("_")
   }
 
-  // def tableTitle(experiments: Seq[CorrespondenceExperiment]): String = {
-  //   val maps = experiments.map(_.stringMap).toSet
-  //   summarizeStructure(maps)
-  // }
+  def tableTitle(experiments: Seq[CorrespondenceExperiment]): String = {
+    val maps = experiments.map(_.stringMap).toSet
+    summarizeStructure(maps)
+  }
 
-  // def tableEntryTitles(experiments: Seq[CorrespondenceExperiment]): Seq[String] = {
-  //   val experimentMaps = experiments.map(_.stringMap)
-  //   val union = mapUnion(experimentMaps.toSet)
-  //   val variableKeys = union.filter(_._2.size > 1).keys.toSet
+  def tableEntryTitles(experiments: Seq[CorrespondenceExperiment]): Seq[String] = {
+    val experimentMaps = experiments.map(_.stringMap)
+    val union = mapUnion(experimentMaps.toSet)
+    val variableKeys = union.filter(_._2.size > 1).keys.toSet
 
-  //   def entryTitle(experimentMap: Map[String, String]): String = {
-  //     experimentMap.filterKeys(variableKeys).toSeq.map({ case(k, v) => "%s-%s".format(k, v) }).mkString("_")
-  //   }
+    def entryTitle(experimentMap: Map[String, String]): String = {
+      experimentMap.filterKeys(variableKeys).toSeq.map({ case (k, v) => "%s-%s".format(k, v) }).mkString("_")
+    }
 
-  //   experimentMaps.map(entryTitle)
-  // }
+    experimentMaps.map(entryTitle)
+  }
 }
 
 // case class TwoDimensionalTable(experimentGrid: List[List[MPIEExperiment]])

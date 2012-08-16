@@ -16,8 +16,8 @@ object MatcherLike {
     classOf[KendallTauMatcher],
     classOf[CayleyMatcher])  
 
-  implicit def l0 = new MatcherLike[L0Matcher, IndexedSeq[Any]] {
-    override def apply(matcher: L0Matcher) = matcher.apply[IndexedSeq[Any], Any]
+  implicit def l0[A] = new MatcherLike[L0Matcher, RawDescriptor[A]] {
+    override def apply(matcher: L0Matcher) = matcher.apply[RawDescriptor[A], A]
   }
 
   // TODO: Can I avoid this extra implicit def?
@@ -25,12 +25,20 @@ object MatcherLike {
     override def apply(matcher: L0Matcher) = matcher.apply[SortDescriptor, Int]
   }
 
-  implicit def l1 = new MatcherLike[L1Matcher, IndexedSeq[Int]] {
-    override def apply(matcher: L1Matcher) = matcher.apply[IndexedSeq[Int]]
+  implicit def l1 = new MatcherLike[L1Matcher, RawDescriptor[Int]] {
+    override def apply(matcher: L1Matcher) = matcher.apply[RawDescriptor[Int]]
   }
 
-  implicit def l2 = new MatcherLike[L2Matcher, IndexedSeq[Int]] {
-    override def apply(matcher: L2Matcher) = matcher.apply[IndexedSeq[Int]]
+  implicit def l1Sort = new MatcherLike[L1Matcher, SortDescriptor] {
+    override def apply(matcher: L1Matcher) = matcher.apply[SortDescriptor]
+  }
+
+  implicit def l2 = new MatcherLike[L2Matcher, RawDescriptor[Int]] {
+    override def apply(matcher: L2Matcher) = matcher.apply[RawDescriptor[Int]]
+  }
+
+  implicit def l2Sort = new MatcherLike[L2Matcher, SortDescriptor] {
+    override def apply(matcher: L2Matcher) = matcher.apply[SortDescriptor]
   }
 
   implicit def kendallTau = new MatcherLike[KendallTauMatcher, SortDescriptor] {
@@ -65,7 +73,9 @@ object MatcherImpl {
   }
 }
 
-case class L0Matcher() {
+sealed trait Matcher
+
+case class L0Matcher() extends Matcher {
   import MatcherImpl._
 
   def apply[D, E](
@@ -81,7 +91,7 @@ case class L0Matcher() {
   }  
 }
 
-case class L1Matcher() {
+case class L1Matcher() extends Matcher {
   import MatcherImpl._
 
   def apply[D](
@@ -97,7 +107,7 @@ case class L1Matcher() {
   }  
 }
 
-case class L2Matcher() {
+case class L2Matcher() extends Matcher {
   import MatcherImpl._
 
   def apply[D](
@@ -113,7 +123,7 @@ case class L2Matcher() {
   }  
 }
 
-case class KendallTauMatcher() {
+case class KendallTauMatcher() extends Matcher {
   import MatcherImpl._
 
   def apply(
@@ -128,7 +138,7 @@ case class KendallTauMatcher() {
   }
 }
 
-case class CayleyMatcher() {
+case class CayleyMatcher() extends Matcher {
   import MatcherImpl._
 
   def apply(

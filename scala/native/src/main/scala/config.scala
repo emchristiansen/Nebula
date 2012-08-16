@@ -30,7 +30,7 @@ case class RuntimeConfig (
   override val skipCompletedExperiments: Boolean,
   override val maxSimultaneousExperiments: Int) extends RuntimeConfigTrait
 
-abstract class Experiment {
+trait Experiment {
   val parameterAbbreviations: Seq[String]
   val parameterValues: Seq[String]
 
