@@ -2,6 +2,7 @@ package nebula
 
 import java.awt.image._
 
+import com.googlecode.javacv.cpp.opencv_core._
 import com.googlecode.javacv.cpp.opencv_features2d._
 
 // TODO: Given |D|, |E| can be determined statically. Figure
@@ -128,22 +129,26 @@ case class ImagePoint(val x: Int, val y: Int, val z: Int)
 trait ExtractorLike[E, D] {
   import ExtractorImpl._
 
-  def extractSingle(extractor: E): ExtractorActionSingle[D]
-
-  def apply(extractor: E): ExtractorAction[D] = 
-    (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
-      keyPoints.map(k => extractSingle(extractor)(image, k))
+  def apply(extractor: E): ExtractorAction[D]
 }
 
 object ExtractorLike {
   val instances: Seq[Class[_]] = Seq(classOf[RawExtractor], classOf[SortExtractor])
 
   implicit def raw = new ExtractorLike[RawExtractor, RawDescriptor[Int]] {
-    override def extractSingle(extractor: RawExtractor) = extractor.extractSingle
+    override def apply(extractor: RawExtractor) = 
+      ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 
   implicit def sort = new ExtractorLike[SortExtractor, SortDescriptor] {
-    override def extractSingle(extractor: SortExtractor) = extractor.extractSingle
+    override def apply(extractor: SortExtractor) = 
+      ExtractorImpl.applySeveral(extractor.extractSingle)
+  }
+  
+  implicit def brisk = new ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]] {
+//    override def apply(extractor: BRISKExtractor) = extractor.extract
+    override def apply(extractor: BRISKExtractor) = 
+      ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 }
 
@@ -151,6 +156,10 @@ object ExtractorImpl {
   type ExtractorActionSingle[D] = (BufferedImage, KeyPoint) => Option[D]
 
   type ExtractorAction[D] = (BufferedImage, Seq[KeyPoint]) => Seq[Option[D]]
+
+  def applySeveral[D](extractSingle: ExtractorActionSingle[D]): ExtractorAction[D] = 
+    (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
+      keyPoints.map(k => extractSingle(image, k))
 
   def rawPixels(
     normalizeRotation: Boolean,
@@ -214,6 +223,55 @@ case class SortExtractor(
       for (unsorted <- unsortedOption) yield {
 	val descriptorLike = implicitly[DescriptorLike[RawDescriptor[Int], Int]]
 	SortDescriptor.fromUnsorted(descriptorLike.values(unsorted))
+      }
+    }
+}
+
+case class BRISKExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean) extends Extractor {
+  import ExtractorImpl._
+
+  def extract: ExtractorAction[RawDescriptor[Boolean]] = 
+    (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
+      val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
+      val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
+      // This will get overwritten, it just matters that |compute| gets
+      // a valid |CvMat|.
+      val descriptorMat = CvMat.create(1, 1, 1, 1)
+      println(keyPoints.size)
+      val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(keyPoints)
+      println(keyPointsFuckingStupidDesign.capacity)
+      extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
+      println(keyPointsFuckingStupidDesign.capacity)
+      println(descriptorMat.rows)
+      println(descriptorMat.cols)
+      sys.error("TODO")
+    }
+
+  def extractSingle: ExtractorActionSingle[RawDescriptor[Boolean]] =
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
+      val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
+      // This will get overwritten, it just matters that |compute| gets
+      // a valid |CvMat|.
+      val descriptorMat = CvMat.create(1, 1, 1, 1)
+      val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(Seq(keyPoint))
+      extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
+      try {
+	if (
+	  descriptorMat == null || 
+	  descriptorMat.rows == 0 || 
+	  descriptorMat.cols == 0) None
+	else {
+	  val descriptorInts = OpenCVUtil.cvMatToSeq(descriptorMat).map(_.toInt)
+	  val booleans = descriptorInts.flatMap(Util.numToBits(8))
+      	  Some(RawDescriptor(booleans.toIndexedSeq))
+	}
+      } catch {
+	// TODO: For some reason, I can't check for nullity of the native pointer
+	// using " == null", so I'm using this ugly try-catch.
+	case _: NullPointerException => None
       }
     }
 }

@@ -11,17 +11,6 @@ import com.googlecode.javacv.cpp.opencv_core._
 import com.googlecode.javacv.cpp.opencv_highgui._
 import com.googlecode.javacv.cpp.opencv_features2d._
 
-object OpenCVUtil {
-  def bufferedImageToCvMat(image: BufferedImage): CvMat = {
-    // TODO: Figure out how to do this without IO.
-    val file = IO.createTempFile("bufferedImageToCvMat", ".bmp")
-    ImageIO.write(image, "bmp", file)
-    val matImage = cvLoadImageM(file.toString)
-    assert(matImage != null)
-    matImage
-  }
-}
-
 object ImageProcessing {
   def boxBlur(boxWidth: Int, image: BufferedImage): BufferedImage = {
     val kernel = {

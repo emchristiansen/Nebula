@@ -11,21 +11,14 @@ import java.io.File
 import com.googlecode.javacv.cpp.opencv_features2d._
 
 case class Homography(matrix: RealMatrix) {
-  def transform(keyPoint: KeyPoint): KeyPoint = {
-    val homogeneousIn = new ArrayRealVector(Array(keyPoint.pt_x.toDouble, 
-						  keyPoint.pt_y.toDouble, 
-						  1))
-    val homogeneousOut = {
-      val unscaled = matrix.operate(homogeneousIn)
-      unscaled.mapMultiply(1.0 / unscaled.getEntry(2))
-    }
+  require(matrix.getRowDimension == 3)
+  require(matrix.getColumnDimension == 3)
 
-    val outX = homogeneousOut.getEntry(0).toFloat
-    val outY = homogeneousOut.getEntry(1).toFloat
-
-    // TODO: Map over components necessary for invariant descriptors, such as
-    // size and angle.
-    KeyPointUtil.withDefaults(outX, outY)
+  def transform(in: RealVector): RealVector = {
+    require(in.getDimension == 2)
+    val inHomogeneous = Geometry.homogenize(in)
+    val outHomogeneous = matrix.operate(inHomogeneous)
+    Geometry.dehomogenize(outHomogeneous)
   }
 }
 
@@ -39,6 +32,16 @@ object Homography {
 
 
 object Geometry {
+  def homogenize(inhomogeneous: RealVector): RealVector =
+    inhomogeneous.append(new ArrayRealVector(Array(1.0)))
+
+  def dehomogenize(homogeneous: RealVector): RealVector = {
+    val homogeneousElement = homogeneous.getEntry(homogeneous.getDimension - 1)
+    require(homogeneousElement != 0)
+    val normalized = homogeneous.mapMultiply(1.0 / homogeneousElement)
+    normalized.getSubVector(0, homogeneous.getDimension - 1)
+  }
+
   def fitAffine(source: List[Point2D], target: List[Point2D]): AffineTransform = {
     assert(source.size == target.size)
     assert(source.size >= 3)

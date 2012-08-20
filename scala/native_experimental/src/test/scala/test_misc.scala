@@ -21,7 +21,7 @@ class TestMisc extends FunSuite {
 
     assert(map === goldenMap)
 
-    val experiment1 = CorrespondenceExperiment[FASTDetector, SortDescriptor, SortExtractor, L0Matcher](
+    val experiment1 = CorrespondenceExperiment(
       "bikes", 
       2, 
       FASTDetector(100),
@@ -32,5 +32,12 @@ class TestMisc extends FunSuite {
     // val title = SummaryUtil.tableTitle(Seq(experiment1, experiment2))
     // val golden = "D-FASTDetector-MKP-100_E-SortExtractor-BW-5-C-true-NR-false-NS-false-PW-8_IC-bikes_M-L0Matcher_OI-*"
     // assert(title === golden)
+  }
+
+  test("numToBits") {
+    assert(Util.numToBits(3)(15) === Seq(true, true, true))
+    assert(Util.numToBits(5)(15) === Seq(false, true, true, true, true))
+    assert(Util.numToBits(0)(12) === Seq())
+    assert(Util.numToBits(5)(10) === Seq(false, true, false, true, false))
   }
 }

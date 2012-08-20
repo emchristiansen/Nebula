@@ -5,10 +5,15 @@ import java.io.File
 import net.liftweb.json._
 import net.liftweb.json.Serialization.{read, write}
 
+import org.apache.commons.math3.linear._
+
+import java.awt.image._
+import javax.imageio.ImageIO
 
 import com.googlecode.javacv.cpp.opencv_contrib._
 import com.googlecode.javacv.cpp.opencv_core._
 import com.googlecode.javacv.cpp.opencv_features2d._
+import com.googlecode.javacv.cpp.opencv_highgui._
 
 // Warning: A KeyPoint is both a single key point and a collection of
 // key points. Terrible design, I know, but not mine. The methods that
@@ -21,7 +26,14 @@ object KeyPointUtil {
   val defaultClassID = -1
 
   def withDefaults(x: Float, y: Float): KeyPoint = {
-    new KeyPoint(x, y, defaultSize, defaultAngle, defaultResponse, defaultOctave, defaultClassID)
+    new KeyPoint(
+      x, 
+      y, 
+      defaultSize, 
+      defaultAngle, 
+      defaultResponse, 
+      defaultOctave, 
+      defaultClassID)
   }
 
   def isWithinBounds(width: Int, height: Int)(keyPoint: KeyPoint): Boolean = {
@@ -39,8 +51,8 @@ object KeyPointUtil {
 		 keyPoints.class_id)
   }
 
-  def keyPointsToList(keyPoints: KeyPoint): List[KeyPoint] = {
-    for (index <- 0 until keyPoints.capacity toList) yield {
+  def keyPointsToSeq(keyPoints: KeyPoint): Seq[KeyPoint] = {
+    for (index <- 0 until keyPoints.capacity toSeq) yield {
       keyPointAt(keyPoints, index)
     }
   }
@@ -55,13 +67,102 @@ object KeyPointUtil {
     keyPoints.class_id(keyPoint.class_id)
   }
 
-  def listToKeyPoints(keyPointsList: List[KeyPoint]): KeyPoint = {
-    val keyPoints = new KeyPoint(keyPointsList.size)
-    for ((keyPoint, index) <- keyPointsList.zipWithIndex) {
+  def listToKeyPoints(keyPointsSeq: Seq[KeyPoint]): KeyPoint = {
+    val keyPoints = new KeyPoint(keyPointsSeq.size)
+    for ((keyPoint, index) <- keyPointsSeq.zipWithIndex) {
       setKeyPointAt(keyPoints, index, keyPoint)
     }
     keyPoints.position(0)
     keyPoints
+  }
+  
+  def toString(keyPoint: KeyPoint): String = {
+    "KeyPoint(%s, %s, %s, %s, %s, %s, %s)".format(
+      keyPoint.pt_x,
+      keyPoint.pt_y,
+      keyPoint.size,
+      keyPoint.angle,
+      keyPoint.response,
+      keyPoint.octave,
+      keyPoint.class_id)
+  }
+
+  def scaleFactor(homography: Homography, xyPoint: RealVector): Double = {
+    require(xyPoint.getDimension == 2)
+
+    val plusX = xyPoint.add(new ArrayRealVector(Array(1.0, 0.0)))
+    val plusY = xyPoint.add(new ArrayRealVector(Array(0.0, 1.0)))
+
+    val hBase = homography.transform(xyPoint)
+    val hPlusX = homography.transform(plusX)
+    val hPlusY = homography.transform(plusY)
+
+    val xOffset = hPlusX.subtract(hBase)
+    val yOffset = hPlusY.subtract(hBase)
+    
+    val parallelepiped = new Array2DRowRealMatrix(
+      Array(
+	xOffset.toArray,
+	yOffset.toArray),
+      true)
+    (new LUDecomposition(parallelepiped)).getDeterminant
+  }
+
+  // A proper warping of a keypoint between images, mapping over the
+  // size and angle under the homography.
+  // TODO: What to do with |octave|?
+  // TODO: Add such a function to OpenCV if it doesn't have one.
+  def transform(homography: Homography)(keyPoint: KeyPoint): KeyPoint = {
+    val xyPoint = new ArrayRealVector(Array(
+      keyPoint.pt_x.toDouble, 
+      keyPoint.pt_y.toDouble))
+
+    val size = scaleFactor(homography, xyPoint) * keyPoint.size
+
+    val angle = {
+      // TODO: Are we using radians or degrees?
+      assert(keyPoint.angle == -1)
+      -1
+    }
+
+    val xyVector = homography.transform(new ArrayRealVector(Array(
+      keyPoint.pt_x.toDouble,
+      keyPoint.pt_y.toDouble)))
+
+    new KeyPoint(
+      xyVector.getEntry(0).toFloat,
+      xyVector.getEntry(1).toFloat,
+      size.toFloat,
+      angle,
+      keyPoint.response,
+      keyPoint.octave,
+      keyPoint.class_id)
+  }
+}
+
+object OpenCVUtil {
+  def bufferedImageToCvMat(image: BufferedImage): CvMat = {
+    // TODO: Figure out how to do this without IO.
+    val file = IO.createTempFile("bufferedImageToCvMat", ".bmp")
+    ImageIO.write(image, "bmp", file)
+    val matImage = cvLoadImageM(file.toString)
+    assert(matImage != null)
+    matImage
+  }
+
+  def cvMatStringToSeq(matString: String): Seq[Double] = {
+    val tokens = matString.replace("[", "").replace("]", "").split(",")
+    val noWhitespace = tokens.map(_.replace(" ", ""))
+    tokens.map(_.toDouble)
+  }
+
+  // We're going to get the string representation of the |CvMat|,
+  // and parse it to get out its values.
+  // Yes, the JavaCV interface really is this broken.
+  def cvMatToSeq(mat: CvMat): Seq[Double] = {
+    assert(mat.rows == 1)
+    assert(mat.cols > 0)
+    cvMatStringToSeq(mat.toString)
   }
 }
 

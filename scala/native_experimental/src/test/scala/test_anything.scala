@@ -26,7 +26,6 @@ class TestAnything extends FunSuite {
 """
 
   test("anything") {
-    val x = (new Eval).apply[CorrespondenceExperiment[FASTDetector, SortDescriptor, SortExtractor, L0Matcher]](source)
-    println(x)
+
   }
 }

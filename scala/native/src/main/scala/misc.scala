@@ -39,6 +39,18 @@ object Global {
 }
 
 object Util { 
+  // Assuming |num| is represented as an arbitrarily long unsigned int, get
+  // the |numBits| low order bits in the representation, where the head of
+  // the list is the high-order bit.
+  def numToBits(numBits: Int)(num: Int): Seq[Boolean] = {
+    require(numBits >= 0)
+    require(num >= 0)
+  
+    val divisors = (0 until numBits).reverse.map(p => math.pow(2, p).toInt)
+    val divided = divisors.map(d => num / d)
+    divided.map(_ % 2 == 1)
+  }
+
   def caseClassToStringMap[A <: AnyRef](caseClass: A): Map[String, String] = {
     // Implementation uses lift-json for introspection, which is
     // admittedly roundabout. It is also likely brittle; I'm guessing it will
@@ -97,7 +109,7 @@ object Util {
     val insideLeft = 
       leftKeyPoints.filter(KeyPointUtil.isWithinBounds(leftWidth, leftHeight))
 
-    val rightKeyPoints = insideLeft.map(homography.transform)
+    val rightKeyPoints = insideLeft.map(KeyPointUtil.transform(homography))
 
     val rightWidth = rightImage.getWidth
     val rightHeight = rightImage.getHeight

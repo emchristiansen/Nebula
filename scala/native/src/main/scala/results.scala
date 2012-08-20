@@ -38,6 +38,7 @@ object CorrespondenceExperimentResults {
 
     val detector = experiment.detector match {
       case detector: FASTDetector => implicitly[DetectorLike[FASTDetector]].apply(detector)
+      case detector: BRISKDetector => implicitly[DetectorLike[BRISKDetector]].apply(detector)
     }
 
     def runWithActions[D <: Descriptor](
@@ -118,6 +119,11 @@ object CorrespondenceExperimentResults {
       case (extractor: SortExtractor, matcher: CayleyMatcher) => {
 	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
 	val matcherAction = implicitly[MatcherLike[CayleyMatcher, SortDescriptor]].apply(matcher)
+	runWithActions(extractorAction, matcherAction)
+      }
+      case (extractor: BRISKExtractor, matcher: L0Matcher) => {
+	val extractorAction = implicitly[ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]]].apply(extractor)
+	val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Boolean]]].apply(matcher)
 	runWithActions(extractorAction, matcherAction)
       }
       case _ => sys.error("You must manually add the experiment to this list")
