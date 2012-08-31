@@ -1,14 +1,17 @@
 package nebula
 
-import org.apache.commons.math3.linear._
-
-import java.awt.geom._
-import java.awt.image._
-import java.awt.image.AffineTransformOp._
-
-import org.apache.commons.math3.linear._
+import java.awt.geom.AffineTransform
 import java.io.File
-import com.googlecode.javacv.cpp.opencv_features2d._
+
+import scala.Array.canBuildFrom
+
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
+import org.apache.commons.math3.linear.ArrayRealVector
+import org.apache.commons.math3.linear.LUDecomposition
+import org.apache.commons.math3.linear.MatrixUtils
+import org.apache.commons.math3.linear.RealMatrix
+import org.apache.commons.math3.linear.RealVector
+import org.apache.commons.math3.linear.SingularValueDecomposition
 
 case class Homography(matrix: RealMatrix) {
   require(matrix.getRowDimension == 3)

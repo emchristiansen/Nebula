@@ -1,6 +1,6 @@
 package nebula
 
-import com.googlecode.javacv.cpp.opencv_features2d._
+import com.googlecode.javacv.cpp.opencv_features2d.DMatch
 
 trait MatcherLike[M, D] {
   import MatcherImpl._

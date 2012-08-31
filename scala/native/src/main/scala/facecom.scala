@@ -1,16 +1,18 @@
 package nebula
 
-import java.awt.geom._
-import java.awt.image._
-import java.awt.image.AffineTransformOp._
-import javax.imageio.ImageIO
 import java.awt.Rectangle
-
-import com.github.mhendred.face4j.model._
-import com.github.mhendred.face4j.DefaultFaceClient
+import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
+import java.awt.image.AffineTransformOp.TYPE_BILINEAR
+import java.awt.image.BufferedImage
 import java.io.File
 
-import org.apache.log4j._
+import com.github.mhendred.face4j.DefaultFaceClient
+import com.github.mhendred.face4j.model.Face
+import com.github.mhendred.face4j.model.Photo
+import com.github.mhendred.face4j.model.Point
+
+import javax.imageio.ImageIO
 
 case class Point2D(val x: Double, val y: Double) {
   def toList: List[Double] = List(x, y)

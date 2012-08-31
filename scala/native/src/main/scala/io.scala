@@ -1,25 +1,28 @@
 package nebula
 
-import java.io.File
-import org.apache.commons.io.FilenameUtils
-
-import java.awt.image._
-
-import java.io.ByteArrayOutputStream
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
+import scala.xml.Node
+import scala.xml.XML
+
+import com.twitter.util.Eval
+
 import javax.imageio.ImageIO
-
-import net.liftweb.json._
-import net.liftweb.json.Serialization.{read, write}
-
-import com.twitter.util._
-
-import xml._
+import net.liftweb.json.Formats
+import net.liftweb.json.Serialization
+import net.liftweb.json.Serialization.read
+import net.liftweb.json.Serialization.write
+import net.liftweb.json.ShortTypeHints
+import net.liftweb.json.parse
+import net.liftweb.json.pretty
+import net.liftweb.json.render
 
 trait FromXML[+A] {
   def fromXMLOption(node: Node): Option[A]

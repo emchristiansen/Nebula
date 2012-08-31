@@ -1,28 +1,23 @@
 package nebula
 
+import java.awt.image.BufferedImage
 import java.io.File
-import org.apache.commons.io.FilenameUtils
-import org.apache.commons.math3.linear._
 
-import java.awt.geom._
-import java.awt.image._
-import java.awt.image.AffineTransformOp._
+import scala.Array.canBuildFrom
+import scala.text.DocText
+import scala.text.Document
+import scala.util.Random
 
-import util.Random
+import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
 
-import java.io.ByteArrayOutputStream
-import java.io.ByteArrayInputStream
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-
-import javax.imageio.ImageIO
-
-import com.googlecode.javacv.cpp.opencv_features2d._
-
-import net.liftweb.json._
-import net.liftweb.json.Serialization.{read, write}
+import net.liftweb.json.JField
+import net.liftweb.json.JObject
+import net.liftweb.json.JString
+import net.liftweb.json.Serialization
+import net.liftweb.json.Serialization.write
+import net.liftweb.json.ShortTypeHints
+import net.liftweb.json.parse
+import net.liftweb.json.render
 
 object Global {
   val random = new Random(0)

@@ -1,18 +1,6 @@
 package nebula
 
-import java.io.File
 import javax.imageio.ImageIO
-
-import net.liftweb.json._
-import net.liftweb.json.Serialization.{read, write}
-
-// sealed trait CorrespondenceExperiment {
-//   val imageClass: String
-//   val otherImage: Int
-//   val detector: Detector
-//   val extractor: Extractor
-//   val matcher: Matcher
-// }
 
 case class CorrespondenceExperimentParameterized[T <: Detector, D <: Descriptor, E <: Extractor, M <: Matcher](
   val imageClass: String,

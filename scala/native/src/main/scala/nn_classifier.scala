@@ -1,6 +1,6 @@
 package nebula
 
-import java.awt.image._
+import java.awt.image.BufferedImage
 
 case class NNClassifier[A](val distances: List[Tuple2[Int, NNClassifier.ImageDistance]],
                            val trainData: List[Tuple2[A, BufferedImage]]) {

@@ -1,10 +1,11 @@
 package nebula
 
-import java.awt.image._
+import java.awt.image.BufferedImage
 
-import com.googlecode.javacv.cpp.opencv_contrib._
-import com.googlecode.javacv.cpp.opencv_core._
-import com.googlecode.javacv.cpp.opencv_features2d._
+import com.googlecode.javacv.cpp.opencv_features2d.BriskFeatureDetector
+import com.googlecode.javacv.cpp.opencv_features2d.FastFeatureDetector
+import com.googlecode.javacv.cpp.opencv_features2d.FeatureDetector
+import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
 
 trait DetectorLike[T] {
   import DetectorImpl._

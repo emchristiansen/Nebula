@@ -1,10 +1,15 @@
 package nebula
 
-import java.awt.Rectangle
-import java.awt.geom._
-import java.awt.image._
-import java.awt.image.AffineTransformOp._
+import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
+import java.awt.image.AffineTransformOp.TYPE_BILINEAR
+import java.awt.image.BufferedImage
+import java.awt.image.ConvolveOp
+import java.awt.image.Kernel
 import java.io.File
+
+import scala.Array.canBuildFrom
+
 import javax.imageio.ImageIO
 
 class LazyImage(originalPath: String, condition: MPIECondition, roiString: String) {

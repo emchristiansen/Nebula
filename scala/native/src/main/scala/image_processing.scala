@@ -1,18 +1,20 @@
 package nebula
 
-import java.awt.Rectangle
-import java.awt.geom._
-import java.awt.image._
-import java.awt.image.AffineTransformOp._
-import java.io.File
-import javax.imageio.ImageIO
-
-import com.googlecode.javacv.cpp.opencv_core._
-import com.googlecode.javacv.cpp.opencv_highgui._
-import com.googlecode.javacv.cpp.opencv_features2d._
-
-import java.awt.color.ColorSpace
 import java.awt.Color
+import java.awt.Rectangle
+import java.awt.color.ColorSpace
+import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
+import java.awt.image.BufferedImage
+import java.awt.image.ColorConvertOp
+import java.awt.image.ConvolveOp
+import java.awt.image.DataBufferInt
+import java.awt.image.Kernel
+
+import scala.Array.canBuildFrom
+import scala.Array.fallbackCanBuildFrom
+
+import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
 
 object ImageProcessing {
   def boxBlur(boxWidth: Int, image: BufferedImage): BufferedImage = {

@@ -1,10 +1,10 @@
 package nebula
 
+import java.awt.image.BufferedImage
 import java.io.File
 
-import com.googlecode.javacv.cpp.opencv_features2d._
+import com.googlecode.javacv.cpp.opencv_features2d.DMatch
 
-import java.awt.image._
 import javax.imageio.ImageIO
 
 object Summary {
@@ -189,20 +189,6 @@ object SummaryUtil {
     experimentMaps.map(entryTitle)
   }
 }
-
-// case class TwoDimensionalTable(experimentGrid: List[List[MPIEExperiment]])
-
-// object TwoDimensionalTable {
-//   def fromXML(node: Node): TwoDimensionalTable = {
-//     val experiments = MPIEExperiment.fromConfig(MPIEExperimentConfig.fromXML((node \ "experimentConfig").head))
-
-//     val yAxis = 
-
-//     def optionalConstant(name: String): Option[String] = {
-//       val matches = constants \ name
-//       if (matches.size > 0) Some(matches.head.text)
-//       else None
-//     }
 
 //     val roiConstant = optionalConstant("roi")
 //     val distanceConstant = optionalConstant("distance")

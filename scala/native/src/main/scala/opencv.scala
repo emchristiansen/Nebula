@@ -1,19 +1,32 @@
 package nebula
 
-import java.io.File
+import java.awt.image.BufferedImage
 
-import net.liftweb.json._
-import net.liftweb.json.Serialization.{read, write}
+import scala.Array.canBuildFrom
+import scala.Array.fallbackCanBuildFrom
+import scala.math.BigInt.int2bigInt
 
-import org.apache.commons.math3.linear._
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
+import org.apache.commons.math3.linear.ArrayRealVector
+import org.apache.commons.math3.linear.LUDecomposition
+import org.apache.commons.math3.linear.RealVector
 
-import java.awt.image._
+import com.googlecode.javacv.cpp.opencv_core.CvMat
+import com.googlecode.javacv.cpp.opencv_features2d.DMatch
+import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
+import com.googlecode.javacv.cpp.opencv_highgui.cvLoadImageM
+
 import javax.imageio.ImageIO
-
-import com.googlecode.javacv.cpp.opencv_contrib._
-import com.googlecode.javacv.cpp.opencv_core._
-import com.googlecode.javacv.cpp.opencv_features2d._
-import com.googlecode.javacv.cpp.opencv_highgui._
+import net.liftweb.json.Formats
+import net.liftweb.json.JDouble
+import net.liftweb.json.JField
+import net.liftweb.json.JInt
+import net.liftweb.json.JObject
+import net.liftweb.json.JString
+import net.liftweb.json.JValue
+import net.liftweb.json.MappingException
+import net.liftweb.json.Serializer
+import net.liftweb.json.TypeInfo
 
 // Warning: A KeyPoint is both a single key point and a collection of
 // key points. Terrible design, I know, but not mine. The methods that
