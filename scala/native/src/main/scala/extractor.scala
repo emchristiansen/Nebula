@@ -1,9 +1,10 @@
 package nebula
 
-import java.awt.image._
+import java.awt.image.BufferedImage
 
-import com.googlecode.javacv.cpp.opencv_core._
-import com.googlecode.javacv.cpp.opencv_features2d._
+import com.googlecode.javacv.cpp.opencv_core.CvMat
+import com.googlecode.javacv.cpp.opencv_features2d.BriskDescriptorExtractor
+import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
 
 // TODO: Given |D|, |E| can be determined statically. Figure
 // out how to reduce this to one parameter.
@@ -166,7 +167,7 @@ object ExtractorImpl {
     normalizeScale: Boolean,
     patchWidth: Int,
     blurWidth: Int,
-    color: Boolean)(
+    color: String)(
     image: BufferedImage,
     keyPoint: KeyPoint): Option[RawDescriptor[Int]] = {
     // TODO
@@ -178,9 +179,27 @@ object ExtractorImpl {
     for (
       patch <- patchOption
     ) yield {
-      val values = if (color) Pixel.getPixels(patch) 
-		   else Pixel.getPixelsGray(patch)
-      RawDescriptor(values)
+      // // TODO
+      // if (color == "Gray") {	
+      // 	RawDescriptor(Pixel.getPixelsGray(patch))
+      // } else if (color == "sRGB") {
+      // 	RawDescriptor(Pixel.getPixels(patch))
+      // } else {
+	val values = color match {
+	  case "Gray" => Pixel.getPixelsGray(patch)
+	  case "sRGB" => Pixel.getPixels(patch)
+	  case "lRGB" => Pixel.getPixelsOriginal(patch).flatMap(_.lRGB)
+	  case "HSB" => Pixel.getPixelsOriginal(patch).flatMap(_.hsb)
+	  case "Lab" => Pixel.getPixelsOriginal(patch).flatMap(_.lab)
+	  case "XYZ" => Pixel.getPixelsOriginal(patch).flatMap(_.xyz)
+	  case _ => sys.error("TODO")
+	  // case "CIEXYZ" => ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
+	  // case "LINEAR_RGB" => ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB)
+	  // case "PYCC" => ColorSpace.getInstance(ColorSpace.CS_PYCC)
+	  // case _ => sys.error("TODO")
+	}
+	RawDescriptor(values)
+//      }
     }    
   }
 }
@@ -192,7 +211,7 @@ case class RawExtractor(
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: Boolean) extends Extractor {
+  val color: String) extends Extractor {
   import ExtractorImpl._
 
   // TODO: It's dumb I have to pass these parameters explicitly.
@@ -209,7 +228,7 @@ case class SortExtractor(
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: Boolean) extends Extractor {
+  val color: String) extends Extractor {
   import ExtractorImpl._
 
   def extractSingle: ExtractorActionSingle[SortDescriptor] = 

@@ -33,11 +33,11 @@ case class CorrespondenceExperimentParameterized[T <: Detector, D <: Descriptor,
   
   def stringMap = parameterAbbreviations.zip(parameterValues).toMap
 
-  lazy val leftImageFile = Global.run[RuntimeConfig].childPath("data/%s/images/img1.bmp".format(imageClass))
+  lazy val leftImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img1.bmp".format(imageClass))
   def leftImage = ImageIO.read(leftImageFile)
-  lazy val rightImageFile = Global.run[RuntimeConfig].childPath("data/%s/images/img%s.bmp".format(imageClass, otherImage))
+  lazy val rightImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img%s.bmp".format(imageClass, otherImage))
   def rightImage = ImageIO.read(rightImageFile)
-  lazy val homographyFile = Global.run[RuntimeConfig].childPath("data/%s/homographies/H1to%sp".format(imageClass, otherImage))
+  lazy val homographyFile = Global.run[RuntimeConfig].projectChildPath("data/%s/homographies/H1to%sp".format(imageClass, otherImage))
   def homography = Homography.fromFile(homographyFile)
 }
 
@@ -57,10 +57,10 @@ case class CorrespondenceExperiment (
   
   def stringMap = parameterAbbreviations.zip(parameterValues).toMap
 
-  lazy val leftImageFile = Global.run[RuntimeConfig].childPath("data/%s/images/img1.bmp".format(imageClass))
+  lazy val leftImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img1.bmp".format(imageClass))
   def leftImage = ImageIO.read(leftImageFile)
-  lazy val rightImageFile = Global.run[RuntimeConfig].childPath("data/%s/images/img%s.bmp".format(imageClass, otherImage))
+  lazy val rightImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img%s.bmp".format(imageClass, otherImage))
   def rightImage = ImageIO.read(rightImageFile)
-  lazy val homographyFile = Global.run[RuntimeConfig].childPath("data/%s/homographies/H1to%sp".format(imageClass, otherImage))
+  lazy val homographyFile = Global.run[RuntimeConfig].projectChildPath("data/%s/homographies/H1to%sp".format(imageClass, otherImage))
   def homography = Homography.fromFile(homographyFile)
 }

@@ -11,6 +11,9 @@ import com.googlecode.javacv.cpp.opencv_core._
 import com.googlecode.javacv.cpp.opencv_highgui._
 import com.googlecode.javacv.cpp.opencv_features2d._
 
+import java.awt.color.ColorSpace
+import java.awt.Color
+
 object ImageProcessing {
   def boxBlur(boxWidth: Int, image: BufferedImage): BufferedImage = {
     val kernel = {
@@ -86,18 +89,57 @@ case class Pixel(val alpha: Int, val red: Int, val green: Int, val blue: Int) {
     case 3 => blue
   }
 
-  def gray: Int = (red + green + blue) / 3
+  def gray: Seq[Int] = Seq((red + green + blue) / 3)
+  def sRGB: Seq[Int] = Seq(red, green, blue)
+  def lRGB: Seq[Int]= {
+    val converter = new LinearRGBConverter
+    converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).map(x => (255 * x).toInt).toSeq
+  }
+  def hsb: Seq[Int] = {
+    Color.RGBtoHSB(red, green, blue, null).map(x => (255 * x).toInt).toSeq
+  }
+  def lab: Seq[Int] = {
+    val converter = CIELab.getInstance
+//    println(List(red, green, blue))
+    // println(converter.fromRGB(Array(red, green, blue).map(_.toFloat)).toSeq)
+    // println(converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).toSeq)
+    converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).toSeq.map(_.toInt)
+  }
+  // def luv: Seq[Int] = {
+  //   sys.error("Broken")
+  //   val luvColorSpace = new LUVColorSpace
+  //   println("here")
+  //   println(luvColorSpace.fromRGB(Array(red, green, blue).map(_.toFloat)).toSeq)
+  //   luvColorSpace.fromRGB(Array(red, green, blue).map(_.toFloat)).map(_.toInt).toSeq
+  // }
+  def xyz: Seq[Int] = {
+    val sRGB = ColorSpace.getInstance(ColorSpace.CS_sRGB)
+    sRGB.toCIEXYZ(Array(red, green, blue).map(_.toFloat)).map(x => (255 * x).toInt).toSeq
+  }
 }
 
-object Pixel { 
+object Pixel {
+  def breakIntoBytes(int: Int): Tuple4[Int, Int, Int, Int] = {
+    val byte0: Int = (int >> 24) & 0xff
+    val byte1: Int = (int >> 16) & 0xff
+    val byte2: Int = (int >> 8) & 0xff
+    val byte3: Int = (int) & 0xff
+    (byte0, byte1, byte2, byte3)
+  }
+
   def getPixel(image: BufferedImage, x: Int, y: Int): Pixel = { 
     val argb = image.getRGB(x, y)
-    val alpha: Int = (argb >> 24) & 0xff
-    val red: Int = (argb >> 16) & 0xff
-    val green: Int = (argb >> 8) & 0xff
-    val blue: Int = (argb) & 0xff
+    val (alpha, red, green, blue) = breakIntoBytes(argb)
 
     Pixel(alpha, red, green, blue)
+  }
+
+  // TODO: Rename
+  def getPixelsOriginal(image: BufferedImage): IndexedSeq[Pixel] = {
+    (for (h <- 0 until image.getHeight;
+	  w <- 0 until image.getWidth) yield { 
+      getPixel(image, w, h)
+    }).toIndexedSeq
   }
 
   def getPixels(image: BufferedImage): IndexedSeq[Int] = {
@@ -111,8 +153,17 @@ object Pixel {
   def getPixelsGray(image: BufferedImage): IndexedSeq[Int] = {
     (for (h <- 0 until image.getHeight;
 	  w <- 0 until image.getWidth) yield { 
-      getPixel(image, w, h).gray
+      getPixel(image, w, h).gray.head
     }).toIndexedSeq
+  }
+
+  def getPixelsColorSpace(colorSpace: ColorSpace, image: BufferedImage): IndexedSeq[Int] = {
+    val colorConvertOp = new ColorConvertOp(colorSpace, null)
+    val convertedImage = colorConvertOp.filter(image, null)
+
+    val packedPixels = image.getRaster.getDataBuffer.asInstanceOf[DataBufferInt].getData
+    
+    packedPixels.map(breakIntoBytes).flatMap({case (a, b, c, d) => List(a, b, c, d)})
   }
   
   def fromUnclipped(a: Int, r: Int, g: Int, b: Int): Pixel = {

@@ -4,6 +4,9 @@ import java.io.File
 
 import com.googlecode.javacv.cpp.opencv_features2d._
 
+import java.awt.image._
+import javax.imageio.ImageIO
+
 object Summary {
   def recognitionRate(dmatches: Seq[DMatch]): Double = {
     // The base image feature index is |queryIdx|, and the other 
@@ -27,29 +30,60 @@ object Summary {
   }
 }
 
+sealed trait ExperimentSummary
+case class ExperimentSummaryDouble(
+  name: String, 
+  value: Double) extends ExperimentSummary
+case class ExperimentSummaryBufferedImage(
+  name: String, 
+  value: BufferedImage) extends ExperimentSummary
+
+// TODO: Change the table type names and remove the duplication.
 case class Table(
-  title: String,
-  rowLabels: Seq[String],
-  columnLabels: Seq[String],
-  entries: Seq[Seq[String]]) {
-  def toTSV: String = {
+  val title: String,
+  val rowLabels: Seq[String],
+  val columnLabels: Seq[String],
+  val entries: Seq[Seq[Seq[ExperimentSummary]]])
+  
+case class TableUnrendered(
+  val title: String,
+  val rowLabels: Seq[String],
+  val columnLabels: Seq[String],
+  val entries: Seq[Seq[CorrespondenceExperiment]]) {
+  def toTSV(toString: CorrespondenceExperiment => String): String = {
     val topRow = Seq(title) ++ columnLabels
-    val otherRows = rowLabels.zip(entries).map({case (title, entries) => Seq(title) ++ entries})
+    val stringEntries: Seq[Seq[String]] = entries.map(_.map(toString))
+    val otherRows: Seq[Seq[String]] = rowLabels.zip(stringEntries).map({case (title, entries) => Seq(title) ++ entries})
     val stringsTable = Seq(topRow) ++ otherRows
 
     stringsTable.map(_.mkString("\t")).mkString("\n")
   }
 
-  def path: File = Global.run[RuntimeConfig].childPathNew("summary/%s.csv".format(title))
+  def render(summarize: CorrespondenceExperiment => Seq[ExperimentSummary]): Table = {
+    Table(
+      title,
+      rowLabels,
+      columnLabels,
+      entries.map(_.map(summarize)))
+  }
+
+  def toBag[A](convert: (String, String, CorrespondenceExperiment) => A): Seq[A] = {
+    for ((rowLabel, row) <- rowLabels.zip(entries);
+	 (columnLabel, entry) <- columnLabels.zip(row)) yield {
+      convert(rowLabel, columnLabel, entry)
+    }
+  }
+
+  lazy val unixEpoch = System.currentTimeMillis / 1000L
+  def path: File = Global.run[RuntimeConfig].projectChildPathNew("summary/%s_%s.csv".format(unixEpoch, title))
 }
 
-object Table {
-  def apply(experiments: Seq[Seq[CorrespondenceExperiment]]): Table = {
-    // TODO: Replace with |everywhere| from shapeless when Scala 2.10 comes out.
-    // val results = Util.parallelize(experiments).map(
-    //   x => Util.parallelize(x).map(CorrespondenceExperimentResults.fromExperiment).toList).toList
-    val results = experiments.par.map(_.par.map(CorrespondenceExperimentResults.fromExperiment).toList).toList
+object TableUnrendered {
+  val recognitionRate: CorrespondenceExperiment => Double = experiment =>
+    Summary.recognitionRate(CorrespondenceExperimentResults.fromExperiment(experiment).dmatches)
 
+  def apply(experiments: Seq[Seq[CorrespondenceExperiment]]): TableUnrendered = {
+    // TODO: Replace with |everywhere| from shapeless when Scala 2.10 comes out.
     val experimentsFirstRow = experiments.head
     val experimentsFirstColumn = experiments.map(_.head)
 
@@ -57,9 +91,50 @@ object Table {
     val rowLabels = SummaryUtil.tableEntryTitles(experimentsFirstColumn)
     val columnLabels = SummaryUtil.tableEntryTitles(experimentsFirstRow)
 
-    val entries = results.map(_.map(r => Summary.recognitionRate(r.dmatches).formatted("%.2f")))
+    TableUnrendered(title, rowLabels, columnLabels, experiments)
+  }
+}
 
-    Table(title, rowLabels, columnLabels, entries)
+case class Histogram(
+  val title: String,
+  val sameDistances: Seq[Double],
+  val differentDistances: Seq[Double]) {
+  def draw {
+    val image = render
+    ImageIO.write(image, "png", path)
+
+    println("wrote %s".format(path))    
+  }
+
+  // TODO: Improve this and the above name.
+  def render: BufferedImage = {
+    val tempContents = "%s\n%s\n%s".format(
+      title, 
+      sameDistances.sorted.mkString(" "), 
+      differentDistances.sorted.mkString(" "))
+    val tempFile = IO.createTempFile("histogramData", ".txt")
+    org.apache.commons.io.FileUtils.writeStringToFile(tempFile, tempContents)
+
+    // TODO: Fix path
+    val pythonScript = Global.run[RuntimeConfig].nebulaChildPath("python/distance_histogram.py")
+    val outputFile = IO.createTempFile("histogram", ".png")
+    val command = "python %s %s %s".format(pythonScript, tempFile, outputFile)
+    IO.runSystemCommand(command)
+
+    ImageIO.read(outputFile)
+  }
+
+  def path: File = {
+    val filename = title.replace(" ", "_") + ".png"
+    Global.run[RuntimeConfig].projectChildPathNew("summary/histograms/%s".format(filename))
+  }
+}
+  
+object Histogram {
+  def apply(experiment: CorrespondenceExperiment, title: String): Histogram = {
+    val results = CorrespondenceExperimentResults.fromExperiment(experiment)
+    val (same, different) = results.dmatches.partition(dmatch => dmatch.queryIdx == dmatch.trainIdx)
+    Histogram(title, same.map(_.distance.toDouble), different.map(_.distance.toDouble))
   }
 }
 

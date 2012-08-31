@@ -6,9 +6,10 @@ import org.apache.commons.io.FilenameUtils
 
 // TODO: Duplication. Grr.
 case class MPIERuntimeConfig (
-  override val projectRoot: String,
+  override val projectRoot: File,
+  override val nebulaRoot: File,
   override val parallel: Boolean,
-  override val tempDirectory: String,
+  override val tempDirectory: Option[File],
   override val deleteTemporaryFiles: Boolean,
   override val skipCompletedExperiments: Boolean,
   override val maxSimultaneousExperiments: Int,

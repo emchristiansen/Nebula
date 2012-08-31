@@ -17,6 +17,8 @@ import javax.imageio.ImageIO
 import net.liftweb.json._
 import net.liftweb.json.Serialization.{read, write}
 
+import com.twitter.util._
+
 import xml._
 
 trait FromXML[+A] {
@@ -95,6 +97,11 @@ object AtomicIO {
 }
 
 object IO {
+  def interpretFile[A](file: File): A = {
+    val source = org.apache.commons.io.FileUtils.readFileToString(file)
+    (new Eval).apply[A](source)
+  }
+
   def objectToByteArray[A](obj: A): Array[Byte] = {
     val byte_stream = new ByteArrayOutputStream
     (new ObjectOutputStream(byte_stream)).writeObject(obj)
@@ -153,6 +160,13 @@ object IO {
     toJSONFileAbstract(formats, item, file)
   }
 
+  def writeImage(directory: File, image: BufferedImage): File = {
+    require(directory.isDirectory)
+    val file = File.createTempFile("histogram", ".png", directory)
+    ImageIO.write(image, "png", file)
+    file
+  }
+
   def runSystemCommand(command: String): String = {
     println("running system command: %s".format(command))
     try {
@@ -172,10 +186,11 @@ object IO {
   }
 
   def createTempFile(prefix: String, suffix: String) = {
-    val file = {
-      if (Global.run[RuntimeConfig].tempDirectory.size == 0) File.createTempFile(prefix, suffix)
-      else File.createTempFile(prefix, suffix, new File(Global.run[RuntimeConfig].tempDirectory))
+    val file = Global.run[RuntimeConfig].tempDirectory match {
+      case Some(file) => File.createTempFile(prefix, suffix, file)
+      case None => File.createTempFile(prefix, suffix)
     }
+
     if (Global.run[RuntimeConfig].deleteTemporaryFiles) file.deleteOnExit
     file
   }

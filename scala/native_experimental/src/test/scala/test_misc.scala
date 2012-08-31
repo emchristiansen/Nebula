@@ -25,7 +25,7 @@ class TestMisc extends FunSuite {
       "bikes", 
       2, 
       FASTDetector(100),
-      SortExtractor(false, false, 8, 5, true),
+      SortExtractor(false, false, 8, 5, "Gray"),
       L0Matcher())
 
     val experiment2 = experiment1.copy(otherImage = 4)

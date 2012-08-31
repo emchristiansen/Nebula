@@ -52,6 +52,7 @@ public class HungarianAlgorithm {
 		Scanner in = new Scanner(System.in);
 		System.out.print(prompt);
 		int input = in.nextInt();
+		in.close();
 		return input;
 	}
 	public static void printTime(double time)	//Formats time output.

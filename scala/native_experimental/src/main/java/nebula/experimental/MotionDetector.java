@@ -31,9 +31,9 @@ import com.googlecode.javacv.OpenCVFrameGrabber;
 import com.googlecode.javacv.cpp.opencv_core.CvBox2D;
 import com.googlecode.javacv.cpp.opencv_core.CvContour;
 import com.googlecode.javacv.cpp.opencv_core.CvMemStorage;
-import com.googlecode.javacv.cpp.opencv_core.CvPoint2D32f;
+//import com.googlecode.javacv.cpp.opencv_core.CvPoint2D32f;
 import com.googlecode.javacv.cpp.opencv_core.CvSeq;
-import com.googlecode.javacv.cpp.opencv_core.CvSize2D32f;
+//import com.googlecode.javacv.cpp.opencv_core.CvSize2D32f;
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
 
 public class MotionDetector {
@@ -85,8 +85,7 @@ public class MotionDetector {
                         CvBox2D box = cvMinAreaRect2(contour, storage);
                         // test intersection
                         if (box != null) {
-                            CvPoint2D32f center = box.center();
-                            CvSize2D32f size = box.size();
+//                            
 /*                            for (int i = 0; i < sa.length; i++) {
                                 if ((Math.abs(center.x - (sa[i].offsetX + sa[i].width / 2))) < ((size.width / 2) + (sa[i].width / 2)) &&
                                     (Math.abs(center.y - (sa[i].offsetY + sa[i].height / 2))) < ((size.height / 2) + (sa[i].height / 2))) {

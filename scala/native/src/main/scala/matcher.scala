@@ -62,7 +62,6 @@ object MatcherImpl {
       for ((left, leftIndex) <- leftDescriptors.zipWithIndex;
 	   (right, rightIndex) <- rightDescriptors.zipWithIndex) yield {
         val distance = distanceMethod(left, right)
-	println(left, right, distance)
 	new DMatch(leftIndex, rightIndex, distance.toFloat)
       }
     } else {

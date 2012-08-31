@@ -26,7 +26,7 @@ import net.liftweb.json.Serialization.{read, write}
 
 object Global {
   val random = new Random(0)
-  val homeDirectory = System.getProperty("user.home")
+  val homeDirectory = new File(System.getProperty("user.home"))
   var runVar: Option[RuntimeConfigTrait] = None
   // TODO: This asInstanceOf stuff has bad code smell.
   def run[R <: RuntimeConfigTrait](implicit manifest: Manifest[R]): R = runVar match {
@@ -60,7 +60,7 @@ object Util {
 
     val string = write(caseClass)
     val json = parse(string)
-    
+   
     import scala.text.{Document, DocText}
     def documentToString(document: Document): String = document match {
       case DocText(string) => string.replace("\"", "")
