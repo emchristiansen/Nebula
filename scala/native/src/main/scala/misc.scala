@@ -33,7 +33,10 @@ object Global {
   }
 }
 
-object Util { 
+object Util {
+  // The correct implementation of a % b.
+  def modulo(a: Double, b: Double): Double = a - (a / b).floor * b
+  
   // Assuming |num| is represented as an arbitrarily long unsigned int, get
   // the |numBits| low order bits in the representation, where the head of
   // the list is the high-order bit.

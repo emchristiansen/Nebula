@@ -16,6 +16,8 @@ import scala.Array.fallbackCanBuildFrom
 
 import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
 
+import RichImage._
+
 case class RichImage(image: BufferedImage) {
   def getPixel(x: Int, y: Int): Pixel = {
     require(x >= 0 && x < image.getWidth)
@@ -35,7 +37,7 @@ case class RichImage(image: BufferedImage) {
       } else {
         val floorWeight = 1 - (double - floor)
         val ceil = double.ceil
-        val ceilWeight = 1 - (ceil - double) - (ceil - floor)
+        val ceilWeight = 1 - (ceil - double)
         List((floor.toInt, floorWeight), (ceil.toInt, ceilWeight))
       }
     }
@@ -65,6 +67,10 @@ object RichImage {
 
 object ImageProcessing {
   def boxBlur(boxWidth: Int, image: BufferedImage): BufferedImage = {
+
+    
+    val pixel = image.getSubPixel(0, 1)
+    
     val kernel = {
       val numPixels = boxWidth * boxWidth
       val kernelValues = Array.fill(numPixels)((1.0 / numPixels).toFloat)
