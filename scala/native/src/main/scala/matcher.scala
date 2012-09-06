@@ -14,7 +14,8 @@ object MatcherLike {
     classOf[L1Matcher],
     classOf[L2Matcher],
     classOf[KendallTauMatcher],
-    classOf[CayleyMatcher])  
+    classOf[CayleyMatcher],
+    classOf[CayleyRotate4Matcher])  
 
   implicit def l0[A] = new MatcherLike[L0Matcher, RawDescriptor[A]] {
     override def apply(matcher: L0Matcher) = matcher.apply[RawDescriptor[A], A]
@@ -48,6 +49,10 @@ object MatcherLike {
   implicit def cayley = new MatcherLike[CayleyMatcher, SortDescriptor] {
     override def apply(matcher: CayleyMatcher) = matcher.apply
   }
+  
+  implicit def cayleyRotate4 = new MatcherLike[CayleyRotate4Matcher, SortDescriptor] {
+    override def apply(matcher: CayleyRotate4Matcher) = matcher.apply
+  }  
 }
 
 object MatcherImpl {
@@ -153,6 +158,21 @@ case class CayleyMatcher() extends Matcher {
   }
 }
 
+case class CayleyRotate4Matcher() extends Matcher {
+  import MatcherImpl._
+
+  def apply(
+    allPairs: Boolean,
+    leftDescriptors: Seq[SortDescriptor],
+    rightDescriptors: Seq[SortDescriptor]): Seq[DMatch] = {
+    applyIndividual(
+      Matcher.cayleyRotate4 _,
+      allPairs,
+      leftDescriptors,
+      rightDescriptors)
+  }
+}
+
 object Matcher {
   def l0[D, E](
     left: D, 
@@ -196,5 +216,43 @@ object Matcher {
     val rightInverse = SortDescriptor.invert(right)
     val composition = SortDescriptor.compose(left, rightInverse)
     left.values.size - SortDescriptor.numCycles(composition)
+  }
+  
+//  def rotate4[D, E](
+//    descriptor: D)(implicit descriptorLike: DescriptorLike[D, E]): Seq[D] = {
+//    val values = descriptorLike.values(descriptor)
+//  }
+  
+  // Rotate values taken from a square patch pi / 2 radians.
+  // TODO: This "rotate4" idea can be generalized to rotateN on general patches.
+  def rotateQuarter[A](descriptor: SortDescriptor): SortDescriptor = {
+    // TODO: Doing a color check in this part of the code is clearly dumb.
+    val (patchWidth, pixels) = {
+      val sqrt = math.sqrt(descriptor.values.size)
+      val validGray = sqrt == sqrt.toInt
+      
+      val sqrtThird = math.sqrt(descriptor.values.size / 3)
+      val validColor = sqrtThird == sqrtThird.toInt
+      
+      require(validGray || validColor)
+      if (sqrt == sqrt.toInt) (sqrt.toInt, descriptor.values.grouped(1).toIndexedSeq)
+      else (sqrtThird.toInt, descriptor.values.grouped(3).toIndexedSeq)
+    }
+    
+    val indices = (0 until pixels.size).grouped(patchWidth).toSeq
+    val rotated = indices.transpose.map(_.reverse)
+    SortDescriptor(rotated.flatten.map(i => pixels(i)).flatten.toIndexedSeq)    
+  }
+  
+  def rotate4(descriptor: SortDescriptor): Seq[SortDescriptor] = {
+    lazy val rotaters: Stream[SortDescriptor => SortDescriptor] = 
+      Stream.cons(identity, rotaters.map(f => rotateQuarter _ compose f))
+    rotaters.map(_(descriptor)).take(4).toList
+  }
+  
+  def cayleyRotate4(left: SortDescriptor, right: SortDescriptor): Int = {
+    val rightRotations = rotate4(right)
+    val distances = rightRotations.map(r => cayley(left, r))
+    distances.min
   }
 }

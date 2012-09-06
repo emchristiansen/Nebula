@@ -50,20 +50,21 @@ object CorrespondenceExperimentResults {
       val rightImage = experiment.rightImage
 
       val (leftKeyPoints, rightKeyPoints) = {
-	val leftKeyPoints = detector(leftImage)
-	Util.pruneKeyPoints(leftImage,
-                            rightImage,
-                            experiment.homography,
-                            leftKeyPoints).unzip
+        val leftKeyPoints = detector(leftImage)
+        Util.pruneKeyPoints(
+          leftImage,
+          rightImage,
+          experiment.homography,
+          leftKeyPoints).unzip
       }
 
       println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 
       val (leftDescriptors, rightDescriptors) = {
-	val leftDescriptors = extractor(leftImage, leftKeyPoints)
-	val rightDescriptors = extractor(rightImage, rightKeyPoints)
+        val leftDescriptors = extractor(leftImage, leftKeyPoints)
+        val rightDescriptors = extractor(rightImage, rightKeyPoints)
 
-	for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
+        for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
       } unzip
 
       println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
@@ -121,6 +122,11 @@ object CorrespondenceExperimentResults {
 	val matcherAction = implicitly[MatcherLike[CayleyMatcher, SortDescriptor]].apply(matcher)
 	runWithActions(extractorAction, matcherAction)
       }
+      case (extractor: SortExtractor, matcher: CayleyRotate4Matcher) => {
+  val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+  val matcherAction = implicitly[MatcherLike[CayleyRotate4Matcher, SortDescriptor]].apply(matcher)
+  runWithActions(extractorAction, matcherAction)
+      }      
       case (extractor: BRISKExtractor, matcher: L0Matcher) => {
 	val extractorAction = implicitly[ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]]].apply(extractor)
 	val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Boolean]]].apply(matcher)
