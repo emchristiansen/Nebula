@@ -4,20 +4,14 @@ import java.awt.image.BufferedImage
 import java.io.File
 
 import scala.Array.canBuildFrom
-import scala.text.DocText
-import scala.text.Document
+import scala.text.{DocText, Document}
 import scala.util.Random
 
-import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
+import org.opencv.features2d.KeyPoint
 
-import net.liftweb.json.JField
-import net.liftweb.json.JObject
-import net.liftweb.json.JString
-import net.liftweb.json.Serialization
+import net.liftweb.json.{JField, JObject, JString, Serialization}
+import net.liftweb.json.{ShortTypeHints, parse, render}
 import net.liftweb.json.Serialization.write
-import net.liftweb.json.ShortTypeHints
-import net.liftweb.json.parse
-import net.liftweb.json.render
 
 object Global {
   val random = new Random(0)

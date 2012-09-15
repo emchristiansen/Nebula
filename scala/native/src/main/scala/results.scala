@@ -3,7 +3,9 @@ package nebula
 import java.io.File
 import xml._
 
-import com.googlecode.javacv.cpp.opencv_features2d._
+import org.opencv.core.Mat
+import org.opencv.features2d.{DMatch, KeyPoint}
+import org.opencv.highgui.Highgui.imread
 
 case class PredictionAndTruth(val prediction: Double, val truth: Boolean)
 
@@ -128,11 +130,15 @@ object CorrespondenceExperimentResults {
         val matcherAction = implicitly[MatcherLike[CayleyRotate4Matcher, SortDescriptor]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      case (extractor: BRISKExtractor, matcher: L0Matcher) => {
-        val extractorAction = implicitly[ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]]].apply(extractor)
-        val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Boolean]]].apply(matcher)
-        runWithActions(extractorAction, matcherAction)
-      }
+      
+      // TODO: Enable
+      
+//      case (extractor: BRISKExtractor, matcher: L0Matcher) => {
+//        val extractorAction = implicitly[ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]]].apply(extractor)
+//        val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Boolean]]].apply(matcher)
+//        runWithActions(extractorAction, matcherAction)
+//      }
+      
       case _ => sys.error("You must manually add the experiment to this list")
     }
   }

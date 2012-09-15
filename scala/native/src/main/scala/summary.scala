@@ -2,10 +2,8 @@ package nebula
 
 import java.awt.image.BufferedImage
 import java.io.File
-
-import com.googlecode.javacv.cpp.opencv_features2d.DMatch
-
 import javax.imageio.ImageIO
+import org.opencv.features2d.DMatch
 
 object Summary {
   def recognitionRate(dmatches: Seq[DMatch]): Double = {
@@ -190,26 +188,7 @@ object SummaryUtil {
 
     experimentMaps.map(entryTitle)
   }
-}
-
-//     val roiConstant = optionalConstant("roi")
-//     val distanceConstant = optionalConstant("distance")
-//     val pose = optionalConstant
-//     val illumination = optionalConstant("illumination")
-//     val 
-
-//     def text = XMLUtil.text(node) _
-
-//     Condition(
-//       text("pose"),
-//       text("illumination"),
-//       text("blur"),
-//       text("noise"),
-//       text("jpeg"),
-//       text("misalignment"),
-//       text("background")
-//     )
-//   }  
+}  
 
 //   def fromFile(filename: String): TwoDimensionalTable = fromXML(XML.loadFile(filename))
 // }

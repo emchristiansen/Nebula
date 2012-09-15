@@ -1,10 +1,7 @@
 package nebula
 
 import java.awt.image.BufferedImage
-
-import com.googlecode.javacv.cpp.opencv_core.CvMat
-import com.googlecode.javacv.cpp.opencv_features2d.BriskDescriptorExtractor
-import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
+import org.opencv.features2d.KeyPoint
 
 // TODO: Given |D|, |E| can be determined statically. Figure
 // out how to reduce this to one parameter.
@@ -146,11 +143,13 @@ object ExtractorLike {
       ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 
-  implicit def brisk = new ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]] {
-    //    override def apply(extractor: BRISKExtractor) = extractor.extract
-    override def apply(extractor: BRISKExtractor) =
-      ExtractorImpl.applySeveral(extractor.extractSingle)
-  }
+  // TODO: Enable
+  
+//  implicit def brisk = new ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]] {
+//    //    override def apply(extractor: BRISKExtractor) = extractor.extract
+//    override def apply(extractor: BRISKExtractor) =
+//      ExtractorImpl.applySeveral(extractor.extractSingle)
+//  }
 }
 
 object ExtractorImpl {
@@ -246,50 +245,52 @@ case class SortExtractor(
     }
 }
 
-case class BRISKExtractor(
-  val normalizeRotation: Boolean,
-  val normalizeScale: Boolean) extends Extractor {
-  import ExtractorImpl._
+// TODO: Enable BRISK
 
-  def extract: ExtractorAction[RawDescriptor[Boolean]] =
-    (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
-      val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
-      val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
-      // This will get overwritten, it just matters that |compute| gets
-      // a valid |CvMat|.
-      val descriptorMat = CvMat.create(1, 1, 1, 1)
-      println(keyPoints.size)
-      val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(keyPoints)
-      println(keyPointsFuckingStupidDesign.capacity)
-      extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
-      println(keyPointsFuckingStupidDesign.capacity)
-      println(descriptorMat.rows)
-      println(descriptorMat.cols)
-      sys.error("TODO")
-    }
-
-  def extractSingle: ExtractorActionSingle[RawDescriptor[Boolean]] =
-    (image: BufferedImage, keyPoint: KeyPoint) => {
-      val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
-      val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
-      // This will get overwritten, it just matters that |compute| gets
-      // a valid |CvMat|.
-      val descriptorMat = CvMat.create(1, 1, 1, 1)
-      val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(Seq(keyPoint))
-      extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
-      try {
-        if (descriptorMat == null ||
-          descriptorMat.rows == 0 ||
-          descriptorMat.cols == 0) None
-        else {
-          val descriptorInts = OpenCVUtil.cvMatToSeq(descriptorMat).map(_.toInt)
-          val booleans = descriptorInts.flatMap(Util.numToBits(8))
-          Some(RawDescriptor(booleans.toIndexedSeq))
-        }
-      } catch {
-        // TODO: For some reason, I can't check for nullity of the native pointer
-        // using " == null", so I'm using this ugly try-catch.
-        case _: NullPointerException => None
-      }
-    }
-}
+//case class BRISKExtractor(
+//  val normalizeRotation: Boolean,
+//  val normalizeScale: Boolean) extends Extractor {
+//  import ExtractorImpl._
+//
+//  def extract: ExtractorAction[RawDescriptor[Boolean]] =
+//    (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
+//      val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
+//      val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
+//      // This will get overwritten, it just matters that |compute| gets
+//      // a valid |CvMat|.
+//      val descriptorMat = CvMat.create(1, 1, 1, 1)
+//      println(keyPoints.size)
+//      val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(keyPoints)
+//      println(keyPointsFuckingStupidDesign.capacity)
+//      extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
+//      println(keyPointsFuckingStupidDesign.capacity)
+//      println(descriptorMat.rows)
+//      println(descriptorMat.cols)
+//      sys.error("TODO")
+//    }
+//
+//  def extractSingle: ExtractorActionSingle[RawDescriptor[Boolean]] =
+//    (image: BufferedImage, keyPoint: KeyPoint) => {
+//      val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
+//      val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
+//      // This will get overwritten, it just matters that |compute| gets
+//      // a valid |CvMat|.
+//      val descriptorMat = CvMat.create(1, 1, 1, 1)
+//      val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(Seq(keyPoint))
+//      extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
+//      try {
+//        if (descriptorMat == null ||
+//          descriptorMat.rows == 0 ||
+//          descriptorMat.cols == 0) None
+//        else {
+//          val descriptorInts = OpenCVUtil.cvMatToSeq(descriptorMat).map(_.toInt)
+//          val booleans = descriptorInts.flatMap(Util.numToBits(8))
+//          Some(RawDescriptor(booleans.toIndexedSeq))
+//        }
+//      } catch {
+//        // TODO: For some reason, I can't check for nullity of the native pointer
+//        // using " == null", so I'm using this ugly try-catch.
+//        case _: NullPointerException => None
+//      }
+//    }
+//}

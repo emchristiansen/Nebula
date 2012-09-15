@@ -5,8 +5,7 @@ import nebula.native._
 import nebula.experimental._
 
 import java.awt.image._
-import com.googlecode.javacv.cpp.opencv_contrib._
-import com.googlecode.javacv.cpp.opencv_core._
+
 
 case class CVRect(val x: Int, val y: Int, val width: Int, val height: Int)
 

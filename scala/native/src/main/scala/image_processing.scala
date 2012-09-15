@@ -1,22 +1,13 @@
 package nebula
 
-import java.awt.Color
-import java.awt.Rectangle
+import java.awt.{Color, Rectangle}
 import java.awt.color.ColorSpace
 import java.awt.geom.AffineTransform
-import java.awt.image.AffineTransformOp
-import java.awt.image.BufferedImage
-import java.awt.image.ColorConvertOp
-import java.awt.image.ConvolveOp
-import java.awt.image.DataBufferInt
-import java.awt.image.Kernel
+import java.awt.image.{AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel}
 
-import scala.Array.canBuildFrom
-import scala.Array.fallbackCanBuildFrom
+import scala.Array.{canBuildFrom, fallbackCanBuildFrom}
 
-import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
-
-import RichImage._
+import org.opencv.features2d.KeyPoint
 
 case class RichImage(image: BufferedImage) {
   def getPixel(x: Int, y: Int): Pixel = {
@@ -66,6 +57,8 @@ object RichImage {
 }
 
 object ImageProcessing {
+  import RichImage._
+  
   def boxBlur(boxWidth: Int, image: BufferedImage): BufferedImage = {
 
     val pixel = image.getSubPixel(0, 1)
@@ -113,8 +106,8 @@ object ImageProcessing {
                    patchWidth: Int,
                    keyPoint: KeyPoint): Option[BufferedImage] = {
     try {
-      val x = keyPoint.pt_x - patchWidth / 2.0
-      val y = keyPoint.pt_y - patchWidth / 2.0
+      val x = keyPoint.pt.x - patchWidth / 2.0
+      val y = keyPoint.pt.y - patchWidth / 2.0
       Some(getSubimage(image, x, y, patchWidth, patchWidth))
     } catch {
       case e: IllegalArgumentException => None

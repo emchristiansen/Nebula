@@ -2,102 +2,20 @@ package nebula
 
 import java.awt.image.BufferedImage
 
-import scala.Array.canBuildFrom
-import scala.Array.fallbackCanBuildFrom
 import scala.math.BigInt.int2bigInt
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix
-import org.apache.commons.math3.linear.ArrayRealVector
-import org.apache.commons.math3.linear.LUDecomposition
-import org.apache.commons.math3.linear.RealVector
-
-import com.googlecode.javacv.cpp.opencv_core.CvMat
-import com.googlecode.javacv.cpp.opencv_features2d.DMatch
-import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
-import com.googlecode.javacv.cpp.opencv_highgui.cvLoadImageM
+import org.apache.commons.math3.linear.{Array2DRowRealMatrix, ArrayRealVector, LUDecomposition, RealVector}
+import org.opencv.core.Mat
+import org.opencv.features2d.{DMatch, KeyPoint}
+import org.opencv.highgui.Highgui.imread
 
 import javax.imageio.ImageIO
-import net.liftweb.json.Formats
-import net.liftweb.json.JDouble
-import net.liftweb.json.JField
-import net.liftweb.json.JInt
-import net.liftweb.json.JObject
-import net.liftweb.json.JString
-import net.liftweb.json.JValue
-import net.liftweb.json.MappingException
-import net.liftweb.json.Serializer
-import net.liftweb.json.TypeInfo
+import net.liftweb.json.{Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo}
 
-// Warning: A KeyPoint is both a single key point and a collection of
-// key points. Terrible design, I know, but not mine. The methods that
-// operate on KeyPoints largely rely on side effects.
 object KeyPointUtil {
-  val defaultSize = 0
-  val defaultAngle = -1
-  val defaultResponse = 0
-  val defaultOctave = 0
-  val defaultClassID = -1
-
-  def withDefaults(x: Float, y: Float): KeyPoint = {
-    new KeyPoint(
-      x,
-      y,
-      defaultSize,
-      defaultAngle,
-      defaultResponse,
-      defaultOctave,
-      defaultClassID)
-  }
-
   def isWithinBounds(width: Int, height: Int)(keyPoint: KeyPoint): Boolean = {
     def linearBound(max: Int, pt: Double): Boolean = (pt >= 0) && (pt < max)
-    linearBound(width, keyPoint.pt_x) && linearBound(height, keyPoint.pt_y)
-  }
-
-  def keyPointAt(keyPoints: KeyPoint, index: Int): KeyPoint = {
-    keyPoints.position(index)
-    new KeyPoint(keyPoints.pt,
-      keyPoints.size,
-      keyPoints.angle,
-      keyPoints.response,
-      keyPoints.octave,
-      keyPoints.class_id)
-  }
-
-  def keyPointsToSeq(keyPoints: KeyPoint): Seq[KeyPoint] = {
-    for (index <- 0 until keyPoints.capacity toSeq) yield {
-      keyPointAt(keyPoints, index)
-    }
-  }
-
-  def setKeyPointAt(keyPoints: KeyPoint, index: Int, keyPoint: KeyPoint) {
-    keyPoints.position(index)
-    keyPoints.pt(keyPoint.pt)
-    keyPoints.size(keyPoint.size)
-    keyPoints.angle(keyPoint.angle)
-    keyPoints.response(keyPoint.response)
-    keyPoints.octave(keyPoint.octave)
-    keyPoints.class_id(keyPoint.class_id)
-  }
-
-  def listToKeyPoints(keyPointsSeq: Seq[KeyPoint]): KeyPoint = {
-    val keyPoints = new KeyPoint(keyPointsSeq.size)
-    for ((keyPoint, index) <- keyPointsSeq.zipWithIndex) {
-      setKeyPointAt(keyPoints, index, keyPoint)
-    }
-    keyPoints.position(0)
-    keyPoints
-  }
-
-  def toString(keyPoint: KeyPoint): String = {
-    "KeyPoint(%s, %s, %s, %s, %s, %s, %s)".format(
-      keyPoint.pt_x,
-      keyPoint.pt_y,
-      keyPoint.size,
-      keyPoint.angle,
-      keyPoint.response,
-      keyPoint.octave,
-      keyPoint.class_id)
+    linearBound(width, keyPoint.pt.x) && linearBound(height, keyPoint.pt.y)
   }
 
   def scaleFactor(homography: Homography, xyPoint: RealVector): Double = {
@@ -127,8 +45,8 @@ object KeyPointUtil {
   // TODO: Add such a function to OpenCV if it doesn't have one.
   def transform(homography: Homography)(keyPoint: KeyPoint): KeyPoint = {
     val xyPoint = new ArrayRealVector(Array(
-      keyPoint.pt_x.toDouble,
-      keyPoint.pt_y.toDouble))
+      keyPoint.pt.x,
+      keyPoint.pt.y))
 
     val size = scaleFactor(homography, xyPoint) * keyPoint.size
 
@@ -139,8 +57,8 @@ object KeyPointUtil {
     }
 
     val xyVector = homography.transform(new ArrayRealVector(Array(
-      keyPoint.pt_x.toDouble,
-      keyPoint.pt_y.toDouble)))
+      keyPoint.pt.x,
+      keyPoint.pt.y)))
 
     new KeyPoint(
       xyVector.getEntry(0).toFloat,
@@ -154,29 +72,31 @@ object KeyPointUtil {
 }
 
 object OpenCVUtil {
-  def bufferedImageToCvMat(image: BufferedImage): CvMat = {
+  def bufferedImageToMat(image: BufferedImage): Mat = {
     // TODO: Figure out how to do this without IO.
     val file = IO.createTempFile("bufferedImageToCvMat", ".bmp")
     ImageIO.write(image, "bmp", file)
-    val matImage = cvLoadImageM(file.toString)
-    assert(matImage != null)
-    matImage
+    val mat = imread(file.toString)
+    assert(mat != null)
+    mat
   }
 
-  def cvMatStringToSeq(matString: String): Seq[Double] = {
-    val tokens = matString.replace("[", "").replace("]", "").split(",")
-    val noWhitespace = tokens.map(_.replace(" ", ""))
-    tokens.map(_.toDouble)
-  }
-
-  // We're going to get the string representation of the |CvMat|,
-  // and parse it to get out its values.
-  // Yes, the JavaCV interface really is this broken.
-  def cvMatToSeq(mat: CvMat): Seq[Double] = {
-    assert(mat.rows == 1)
-    assert(mat.cols > 0)
-    cvMatStringToSeq(mat.toString)
-  }
+  // TODO: Delete this crap. 
+  
+  //  def cvMatStringToSeq(matString: String): Seq[Double] = {
+  //    val tokens = matString.replace("[", "").replace("]", "").split(",")
+  //    val noWhitespace = tokens.map(_.replace(" ", ""))
+  //    tokens.map(_.toDouble)
+  //  }
+  //
+  //  // We're going to get the string representation of the |CvMat|,
+  //  // and parse it to get out its values.
+  //  // Yes, the JavaCV interface really is this broken.
+  //  def cvMatToSeq(mat: CvMat): Seq[Double] = {
+  //    assert(mat.rows == 1)
+  //    assert(mat.cols > 0)
+  //    cvMatStringToSeq(mat.toString)
+  //  }
 }
 
 class DMatchSerializer extends Serializer[DMatch] {

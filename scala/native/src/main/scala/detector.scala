@@ -2,10 +2,8 @@ package nebula
 
 import java.awt.image.BufferedImage
 
-import com.googlecode.javacv.cpp.opencv_features2d.BriskFeatureDetector
-import com.googlecode.javacv.cpp.opencv_features2d.FastFeatureDetector
-import com.googlecode.javacv.cpp.opencv_features2d.FeatureDetector
-import com.googlecode.javacv.cpp.opencv_features2d.KeyPoint
+import org.opencv.core.MatOfKeyPoint
+import org.opencv.features2d.{FeatureDetector, KeyPoint}
 
 trait DetectorLike[T] {
   import DetectorImpl._
@@ -29,11 +27,10 @@ object DetectorImpl {
   type DetectorAction = BufferedImage => Seq[KeyPoint]
 
   def apply(maxKeyPoints: Int, detector: FeatureDetector): DetectorAction = (image: BufferedImage) => {
-    val matImage = OpenCVUtil.bufferedImageToCvMat(image)
-    val keyPoints = new KeyPoint()
-    detector.detect(matImage, keyPoints, null)
-    val all = KeyPointUtil.keyPointsToSeq(keyPoints).sortBy(_.response).reverse
-    all.take(maxKeyPoints)
+    val matImage = OpenCVUtil.bufferedImageToMat(image)
+    val keyPoints = new MatOfKeyPoint
+    detector.detect(matImage, keyPoints)
+    keyPoints.toArray.sortBy(_.response).reverse.take(maxKeyPoints)
   }
 }
 
@@ -42,11 +39,11 @@ sealed trait Detector
 case class FASTDetector(val maxKeyPoints: Int) extends Detector {
   def apply = DetectorImpl(
     maxKeyPoints,
-    new FastFeatureDetector(10, true))
+    FeatureDetector.create(FeatureDetector.FAST))
 }
 
 case class BRISKDetector(val maxKeyPoints: Int) extends Detector {
   def apply = DetectorImpl(
     maxKeyPoints,
-    new BriskFeatureDetector(10, 4))
+    sys.error("TODO"))
 }
