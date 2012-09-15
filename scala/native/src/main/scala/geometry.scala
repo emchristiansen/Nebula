@@ -33,7 +33,6 @@ object Homography {
   }
 }
 
-
 object Geometry {
   def homogenize(inhomogeneous: RealVector): RealVector =
     inhomogeneous.append(new ArrayRealVector(Array(1.0)))
@@ -48,23 +47,23 @@ object Geometry {
   def fitAffine(source: List[Point2D], target: List[Point2D]): AffineTransform = {
     assert(source.size == target.size)
     assert(source.size >= 3)
-    
+
     val lhs = {
       val data = target.map(_.toList).transpose.map(_.toArray).toArray
       new Array2DRowRealMatrix(data).transpose
     }
-    
+
     val rhs = {
       val data = source.map(_.toListHomogeneous).transpose.map(_.toArray).toArray
       new Array2DRowRealMatrix(data).transpose
     }
-    
+
     val solver = new SingularValueDecomposition(rhs).getSolver
     val transformation = solver.solve(lhs).transpose
-    
+
     assert(transformation.getRowDimension == 2)
     assert(transformation.getColumnDimension == 3)
-    
+
     new AffineTransform(transformation.getData.transpose.flatten)
   }
 
@@ -108,7 +107,7 @@ object Geometry {
       val S = MatrixUtils.createRealIdentityMatrix(2)
       val determinant = new LUDecomposition(SigmaXY, 0).getDeterminant
       if (determinant < 0) {
-	S.setEntry(1, 1, -1)
+        S.setEntry(1, 1, -1)
       }
       S
     }

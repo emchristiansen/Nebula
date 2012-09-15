@@ -15,7 +15,7 @@ object MatcherLike {
     classOf[L2Matcher],
     classOf[KendallTauMatcher],
     classOf[CayleyMatcher],
-    classOf[CayleyRotate4Matcher])  
+    classOf[CayleyRotate4Matcher])
 
   implicit def l0[A] = new MatcherLike[L0Matcher, RawDescriptor[A]] {
     override def apply(matcher: L0Matcher) = matcher.apply[RawDescriptor[A], A]
@@ -49,10 +49,10 @@ object MatcherLike {
   implicit def cayley = new MatcherLike[CayleyMatcher, SortDescriptor] {
     override def apply(matcher: CayleyMatcher) = matcher.apply
   }
-  
+
   implicit def cayleyRotate4 = new MatcherLike[CayleyRotate4Matcher, SortDescriptor] {
     override def apply(matcher: CayleyRotate4Matcher) = matcher.apply
-  }  
+  }
 }
 
 object MatcherImpl {
@@ -64,17 +64,19 @@ object MatcherImpl {
     leftDescriptors: Seq[D],
     rightDescriptors: Seq[D]): Seq[DMatch] = {
     if (allPairs) {
-      for ((left, leftIndex) <- leftDescriptors.zipWithIndex;
-	   (right, rightIndex) <- rightDescriptors.zipWithIndex) yield {
+      for (
+        (left, leftIndex) <- leftDescriptors.zipWithIndex;
+        (right, rightIndex) <- rightDescriptors.zipWithIndex
+      ) yield {
         val distance = distanceMethod(left, right)
-	new DMatch(leftIndex, rightIndex, distance.toFloat)
+        new DMatch(leftIndex, rightIndex, distance.toFloat)
       }
     } else {
       for (((left, right), index) <- leftDescriptors.zip(rightDescriptors).zipWithIndex) yield {
-	val distance = distanceMethod(left, right)
-	new DMatch(index, index, distance.toFloat)
+        val distance = distanceMethod(left, right)
+        new DMatch(index, index, distance.toFloat)
       }
-    }    
+    }
   }
 }
 
@@ -87,13 +89,13 @@ case class L0Matcher() extends Matcher {
     allPairs: Boolean,
     leftDescriptors: Seq[D],
     rightDescriptors: Seq[D])(
-    implicit descriptorLike: DescriptorLike[D, E]): Seq[DMatch] = {
+      implicit descriptorLike: DescriptorLike[D, E]): Seq[DMatch] = {
     applyIndividual(
       (x: D, y: D) => Matcher.l0(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
-  }  
+  }
 }
 
 case class L1Matcher() extends Matcher {
@@ -103,13 +105,13 @@ case class L1Matcher() extends Matcher {
     allPairs: Boolean,
     leftDescriptors: Seq[D],
     rightDescriptors: Seq[D])(
-    implicit descriptorLike: DescriptorLike[D, Int]): Seq[DMatch] = {
+      implicit descriptorLike: DescriptorLike[D, Int]): Seq[DMatch] = {
     applyIndividual(
       (x: D, y: D) => Matcher.l1(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
-  }  
+  }
 }
 
 case class L2Matcher() extends Matcher {
@@ -119,13 +121,13 @@ case class L2Matcher() extends Matcher {
     allPairs: Boolean,
     leftDescriptors: Seq[D],
     rightDescriptors: Seq[D])(
-    implicit descriptorLike: DescriptorLike[D, Int]): Seq[DMatch] = {
+      implicit descriptorLike: DescriptorLike[D, Int]): Seq[DMatch] = {
     applyIndividual(
       (x: D, y: D) => Matcher.l2(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
-  }  
+  }
 }
 
 case class KendallTauMatcher() extends Matcher {
@@ -175,30 +177,30 @@ case class CayleyRotate4Matcher() extends Matcher {
 
 object Matcher {
   def l0[D, E](
-    left: D, 
+    left: D,
     right: D)(
-    implicit descriptorLike: DescriptorLike[D, E]): Int = {
+      implicit descriptorLike: DescriptorLike[D, E]): Int = {
     val leftValues = descriptorLike.values(left)
     val rightValues = descriptorLike.values(right)
-    leftValues.zip(rightValues).count({case (l, r) => l != r})
+    leftValues.zip(rightValues).count({ case (l, r) => l != r })
   }
 
   def l1[D](
-    left: D, 
+    left: D,
     right: D)(
-    implicit descriptorLike: DescriptorLike[D, Int]): Int = {
+      implicit descriptorLike: DescriptorLike[D, Int]): Int = {
     val leftValues = descriptorLike.values(left)
     val rightValues = descriptorLike.values(right)
-    leftValues.zip(rightValues).map({case (l, r) => (l - r).abs}).sum
+    leftValues.zip(rightValues).map({ case (l, r) => (l - r).abs }).sum
   }
 
   def l2[D](
-    left: D, 
+    left: D,
     right: D)(
-    implicit descriptorLike: DescriptorLike[D, Int]): Double = {
+      implicit descriptorLike: DescriptorLike[D, Int]): Double = {
     val leftValues = descriptorLike.values(left)
     val rightValues = descriptorLike.values(right)
-    math.sqrt(leftValues.zip(rightValues).map({case (l, r) => math.pow(l - r, 2)}).sum)
+    math.sqrt(leftValues.zip(rightValues).map({ case (l, r) => math.pow(l - r, 2) }).sum)
   }
 
   def kendallTau(left: SortDescriptor, right: SortDescriptor): Int = {
@@ -217,12 +219,12 @@ object Matcher {
     val composition = SortDescriptor.compose(left, rightInverse)
     left.values.size - SortDescriptor.numCycles(composition)
   }
-  
-//  def rotate4[D, E](
-//    descriptor: D)(implicit descriptorLike: DescriptorLike[D, E]): Seq[D] = {
-//    val values = descriptorLike.values(descriptor)
-//  }
-  
+
+  //  def rotate4[D, E](
+  //    descriptor: D)(implicit descriptorLike: DescriptorLike[D, E]): Seq[D] = {
+  //    val values = descriptorLike.values(descriptor)
+  //  }
+
   // Rotate values taken from a square patch pi / 2 radians.
   // TODO: This "rotate4" idea can be generalized to rotateN on general patches.
   def rotateQuarter[A](descriptor: SortDescriptor): SortDescriptor = {
@@ -230,26 +232,26 @@ object Matcher {
     val (patchWidth, pixels) = {
       val sqrt = math.sqrt(descriptor.values.size)
       val validGray = sqrt == sqrt.toInt
-      
+
       val sqrtThird = math.sqrt(descriptor.values.size / 3)
       val validColor = sqrtThird == sqrtThird.toInt
-      
+
       require(validGray || validColor)
       if (sqrt == sqrt.toInt) (sqrt.toInt, descriptor.values.grouped(1).toIndexedSeq)
       else (sqrtThird.toInt, descriptor.values.grouped(3).toIndexedSeq)
     }
-    
+
     val indices = (0 until pixels.size).grouped(patchWidth).toSeq
     val rotated = indices.transpose.map(_.reverse)
-    SortDescriptor(rotated.flatten.map(i => pixels(i)).flatten.toIndexedSeq)    
+    SortDescriptor(rotated.flatten.map(i => pixels(i)).flatten.toIndexedSeq)
   }
-  
+
   def rotate4(descriptor: SortDescriptor): Seq[SortDescriptor] = {
-    lazy val rotaters: Stream[SortDescriptor => SortDescriptor] = 
+    lazy val rotaters: Stream[SortDescriptor => SortDescriptor] =
       Stream.cons(identity, rotaters.map(f => rotateQuarter _ compose f))
     rotaters.map(_(descriptor)).take(4).toList
   }
-  
+
   def cayleyRotate4(left: SortDescriptor, right: SortDescriptor): Int = {
     val rightRotations = rotate4(right)
     val distances = rightRotations.map(r => cayley(left, r))

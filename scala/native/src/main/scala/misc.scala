@@ -36,14 +36,14 @@ object Global {
 object Util {
   // The correct implementation of a % b.
   def modulo(a: Double, b: Double): Double = a - (a / b).floor * b
-  
+
   // Assuming |num| is represented as an arbitrarily long unsigned int, get
   // the |numBits| low order bits in the representation, where the head of
   // the list is the high-order bit.
   def numToBits(numBits: Int)(num: Int): Seq[Boolean] = {
     require(numBits >= 0)
     require(num >= 0)
-  
+
     val divisors = (0 until numBits).reverse.map(p => math.pow(2, p).toInt)
     val divided = divisors.map(d => num / d)
     divided.map(_ % 2 == 1)
@@ -58,15 +58,15 @@ object Util {
 
     val string = write(caseClass)
     val json = parse(string)
-   
-    import scala.text.{Document, DocText}
+
+    import scala.text.{ Document, DocText }
     def documentToString(document: Document): String = document match {
       case DocText(string) => string.replace("\"", "")
       case _ => throw new Exception
     }
 
     val JObject(jObject) = json
-    val jStrings = jObject.map({case JField(key, value) => JField(key, JString(documentToString(render(value))))})
+    val jStrings = jObject.map({ case JField(key, value) => JField(key, JString(documentToString(render(value)))) })
     val jsonString = JObject(jStrings)
 
     jsonString.extract[Map[String, String]]
@@ -98,21 +98,22 @@ object Util {
   }
 
   def pruneKeyPoints(
-    leftImage: BufferedImage, 
-    rightImage: BufferedImage, 
-    homography: Homography, 
+    leftImage: BufferedImage,
+    rightImage: BufferedImage,
+    homography: Homography,
     leftKeyPoints: Seq[KeyPoint]): Seq[Tuple2[KeyPoint, KeyPoint]] = {
     val leftWidth = leftImage.getWidth
     val leftHeight = leftImage.getHeight
-    val insideLeft = 
+    val insideLeft =
       leftKeyPoints.filter(KeyPointUtil.isWithinBounds(leftWidth, leftHeight))
 
     val rightKeyPoints = insideLeft.map(KeyPointUtil.transform(homography))
 
     val rightWidth = rightImage.getWidth
     val rightHeight = rightImage.getHeight
-    for ((left, right) <- leftKeyPoints.zip(rightKeyPoints)
-         if KeyPointUtil.isWithinBounds(rightWidth, rightHeight)(right)) yield (left, right) 
+    for (
+      (left, right) <- leftKeyPoints.zip(rightKeyPoints) if KeyPointUtil.isWithinBounds(rightWidth, rightHeight)(right)
+    ) yield (left, right)
   }
 
   def imageWidthAndHeight(path: String): Tuple2[Int, Int] = {
@@ -143,27 +144,27 @@ object Util {
   def assertEQ[A](left: A, right: A) {
     assert(left == right, "%s == %s".format(left, right))
   }
-  
+
   def assertContentsEqual[A](left: Seq[A], right: Seq[A]) {
     assertEQ(left.size, right.size)
     for ((l, r) <- left.view.zip(right.view)) {
       assertEQ(l, r)
     }
   }
-  
+
   // Replace "Hi my name is ${name}." with "Hi my name is Eric."
   def bashStyleReplace(substitutions: Map[String, String], original: String): String = {
     def substituteSingle(string: String, keyAndReplacement: Tuple2[String, String]): String = {
       string.replace("${" + keyAndReplacement._1 + "}", keyAndReplacement._2)
     }
-    
+
     substitutions.foldLeft(original)(substituteSingle)
   }
-  
-//  implicit def intTimes(i: Int) = new {
-//    def times(fn: => Unit) = (1 to i) foreach (x => fn)
-//  }  
-  
+
+  //  implicit def intTimes(i: Int) = new {
+  //    def times(fn: => Unit) = (1 to i) foreach (x => fn)
+  //  }  
+
   // def imageToArray(image: BufferedImage): Array2DRealRowMatrix = {
   //   val array = new Array2DRealRowMatrix(image.getHeight, image.getWidth)
   //   for (i <- 0 until image.getHeight; j <- 0 until image.getWidth) {
@@ -173,26 +174,27 @@ object Util {
   def nextPowerOfTwo(n: Double): Int = {
     math.pow(2, (math.log(n) / math.log(2)).ceil).round.toInt
   }
-  
+
   def countSort(input: Seq[Int], min: Int, max: Int): List[Int] = {
     input.foldLeft(Array.fill(max - min + 1)(0)) {
-      (array, n) => array(n - min) += 1
-      array
+      (array, n) =>
+        array(n - min) += 1
+        array
     }.zipWithIndex.foldLeft(List[Int]()) {
-    case (lst, (cnt, ndx)) => List.fill(cnt)(ndx + min) ::: lst
-  }.reverse
+      case (lst, (cnt, ndx)) => List.fill(cnt)(ndx + min) ::: lst
+    }.reverse
   }
-  
+
   // Uses a linear time algorithm, but is in fact quite a slow implementation.
   def permutation(input: Array[Int], max: Int): Array[Int] = {
     val histogram = Array.fill(max + 1)(List[Int]())
-    input.zipWithIndex.foreach({x => histogram(x._1) = x._2 :: histogram(x._1)})
+    input.zipWithIndex.foreach({ x => histogram(x._1) = x._2 :: histogram(x._1) })
     val out = histogram.map(_.reverse).flatten
     assert(out.toSet == (0 until input.size).toSet)
     out
   }
-  
-  def recursiveListFiles(f: File): Seq[File] = { 
+
+  def recursiveListFiles(f: File): Seq[File] = {
     if (!f.exists) throw new Exception("path does not exists: %s".format(f.toString))
 
     val these = f.listFiles.toList
@@ -205,13 +207,13 @@ object Util {
     if (Global.run[RuntimeConfig].parallel) seq.par else seq
   }
 
-  def truncate(list: Seq[Double]): String = { 
+  def truncate(list: Seq[Double]): String = {
     list.map(l => "%.4f".format(l)).mkString(" ")
   }
 
   def gaussianKernel(std: Double): Seq[Seq[Double]] = {
     val width = (4 * std).ceil.toInt
-    
+
     def density(pixel: Int): Double = {
       val normalizer = 1 / (std * math.sqrt(2 * math.Pi))
 
@@ -226,7 +228,7 @@ object Util {
 
     for (p1 <- projection) yield {
       for (p2 <- projection) yield {
-	p1 * p2
+        p1 * p2
       }
     }
   }

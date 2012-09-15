@@ -31,12 +31,10 @@ trait FromXML[+A] {
 }
 
 object XMLUtil {
-  def mapOnKey[A](function: (Node) => A, key: String)
-                 (implicit node: Node): List[A] =
+  def mapOnKey[A](function: (Node) => A, key: String)(implicit node: Node): List[A] =
     (node \ key).toList.map(function)
 
-  def singleOnKey[A](function: (Node) => A, key: String)
-                    (implicit node: Node): A = {
+  def singleOnKey[A](function: (Node) => A, key: String)(implicit node: Node): A = {
     val list = mapOnKey(function, key)
     assert(list.size == 1)
     list.head
@@ -71,8 +69,8 @@ object AtomicIO {
       stream.getChannel.lock()
     } catch {
       case e: java.nio.channels.OverlappingFileLockException => {
-	Thread.sleep(50)
-	getLock(stream)
+        Thread.sleep(50)
+        getLock(stream)
       }
     }
   }
@@ -178,7 +176,7 @@ object IO {
       out
     } catch {
       case e: Exception => throw new Exception("system command failed: %s\nException was %s\n".format(command, e.toString))
-    } 
+    }
   }
 
   def runSystemCommandWaitFile(executable: String, path: String) {

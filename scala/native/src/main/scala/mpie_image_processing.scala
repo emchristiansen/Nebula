@@ -20,9 +20,9 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
   // out-of-bounds pixel, but increases computation time.
   val padding = 200
 
-  lazy val path = { 
+  lazy val path = {
     val image = ImageIO.read(new File(originalPath))
-    
+
     def warp(image: BufferedImage): BufferedImage = {
       // first get the file with the alignment matrix in it
       val pathSegment = mpieProperties.pathSegment
@@ -32,9 +32,9 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
       val tformParams = io.Source.fromFile(path).mkString.split("\t|\n").map(_.toDouble)
 
       val transformMatrix = new AffineTransform(
-	tformParams(0), tformParams(3), // column 1
-	tformParams(1), tformParams(4), // column 2
-	tformParams(2), tformParams(5)) // column 3
+        tformParams(0), tformParams(3), // column 1
+        tformParams(1), tformParams(4), // column 2
+        tformParams(2), tformParams(5)) // column 3
 
       val transformOp = new AffineTransformOp(transformMatrix, TYPE_BILINEAR);
 
@@ -42,7 +42,7 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
       Image.transparentToGreen(warped)
     }
 
-    def scale(image: BufferedImage): BufferedImage = { 
+    def scale(image: BufferedImage): BufferedImage = {
       val scaleMatrix = new AffineTransform(Global.run[MPIERuntimeConfig].scaleFactor, 0, 0, Global.run[MPIERuntimeConfig].scaleFactor, 0, 0)
       val scaleOp = new AffineTransformOp(scaleMatrix, TYPE_BILINEAR)
       scaleOp.filter(image, null)
@@ -51,45 +51,49 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
     def illumination(image: BufferedImage): BufferedImage = {
       val illum = condition.illumination
       if (!illum.contains("x")) {
-	image
+        image
       } else {
-	// When doing artificial illumination, we start with neutral.
-	assert(mpieProperties.illumination == "00")
+        // When doing artificial illumination, we start with neutral.
+        assert(mpieProperties.illumination == "00")
 
-	val factor = illum.init.toDouble
+        val factor = illum.init.toDouble
 
-	val raw = Image.toRaw(image)
-	for (y <- 0 until raw.getHeight;
-	     x <- 0 until raw.getWidth) {
-	  val pixel = Pixel.scale(Pixel.getPixel(raw, x, y), factor)
-	  raw.setRGB(x, y, pixel.argb)
-	}
-	Image.fromRaw(raw)
+        val raw = Image.toRaw(image)
+        for (
+          y <- 0 until raw.getHeight;
+          x <- 0 until raw.getWidth
+        ) {
+          val pixel = Pixel.scale(Pixel.getPixel(raw, x, y), factor)
+          raw.setRGB(x, y, pixel.argb)
+        }
+        Image.fromRaw(raw)
       }
     }
 
     def blur(image: BufferedImage): BufferedImage = {
       val std = condition.blur.toDouble
       if (std == 0) {
-	image
+        image
       } else {
-	val kernelData = Util.gaussianKernel(std)
-	val kernel = new Kernel(kernelData.size, kernelData.size, kernelData.flatten.toArray.map(_.toFloat))
-	val op = new ConvolveOp(kernel, ConvolveOp.EDGE_ZERO_FILL, null)
-	op.filter(image, null)
+        val kernelData = Util.gaussianKernel(std)
+        val kernel = new Kernel(kernelData.size, kernelData.size, kernelData.flatten.toArray.map(_.toFloat))
+        val op = new ConvolveOp(kernel, ConvolveOp.EDGE_ZERO_FILL, null)
+        op.filter(image, null)
       }
     }
 
     def noise(image: BufferedImage): BufferedImage = {
       val std = condition.noise.toDouble
       if (std != 0) {
-	for (y <- 0 until image.getHeight;
-	     x <- 0 until image.getWidth) {
-	  val pixel = Pixel.getPixel(image, x, y)
-	  val List(rNoise, gNoise, bNoise) = (0 until 3).toList.map(_ => Global.random.nextGaussian * std).map(_.toInt)
-	  val sum = Pixel.add(pixel, rNoise, gNoise, bNoise)
-	  image.setRGB(x, y, sum.argb)
-	}
+        for (
+          y <- 0 until image.getHeight;
+          x <- 0 until image.getWidth
+        ) {
+          val pixel = Pixel.getPixel(image, x, y)
+          val List(rNoise, gNoise, bNoise) = (0 until 3).toList.map(_ => Global.random.nextGaussian * std).map(_.toInt)
+          val sum = Pixel.add(pixel, rNoise, gNoise, bNoise)
+          image.setRGB(x, y, sum.argb)
+        }
       }
       image
     }
@@ -97,9 +101,9 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
     def jpeg(image: BufferedImage): BufferedImage = {
       val quality = condition.jpeg.toFloat
       if (quality == 0) {
-	image
+        image
       } else {
-	throw new Exception("not implemented")
+        throw new Exception("not implemented")
       }
     }
 
@@ -107,67 +111,69 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
       val std = condition.misalignment.toDouble
 
       if (std == 0) {
-	image
+        image
       } else {
-	val fiducials = {
-	  val Parser = """.*\((\S+), (\S+)\)""".r
+        val fiducials = {
+          val Parser = """.*\((\S+), (\S+)\)""".r
 
-	  val pathSegment = mpieProperties.pathSegment
-	  val filename = "%s_%s_%s_%s_mean_fiducials.txt".format(mpieProperties.id, mpieProperties.session, mpieProperties.expression, mpieProperties.pose)
-	  val path = "%s/processed/%s/%s".format(Global.run[MPIERuntimeConfig].piSliceRoot, pathSegment, filename)
-	  val lines = io.Source.fromFile(path).mkString.split("\n").filter(_.size > 0)
+          val pathSegment = mpieProperties.pathSegment
+          val filename = "%s_%s_%s_%s_mean_fiducials.txt".format(mpieProperties.id, mpieProperties.session, mpieProperties.expression, mpieProperties.pose)
+          val path = "%s/processed/%s/%s".format(Global.run[MPIERuntimeConfig].piSliceRoot, pathSegment, filename)
+          val lines = io.Source.fromFile(path).mkString.split("\n").filter(_.size > 0)
 
-	  val all = for (l <- lines) yield {
-	    val Parser(x, y) = l
-	    (padding + x.toDouble * Global.run[MPIERuntimeConfig].scaleFactor, padding + y.toDouble * Global.run[MPIERuntimeConfig].scaleFactor)
-	  }
+          val all = for (l <- lines) yield {
+            val Parser(x, y) = l
+            (padding + x.toDouble * Global.run[MPIERuntimeConfig].scaleFactor, padding + y.toDouble * Global.run[MPIERuntimeConfig].scaleFactor)
+          }
 
-	  // We 4 fiducials for the misalignment for each pose. Note the frontal pose
-	  // has 6 fiducials, so we drop the fiducials at the inside corners of the eyes. These
-	  // are currently at locations 1 and 2.
-	  // TODO: Stop assuming the fiducials come in a particular order.
-	  val culled = if (all.size == 6) {
-	    all.take(1) ++ all.drop(3)
-	  } else {
-	    all
-	  }
-	  assert(culled.size == 4)
-	  culled.toList
-	}
+          // We 4 fiducials for the misalignment for each pose. Note the frontal pose
+          // has 6 fiducials, so we drop the fiducials at the inside corners of the eyes. These
+          // are currently at locations 1 and 2.
+          // TODO: Stop assuming the fiducials come in a particular order.
+          val culled = if (all.size == 6) {
+            all.take(1) ++ all.drop(3)
+          } else {
+            all
+          }
+          assert(culled.size == 4)
+          culled.toList
+        }
 
-	def perturb(xy: Tuple2[Double, Double]): Tuple2[Double, Double] = {
-	  val xNoise = Global.random.nextGaussian * std
-	  val yNoise = Global.random.nextGaussian * std
+        def perturb(xy: Tuple2[Double, Double]): Tuple2[Double, Double] = {
+          val xNoise = Global.random.nextGaussian * std
+          val yNoise = Global.random.nextGaussian * std
 
-	  val (x, y) = xy
-	  (x + xNoise, y + yNoise)
-	}
+          val (x, y) = xy
+          (x + xNoise, y + yNoise)
+        }
 
-	val perturbed = fiducials.map(perturb)
+        val perturbed = fiducials.map(perturb)
 
-	val tformParams = Geometry.fitSimilarity(fiducials, perturbed).flatten
+        val tformParams = Geometry.fitSimilarity(fiducials, perturbed).flatten
 
-	val transformMatrix = new AffineTransform(
-	  tformParams(0), tformParams(3), // column 1
-	  tformParams(1), tformParams(4), // column 2
-	  tformParams(2), tformParams(5)) // column 3
+        val transformMatrix = new AffineTransform(
+          tformParams(0), tformParams(3), // column 1
+          tformParams(1), tformParams(4), // column 2
+          tformParams(2), tformParams(5)) // column 3
 
-	val transformOp = new AffineTransformOp(transformMatrix, TYPE_BILINEAR);
+        val transformOp = new AffineTransformOp(transformMatrix, TYPE_BILINEAR);
 
-	val transformed = new BufferedImage(image.getWidth, image.getHeight, image.getType)
-	transformOp.filter(image, transformed)
+        val transformed = new BufferedImage(image.getWidth, image.getHeight, image.getType)
+        transformOp.filter(image, transformed)
 
-	assert(transformed.getWidth == image.getWidth && transformed.getHeight == image.getHeight)
+        assert(transformed.getWidth == image.getWidth && transformed.getHeight == image.getHeight)
 
-	Image.transparentToGreen(transformed)
+        Image.transparentToGreen(transformed)
       }
     }
 
     def padImage(image: BufferedImage): BufferedImage = {
       val padded = new BufferedImage(2 * padding + image.getWidth, 2 * padding + image.getHeight, image.getType)
-      for (y <- 0 until image.getHeight;
-	   x <- 0 until image.getWidth) {
-	     padded.setRGB(padding + x, padding + y, image.getRGB(x, y))
+      for (
+        y <- 0 until image.getHeight;
+        x <- 0 until image.getWidth
+      ) {
+        padded.setRGB(padding + x, padding + y, image.getRGB(x, y))
       }
       padded
     }
@@ -175,54 +181,56 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
     def background(unpaddedImage: BufferedImage): BufferedImage = {
       val image = padImage(unpaddedImage)
 
-      val mask = { 
-	val pathSegment = mpieProperties.pathSegment
-	val filename = "%s_%s_%s_%s_mean_alpha.png".format(mpieProperties.id, mpieProperties.session, mpieProperties.expression, mpieProperties.pose)
-	val path = "%s/processed/%s/%s".format(Global.run[MPIERuntimeConfig].piSliceRoot, pathSegment, filename)
-	padImage(scale(warp(ImageIO.read(new File(path)))))
+      val mask = {
+        val pathSegment = mpieProperties.pathSegment
+        val filename = "%s_%s_%s_%s_mean_alpha.png".format(mpieProperties.id, mpieProperties.session, mpieProperties.expression, mpieProperties.pose)
+        val path = "%s/processed/%s/%s".format(Global.run[MPIERuntimeConfig].piSliceRoot, pathSegment, filename)
+        padImage(scale(warp(ImageIO.read(new File(path)))))
       }
 
-      lazy val syntheticBackground = { 
-	val directory = "%s/session%s".format(Global.run[MPIERuntimeConfig].backgroundRoot, mpieProperties.session)
-	val file = { 
-	  val files = (new File(directory)).listFiles.toList.filter(!_.toString.contains(".DS_Store"))
-	  Global.random.shuffle(files).head
-	}
-	val synthetic = ImageIO.read(file)
-	val x = Global.random.nextInt(synthetic.getWidth - image.getWidth)
-	val y = Global.random.nextInt(synthetic.getHeight - image.getHeight)
-	synthetic.getSubimage(x, y, image.getWidth, image.getHeight)
+      lazy val syntheticBackground = {
+        val directory = "%s/session%s".format(Global.run[MPIERuntimeConfig].backgroundRoot, mpieProperties.session)
+        val file = {
+          val files = (new File(directory)).listFiles.toList.filter(!_.toString.contains(".DS_Store"))
+          Global.random.shuffle(files).head
+        }
+        val synthetic = ImageIO.read(file)
+        val x = Global.random.nextInt(synthetic.getWidth - image.getWidth)
+        val y = Global.random.nextInt(synthetic.getHeight - image.getHeight)
+        synthetic.getSubimage(x, y, image.getWidth, image.getHeight)
       }
 
-      for (h <- 0 until image.getHeight;
-	   w <- 0 until image.getWidth) {
-	val gray = { 
-	  val Pixel(_, r, g, b) = Pixel.getPixel(mask, w, h)
-	  (r + g + b) / 3
-	}
-	if (gray < 127) {
-	  condition.background match {
-	    case "synthetic" => image.setRGB(w, h, syntheticBackground.getRGB(w, h))
-	    case "blank" => image.setRGB(w, h, Pixel.green)
-	    case _ => throw new Exception
-	  }
-	}
+      for (
+        h <- 0 until image.getHeight;
+        w <- 0 until image.getWidth
+      ) {
+        val gray = {
+          val Pixel(_, r, g, b) = Pixel.getPixel(mask, w, h)
+          (r + g + b) / 3
+        }
+        if (gray < 127) {
+          condition.background match {
+            case "synthetic" => image.setRGB(w, h, syntheticBackground.getRGB(w, h))
+            case "blank" => image.setRGB(w, h, Pixel.green)
+            case _ => throw new Exception
+          }
+        }
       }
-     
+
       image
     }
 
-    def roi(image: BufferedImage): BufferedImage = { 
+    def roi(image: BufferedImage): BufferedImage = {
       // figure out the path to the mask
-      val poseUnderscore = condition.pose match { 
-	case "240" => "24_0"
-	case "190" => "19_0"
-	case "051" => "05_1"
+      val poseUnderscore = condition.pose match {
+        case "240" => "24_0"
+        case "190" => "19_0"
+        case "051" => "05_1"
       }
-      
+
       val roiPath = Global.run[MPIERuntimeConfig].piSliceRoot ++ "/processed/roi/" ++ poseUnderscore ++ "/" ++ roiString ++ ".png"
       val roiImg = padImage(scale(ImageIO.read(new File(roiPath))))
-      
+
       Image.extractROI(roiImg, image)
     }
 

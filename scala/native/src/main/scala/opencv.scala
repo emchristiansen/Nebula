@@ -40,12 +40,12 @@ object KeyPointUtil {
 
   def withDefaults(x: Float, y: Float): KeyPoint = {
     new KeyPoint(
-      x, 
-      y, 
-      defaultSize, 
-      defaultAngle, 
-      defaultResponse, 
-      defaultOctave, 
+      x,
+      y,
+      defaultSize,
+      defaultAngle,
+      defaultResponse,
+      defaultOctave,
       defaultClassID)
   }
 
@@ -56,12 +56,12 @@ object KeyPointUtil {
 
   def keyPointAt(keyPoints: KeyPoint, index: Int): KeyPoint = {
     keyPoints.position(index)
-    new KeyPoint(keyPoints.pt, 
-		 keyPoints.size, 
-		 keyPoints.angle, 
-		 keyPoints.response, 
-		 keyPoints.octave, 
-		 keyPoints.class_id)
+    new KeyPoint(keyPoints.pt,
+      keyPoints.size,
+      keyPoints.angle,
+      keyPoints.response,
+      keyPoints.octave,
+      keyPoints.class_id)
   }
 
   def keyPointsToSeq(keyPoints: KeyPoint): Seq[KeyPoint] = {
@@ -88,7 +88,7 @@ object KeyPointUtil {
     keyPoints.position(0)
     keyPoints
   }
-  
+
   def toString(keyPoint: KeyPoint): String = {
     "KeyPoint(%s, %s, %s, %s, %s, %s, %s)".format(
       keyPoint.pt_x,
@@ -112,11 +112,11 @@ object KeyPointUtil {
 
     val xOffset = hPlusX.subtract(hBase)
     val yOffset = hPlusY.subtract(hBase)
-    
+
     val parallelepiped = new Array2DRowRealMatrix(
       Array(
-	xOffset.toArray,
-	yOffset.toArray),
+        xOffset.toArray,
+        yOffset.toArray),
       true)
     (new LUDecomposition(parallelepiped)).getDeterminant
   }
@@ -127,7 +127,7 @@ object KeyPointUtil {
   // TODO: Add such a function to OpenCV if it doesn't have one.
   def transform(homography: Homography)(keyPoint: KeyPoint): KeyPoint = {
     val xyPoint = new ArrayRealVector(Array(
-      keyPoint.pt_x.toDouble, 
+      keyPoint.pt_x.toDouble,
       keyPoint.pt_y.toDouble))
 
     val size = scaleFactor(homography, xyPoint) * keyPoint.size
@@ -185,10 +185,10 @@ class DMatchSerializer extends Serializer[DMatch] {
   def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), DMatch] = {
     case (TypeInfo(DMatchClass, _), json) => json match {
       case JObject(
-	JField("jsonClass", JString("DMatch")) ::
-	JField("queryIdx", JInt(queryIdx)) :: 
-        JField("trainIdx", JInt(trainIdx)) :: 
-        JField("distance", JDouble(distance)) :: Nil) =>
+        JField("jsonClass", JString("DMatch")) ::
+          JField("queryIdx", JInt(queryIdx)) ::
+          JField("trainIdx", JInt(trainIdx)) ::
+          JField("distance", JDouble(distance)) :: Nil) =>
         new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
       case x => throw new MappingException("Can't convert " + x + " to DMatch")
     }
@@ -197,9 +197,9 @@ class DMatchSerializer extends Serializer[DMatch] {
   def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
     case x: DMatch =>
       JObject(
-	JField("jsonClass", JString("DMatch")) ::
-	JField("queryIdx", JInt(x.queryIdx)) :: 
-        JField("trainIdx", JInt(x.trainIdx)) :: 
-	JField("distance", JDouble(x.distance)) :: Nil)
+        JField("jsonClass", JString("DMatch")) ::
+          JField("queryIdx", JInt(x.queryIdx)) ::
+          JField("trainIdx", JInt(x.trainIdx)) ::
+          JField("distance", JDouble(x.distance)) :: Nil)
   }
 }

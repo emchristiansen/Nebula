@@ -24,12 +24,12 @@ case class RichImage(image: BufferedImage) {
     require(y >= 0 && y < image.getHeight)
     Pixel.getPixel(image, x, y)
   }
-  
+
   // Uses linear interpolation.
   def getSubPixel(x: Double, y: Double): Pixel = {
     require(x >= 0 && x < image.getWidth)
-    require(y >= 0 && y < image.getHeight)    
-    
+    require(y >= 0 && y < image.getHeight)
+
     def intsAndWeights(double: Double): List[Tuple2[Int, Double]] = {
       val floor = double.floor
       if (floor == double) {
@@ -41,21 +41,21 @@ case class RichImage(image: BufferedImage) {
         List((floor.toInt, floorWeight), (ceil.toInt, ceilWeight))
       }
     }
-    
+
     val xIntsAndWeights = intsAndWeights(x)
     val yIntsAndWeights = intsAndWeights(y)
-    
+
     val summands = for (
       (xInt, xWeight) <- xIntsAndWeights;
       (yInt, yWeight) <- yIntsAndWeights
     ) yield {
       val weight = xWeight * yWeight
       val pixel = getPixel(xInt, yInt)
-      
+
       val Pixel(a, r, g, b) = pixel
       List(weight * a, weight * r, weight * g, weight * b)
     }
-    
+
     val List(a, r, g, b) = summands.transpose.map(_.sum)
     Pixel(a.toInt, r.toInt, g.toInt, b.toInt)
   }
@@ -68,9 +68,8 @@ object RichImage {
 object ImageProcessing {
   def boxBlur(boxWidth: Int, image: BufferedImage): BufferedImage = {
 
-    
     val pixel = image.getSubPixel(0, 1)
-    
+
     val kernel = {
       val numPixels = boxWidth * boxWidth
       val kernelValues = Array.fill(numPixels)((1.0 / numPixels).toFloat)
@@ -82,10 +81,10 @@ object ImageProcessing {
 
   // A subpixel version of |BufferedImage.getSubimage|.
   def getSubimage(image: BufferedImage,
-		  x: Double, 
-		  y: Double,
-		  width: Int, 
-		  height: Int): BufferedImage = {
+                  x: Double,
+                  y: Double,
+                  width: Int,
+                  height: Int): BufferedImage = {
     require(x >= 0)
     require(x + width < image.getWidth)
     require(y >= 0)
@@ -100,7 +99,7 @@ object ImageProcessing {
     // line up.
     val xResidual = x - xInt
     val yResidual = y - yInt
-    
+
     val translation = new AffineTransform
     translation.translate(-xResidual, -yResidual)
     val op = new AffineTransformOp(translation, AffineTransformOp.TYPE_BILINEAR)
@@ -111,8 +110,8 @@ object ImageProcessing {
   }
 
   def extractPatch(image: BufferedImage,
-  		   patchWidth: Int,
-  		   keyPoint: KeyPoint): Option[BufferedImage] = {
+                   patchWidth: Int,
+                   keyPoint: KeyPoint): Option[BufferedImage] = {
     try {
       val x = keyPoint.pt_x - patchWidth / 2.0
       val y = keyPoint.pt_y - patchWidth / 2.0
@@ -123,7 +122,7 @@ object ImageProcessing {
   }
 }
 
-case class Pixel(val alpha: Int, val red: Int, val green: Int, val blue: Int) { 
+case class Pixel(val alpha: Int, val red: Int, val green: Int, val blue: Int) {
   private def valid(color: Int): Boolean = color >= 0 && color <= 255
 
   assert(valid(alpha) && valid(red) && valid(green) && valid(blue))
@@ -146,7 +145,7 @@ case class Pixel(val alpha: Int, val red: Int, val green: Int, val blue: Int) {
 
   def gray: Seq[Int] = Seq((red + green + blue) / 3)
   def sRGB: Seq[Int] = Seq(red, green, blue)
-  def lRGB: Seq[Int]= {
+  def lRGB: Seq[Int] = {
     val converter = new LinearRGBConverter
     converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).map(x => (255 * x).toInt).toSeq
   }
@@ -155,7 +154,7 @@ case class Pixel(val alpha: Int, val red: Int, val green: Int, val blue: Int) {
   }
   def lab: Seq[Int] = {
     val converter = CIELab.getInstance
-//    println(List(red, green, blue))
+    //    println(List(red, green, blue))
     // println(converter.fromRGB(Array(red, green, blue).map(_.toFloat)).toSeq)
     // println(converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).toSeq)
     converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).toSeq.map(_.toInt)
@@ -182,7 +181,7 @@ object Pixel {
     (byte0, byte1, byte2, byte3)
   }
 
-  def getPixel(image: BufferedImage, x: Int, y: Int): Pixel = { 
+  def getPixel(image: BufferedImage, x: Int, y: Int): Pixel = {
     val argb = image.getRGB(x, y)
     val (alpha, red, green, blue) = breakIntoBytes(argb)
 
@@ -191,23 +190,29 @@ object Pixel {
 
   // TODO: Rename
   def getPixelsOriginal(image: BufferedImage): IndexedSeq[Pixel] = {
-    (for (h <- 0 until image.getHeight;
-	  w <- 0 until image.getWidth) yield { 
+    (for (
+      h <- 0 until image.getHeight;
+      w <- 0 until image.getWidth
+    ) yield {
       getPixel(image, w, h)
     }).toIndexedSeq
   }
 
   def getPixels(image: BufferedImage): IndexedSeq[Int] = {
-    (for (h <- 0 until image.getHeight;
-	  w <- 0 until image.getWidth) yield { 
+    (for (
+      h <- 0 until image.getHeight;
+      w <- 0 until image.getWidth
+    ) yield {
       val Pixel(_, red, green, blue) = getPixel(image, w, h)
       List(red, green, blue)
     }).flatten.toIndexedSeq
   }
 
   def getPixelsGray(image: BufferedImage): IndexedSeq[Int] = {
-    (for (h <- 0 until image.getHeight;
-	  w <- 0 until image.getWidth) yield { 
+    (for (
+      h <- 0 until image.getHeight;
+      w <- 0 until image.getWidth
+    ) yield {
       getPixel(image, w, h).gray.head
     }).toIndexedSeq
   }
@@ -217,10 +222,10 @@ object Pixel {
     val convertedImage = colorConvertOp.filter(image, null)
 
     val packedPixels = image.getRaster.getDataBuffer.asInstanceOf[DataBufferInt].getData
-    
-    packedPixels.map(breakIntoBytes).flatMap({case (a, b, c, d) => List(a, b, c, d)})
+
+    packedPixels.map(breakIntoBytes).flatMap({ case (a, b, c, d) => List(a, b, c, d) })
   }
-  
+
   def fromUnclipped(a: Int, r: Int, g: Int, b: Int): Pixel = {
     Pixel(clip(a), clip(r), clip(g), clip(b))
   }
@@ -277,32 +282,32 @@ object Image {
     var maxx = -1;
     var maxy = -1;
     val maskedImg = new BufferedImage(cols, rows, image.getType())
-    for(i_rows <- 0 until rows) {
-      for(i_cols <- 0 until cols) {
-	// if this pixel is not 100% black, then this is considered
-	// to be an on pixel
-	if( (roiImg.getRGB(i_cols, i_rows) & 0x00ffffff) != 0 ) {
-	  // copy the pixel color value from original image to the masked
-	  // image
-	  maskedImg.setRGB(i_cols, i_rows, image.getRGB(i_cols, i_rows))
+    for (i_rows <- 0 until rows) {
+      for (i_cols <- 0 until cols) {
+        // if this pixel is not 100% black, then this is considered
+        // to be an on pixel
+        if ((roiImg.getRGB(i_cols, i_rows) & 0x00ffffff) != 0) {
+          // copy the pixel color value from original image to the masked
+          // image
+          maskedImg.setRGB(i_cols, i_rows, image.getRGB(i_cols, i_rows))
 
-	  // see if this is a new minx, miny
-	  if( i_cols < minx ) {
+          // see if this is a new minx, miny
+          if (i_cols < minx) {
             minx = i_cols
-	  }
-	  if( i_cols > maxx ) {
+          }
+          if (i_cols > maxx) {
             maxx = i_cols
-	  }
-	  if( i_rows < miny ) {
+          }
+          if (i_rows < miny) {
             miny = i_rows
-	  }
-	  if( i_rows > maxy ) {
+          }
+          if (i_rows > maxy) {
             maxy = i_rows
-	  }
-	} // is this an on pixel?
-	  else {
-	    maskedImg.setRGB(i_cols,i_rows, Pixel.green)
-	  } // else of is this an on pixel?
+          }
+        } // is this an on pixel?
+        else {
+          maskedImg.setRGB(i_cols, i_rows, Pixel.green)
+        } // else of is this an on pixel?
 
       } // loop over cols
     } // loop over rows
@@ -311,16 +316,18 @@ object Image {
 
     // crop the image
     val crop_rect = new Rectangle(minx, miny, width, height)
-    
+
     val overlap = crop_rect.intersection(new Rectangle(image.getWidth(), image.getHeight()))
     val clipped = maskedImg.getSubimage(overlap.x, overlap.y, overlap.width, overlap.height)
 
     clipped
   }
-  
+
   def transparentToGreen(image: BufferedImage): BufferedImage = {
-    for (y <- 0 until image.getHeight;
-	 x <- 0 until image.getWidth) {
+    for (
+      y <- 0 until image.getHeight;
+      x <- 0 until image.getWidth
+    ) {
       val pixel = Pixel.getPixel(image, x, y)
       if (pixel.alpha == 0) image.setRGB(x, y, Pixel.green)
     }
@@ -332,8 +339,10 @@ object Image {
 
   private def powerImage(in: BufferedImage, pwr: Double): BufferedImage = {
     val out = new BufferedImage(in.getWidth, in.getHeight, in.getType)
-    for (y <- 0 until out.getHeight;
-	 x <- 0 until out.getWidth) {
+    for (
+      y <- 0 until out.getHeight;
+      x <- 0 until out.getWidth
+    ) {
       val pixel = Pixel.power(Pixel.getPixel(in, x, y), pwr)
       out.setRGB(x, y, pixel.argb)
     }

@@ -8,17 +8,17 @@ case class CorrespondenceExperimentParameterized[T <: Detector, D <: Descriptor,
   val detector: T,
   val extractor: E,
   val matcher: M)(
-  implicit detectorLike: DetectorLike[T],
-  extractorLike: ExtractorLike[E, D],
-  matcherLike: MatcherLike[M, D]) extends Experiment {
+    implicit detectorLike: DetectorLike[T],
+    extractorLike: ExtractorLike[E, D],
+    matcherLike: MatcherLike[M, D]) extends Experiment {
   val parameterAbbreviations: Seq[String] = "IC OI D E M".split(" ").toList
   val parameterValues: Seq[String] = List(
-    imageClass, 
-    otherImage.toString, 
+    imageClass,
+    otherImage.toString,
     Util.abbreviate(detector),
     Util.abbreviate(extractor),
     Util.abbreviate(matcher))
-  
+
   def stringMap = parameterAbbreviations.zip(parameterValues).toMap
 
   lazy val leftImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img1.bmp".format(imageClass))
@@ -29,7 +29,7 @@ case class CorrespondenceExperimentParameterized[T <: Detector, D <: Descriptor,
   def homography = Homography.fromFile(homographyFile)
 }
 
-case class CorrespondenceExperiment (
+case class CorrespondenceExperiment(
   val imageClass: String,
   val otherImage: Int,
   val detector: Detector,
@@ -37,12 +37,12 @@ case class CorrespondenceExperiment (
   val matcher: Matcher) extends Experiment {
   val parameterAbbreviations: Seq[String] = "IC OI D E M".split(" ").toList
   val parameterValues: Seq[String] = List(
-    imageClass, 
-    otherImage.toString, 
+    imageClass,
+    otherImage.toString,
     Util.abbreviate(detector),
     Util.abbreviate(extractor),
     Util.abbreviate(matcher))
-  
+
   def stringMap = parameterAbbreviations.zip(parameterValues).toMap
 
   lazy val leftImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img1.bmp".format(imageClass))

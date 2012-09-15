@@ -39,8 +39,8 @@ object PermutationLike {
       SortDescriptor.invert(permutation)
     override def compose(
       leftPermutation: SortDescriptor,
-      rightPermutation: SortDescriptor) = 
-	SortDescriptor.compose(leftPermutation, rightPermutation)
+      rightPermutation: SortDescriptor) =
+      SortDescriptor.compose(leftPermutation, rightPermutation)
     override def numCycles(permutation: SortDescriptor) =
       SortDescriptor.numCycles(permutation)
   }
@@ -71,15 +71,15 @@ object SortDescriptor {
     val seen = collection.mutable.Set[Int]()
     var numCycles = 0
     for (start <- permutation.values) {
-      numCycles += {if (seen.contains(start)) 0 else 1}
+      numCycles += { if (seen.contains(start)) 0 else 1 }
       var current = permutation.values(start)
       while (current != start) {
-	seen += current
-	current = permutation.values(current)
+        seen += current
+        current = permutation.values(current)
       }
     }
     numCycles
-  }  
+  }
 
   // implicit def indexedSeq(sortDescriptor: SortDescriptor): IndexedSeq[Int] =
   //   sortDescriptor.values
@@ -137,18 +137,18 @@ object ExtractorLike {
   val instances: Seq[Class[_]] = Seq(classOf[RawExtractor], classOf[SortExtractor])
 
   implicit def raw = new ExtractorLike[RawExtractor, RawDescriptor[Int]] {
-    override def apply(extractor: RawExtractor) = 
+    override def apply(extractor: RawExtractor) =
       ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 
   implicit def sort = new ExtractorLike[SortExtractor, SortDescriptor] {
-    override def apply(extractor: SortExtractor) = 
+    override def apply(extractor: SortExtractor) =
       ExtractorImpl.applySeveral(extractor.extractSingle)
   }
-  
+
   implicit def brisk = new ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]] {
-//    override def apply(extractor: BRISKExtractor) = extractor.extract
-    override def apply(extractor: BRISKExtractor) = 
+    //    override def apply(extractor: BRISKExtractor) = extractor.extract
+    override def apply(extractor: BRISKExtractor) =
       ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 }
@@ -158,7 +158,7 @@ object ExtractorImpl {
 
   type ExtractorAction[D] = (BufferedImage, Seq[KeyPoint]) => Seq[Option[D]]
 
-  def applySeveral[D](extractSingle: ExtractorActionSingle[D]): ExtractorAction[D] = 
+  def applySeveral[D](extractSingle: ExtractorActionSingle[D]): ExtractorAction[D] =
     (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
       keyPoints.map(k => extractSingle(image, k))
 
@@ -168,8 +168,8 @@ object ExtractorImpl {
     patchWidth: Int,
     blurWidth: Int,
     color: String)(
-    image: BufferedImage,
-    keyPoint: KeyPoint): Option[RawDescriptor[Int]] = {
+      image: BufferedImage,
+      keyPoint: KeyPoint): Option[RawDescriptor[Int]] = {
     // TODO
     assert(!normalizeRotation)
     assert(!normalizeScale)
@@ -185,22 +185,22 @@ object ExtractorImpl {
       // } else if (color == "sRGB") {
       // 	RawDescriptor(Pixel.getPixels(patch))
       // } else {
-	val values = color match {
-	  case "Gray" => Pixel.getPixelsGray(patch)
-	  case "sRGB" => Pixel.getPixels(patch)
-	  case "lRGB" => Pixel.getPixelsOriginal(patch).flatMap(_.lRGB)
-	  case "HSB" => Pixel.getPixelsOriginal(patch).flatMap(_.hsb)
-	  case "Lab" => Pixel.getPixelsOriginal(patch).flatMap(_.lab)
-	  case "XYZ" => Pixel.getPixelsOriginal(patch).flatMap(_.xyz)
-	  case _ => sys.error("TODO")
-	  // case "CIEXYZ" => ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
-	  // case "LINEAR_RGB" => ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB)
-	  // case "PYCC" => ColorSpace.getInstance(ColorSpace.CS_PYCC)
-	  // case _ => sys.error("TODO")
-	}
-	RawDescriptor(values)
-//      }
-    }    
+      val values = color match {
+        case "Gray" => Pixel.getPixelsGray(patch)
+        case "sRGB" => Pixel.getPixels(patch)
+        case "lRGB" => Pixel.getPixelsOriginal(patch).flatMap(_.lRGB)
+        case "HSB" => Pixel.getPixelsOriginal(patch).flatMap(_.hsb)
+        case "Lab" => Pixel.getPixelsOriginal(patch).flatMap(_.lab)
+        case "XYZ" => Pixel.getPixelsOriginal(patch).flatMap(_.xyz)
+        case _ => sys.error("TODO")
+        // case "CIEXYZ" => ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
+        // case "LINEAR_RGB" => ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB)
+        // case "PYCC" => ColorSpace.getInstance(ColorSpace.CS_PYCC)
+        // case _ => sys.error("TODO")
+      }
+      RawDescriptor(values)
+      //      }
+    }
   }
 }
 
@@ -231,17 +231,17 @@ case class SortExtractor(
   val color: String) extends Extractor {
   import ExtractorImpl._
 
-  def extractSingle: ExtractorActionSingle[SortDescriptor] = 
+  def extractSingle: ExtractorActionSingle[SortDescriptor] =
     (image: BufferedImage, keyPoint: KeyPoint) => {
       val unsortedOption = rawPixels(
-	normalizeRotation,
-	normalizeScale,
-	patchWidth,
-	blurWidth,
-	color)(image, keyPoint)
+        normalizeRotation,
+        normalizeScale,
+        patchWidth,
+        blurWidth,
+        color)(image, keyPoint)
       for (unsorted <- unsortedOption) yield {
-	val descriptorLike = implicitly[DescriptorLike[RawDescriptor[Int], Int]]
-	SortDescriptor.fromUnsorted(descriptorLike.values(unsorted))
+        val descriptorLike = implicitly[DescriptorLike[RawDescriptor[Int], Int]]
+        SortDescriptor.fromUnsorted(descriptorLike.values(unsorted))
       }
     }
 }
@@ -251,7 +251,7 @@ case class BRISKExtractor(
   val normalizeScale: Boolean) extends Extractor {
   import ExtractorImpl._
 
-  def extract: ExtractorAction[RawDescriptor[Boolean]] = 
+  def extract: ExtractorAction[RawDescriptor[Boolean]] =
     (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
       val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
       val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
@@ -278,19 +278,18 @@ case class BRISKExtractor(
       val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(Seq(keyPoint))
       extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
       try {
-	if (
-	  descriptorMat == null || 
-	  descriptorMat.rows == 0 || 
-	  descriptorMat.cols == 0) None
-	else {
-	  val descriptorInts = OpenCVUtil.cvMatToSeq(descriptorMat).map(_.toInt)
-	  val booleans = descriptorInts.flatMap(Util.numToBits(8))
-      	  Some(RawDescriptor(booleans.toIndexedSeq))
-	}
+        if (descriptorMat == null ||
+          descriptorMat.rows == 0 ||
+          descriptorMat.cols == 0) None
+        else {
+          val descriptorInts = OpenCVUtil.cvMatToSeq(descriptorMat).map(_.toInt)
+          val booleans = descriptorInts.flatMap(Util.numToBits(8))
+          Some(RawDescriptor(booleans.toIndexedSeq))
+        }
       } catch {
-	// TODO: For some reason, I can't check for nullity of the native pointer
-	// using " == null", so I'm using this ugly try-catch.
-	case _: NullPointerException => None
+        // TODO: For some reason, I can't check for nullity of the native pointer
+        // using " == null", so I'm using this ugly try-catch.
+        case _: NullPointerException => None
       }
     }
 }

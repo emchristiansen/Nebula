@@ -28,7 +28,7 @@ trait RuntimeConfigTrait {
 // TODO: This duplication is a bit janky, but I don't want to use anything other
 // than case classes and traits, and given that constraint don't see a way to
 // avoid this.
-case class RuntimeConfig (
+case class RuntimeConfig(
   override val projectRoot: File,
   override val nebulaRoot: File,
   override val parallel: Boolean,

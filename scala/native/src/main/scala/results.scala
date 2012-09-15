@@ -9,10 +9,10 @@ case class PredictionAndTruth(val prediction: Double, val truth: Boolean)
 
 case class ResultsData(val predictionsAndTruths: Seq[PredictionAndTruth])
 
-object ResultsData { 
+object ResultsData {
   def sorted(predictions: Seq[Double], truths: Seq[Boolean]): ResultsData = {
     val sortedPairs = predictions.zip(truths).sortBy(_._1)
-    val predictionsAndTruths = 
+    val predictionsAndTruths =
       sortedPairs.map(e => PredictionAndTruth(e._1, e._2))
     ResultsData(predictionsAndTruths)
   }
@@ -23,13 +23,14 @@ case class CorrespondenceExperimentResults(
   dmatches: Seq[DMatch]) {
   def save {
     println("Writing to %s".format(experiment.path))
-    IO.toJSONFileAbstract(ExperimentIO.formats,
-  			  this, 
-  			  experiment.path)
+    IO.toJSONFileAbstract(
+      ExperimentIO.formats,
+      this,
+      experiment.path)
   }
 }
 
-object CorrespondenceExperimentResults { 
+object CorrespondenceExperimentResults {
   def runExperiment(
     experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
     import DetectorImpl._
@@ -83,54 +84,54 @@ object CorrespondenceExperimentResults {
     // pose a problem with that approach.
     (experiment.extractor, experiment.matcher) match {
       case (extractor: RawExtractor, matcher: L0Matcher) => {
-	val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Int]]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Int]]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case (extractor: RawExtractor, matcher: L1Matcher) => {
-	val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[L1Matcher, RawDescriptor[Int]]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L1Matcher, RawDescriptor[Int]]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case (extractor: RawExtractor, matcher: L2Matcher) => {
-	val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[L2Matcher, RawDescriptor[Int]]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L2Matcher, RawDescriptor[Int]]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case (extractor: SortExtractor, matcher: L0Matcher) => {
-	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[L0Matcher, SortDescriptor]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L0Matcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case (extractor: SortExtractor, matcher: L1Matcher) => {
-	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[L1Matcher, SortDescriptor]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L1Matcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case (extractor: SortExtractor, matcher: L2Matcher) => {
-	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[L2Matcher, SortDescriptor]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L2Matcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case (extractor: SortExtractor, matcher: KendallTauMatcher) => {
-	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[KendallTauMatcher, SortDescriptor]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[KendallTauMatcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case (extractor: SortExtractor, matcher: CayleyMatcher) => {
-	val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[CayleyMatcher, SortDescriptor]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[CayleyMatcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case (extractor: SortExtractor, matcher: CayleyRotate4Matcher) => {
-  val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
-  val matcherAction = implicitly[MatcherLike[CayleyRotate4Matcher, SortDescriptor]].apply(matcher)
-  runWithActions(extractorAction, matcherAction)
-      }      
+        val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[CayleyRotate4Matcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
+      }
       case (extractor: BRISKExtractor, matcher: L0Matcher) => {
-	val extractorAction = implicitly[ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]]].apply(extractor)
-	val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Boolean]]].apply(matcher)
-	runWithActions(extractorAction, matcherAction)
+        val extractorAction = implicitly[ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Boolean]]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
       }
       case _ => sys.error("You must manually add the experiment to this list")
     }
