@@ -1,20 +1,6 @@
-import nebula._
-
 import org.scalatest.FunSuite
- 
-import javax.imageio.ImageIO
-import java.io.File
 
-import com.googlecode.javacv.cpp.opencv_features2d._
-
-import net.liftweb.json._
-import net.liftweb.json.Serialization.{read, write}
-
-import com.twitter.util._
-
-import breeze.linalg._
-
-class TestAnything extends FunSuite { 
+class TestAnything extends FunSuite {
   val source = """
   import nebula._
 
@@ -26,13 +12,12 @@ class TestAnything extends FunSuite {
       L0Matcher())
   experiment1
 """
-  
-    
+
   test("anything") {
-//    val x = DenseVector.zeros[Double](2)
-//    println(x)
-////    val y = new DenseMatrix[Double](5, 4)
-//    val y = DenseMatrix.tabulate(4, 3)((i, j) => "hi")
-//    println(y)
+    //    val x = DenseVector.zeros[Double](2)
+    //    println(x)
+    ////    val y = new DenseMatrix[Double](5, 4)
+    //    val y = DenseMatrix.tabulate(4, 3)((i, j) => "hi")
+    //    println(y)
   }
 }

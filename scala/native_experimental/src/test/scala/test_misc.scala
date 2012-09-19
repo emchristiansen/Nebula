@@ -1,18 +1,10 @@
-import nebula._
-
 import org.scalatest.FunSuite
- 
-import javax.imageio.ImageIO
-import java.io.File
 
-import com.googlecode.javacv.cpp.opencv_features2d._
-
-import net.liftweb.json._
-import net.liftweb.json.Serialization.{read, write}
+import nebula.{ CorrespondenceExperiment, FASTDetector, L0Matcher, SortExtractor, Util }
 
 case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
-class TestMisc extends FunSuite { 
+class TestMisc extends FunSuite {
   test("caseClassToStringMap") {
     val person = Person("Eric", "Christiansen", 42, 3.14)
 
@@ -22,8 +14,8 @@ class TestMisc extends FunSuite {
     assert(map === goldenMap)
 
     val experiment1 = CorrespondenceExperiment(
-      "bikes", 
-      2, 
+      "bikes",
+      2,
       FASTDetector(100),
       SortExtractor(false, false, 8, 5, "Gray"),
       L0Matcher())
