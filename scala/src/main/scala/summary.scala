@@ -28,14 +28,20 @@ object Summary {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 sealed trait ExperimentSummary
+
 case class ExperimentSummaryDouble(
   name: String,
   value: Double) extends ExperimentSummary
+
 case class ExperimentSummaryBufferedImage(
   name: String,
   value: BufferedImage) extends ExperimentSummary
 
+///////////////////////////////////////////////////////////////////////////////  
+  
 // TODO: Change the table type names and remove the duplication.
 case class Table(
   val title: String,
