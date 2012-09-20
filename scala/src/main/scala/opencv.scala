@@ -39,6 +39,9 @@ object KeyPointUtil {
     (new LUDecomposition(parallelepiped)).getDeterminant
   }
 
+  // TODO
+  //def angleAtPoint(homography: Homography, xyPoint: RealVector)
+  
   // A proper warping of a keypoint between images, mapping over the
   // size and angle under the homography.
   // TODO: What to do with |octave|?

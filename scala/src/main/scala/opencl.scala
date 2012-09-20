@@ -26,7 +26,7 @@ import java.awt.image._
     
 //     val source = {
 //       // TODO: fix source
-//       val raw = io.Source.fromFile("/u/echristiansen/Dropbox/head_segmentation/SFSPipeline/src/opencl/extract_sorts.cl").mkString
+//       val raw = io.Source.fromFile(getClass.getResource("/opencl/extract_sorts.cl").getFile).mkString
 //       val substitutions = Map(
 //           "height" -> image.getHeight.toString, 
 //           "width" -> image.getWidth.toString,
@@ -76,7 +76,7 @@ import java.awt.image._
 // //    
 // //    val source = {
 // //      // TODO: fix source
-// //      val raw = io.Source.fromFile("/u/echristiansen/Dropbox/head_segmentation/SFSPipeline/src/opencl/extract_sorts.cl").mkString
+// //      val raw = io.Source.fromFile(getClass.getResource("/opencl/extract_sorts.cl").getFile).mkString
 // //      val substitutions = Map(
 // //          "height" -> image.getHeight.toString, 
 // //          "width" -> image.getWidth.toString, 
@@ -161,7 +161,7 @@ import java.awt.image._
     
 //     val source = {
 //       // TODO: fix source
-//       val raw = io.Source.fromFile("/u/echristiansen/Dropbox/head_segmentation/SFSPipeline/src/opencl/l0_distance.cl").mkString
+//       val raw = io.Source.fromFile(getClass.getResource("/opencl/extract_sorts.cl").getFile).mkString
 //       val substitutions = Map(
 //           "numComparisons" -> numComparisons.toString, 
 //           "descriptorDepth" -> descriptorDepth.toString) 

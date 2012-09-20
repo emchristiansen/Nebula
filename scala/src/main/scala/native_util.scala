@@ -13,8 +13,9 @@ import java.awt.image._
 
 object NativeUtil {
   def initNativeInterface = {
-    val libraryPath = "/u/echristiansen/Dropbox/head_segmentation/SFSPipeline/src/foreign_bin";
-    System.setProperty("jna.library.path", libraryPath);
+    sys.error("Are you sure you meant to use this?")
+//    val libraryPath = ???/bin
+//    System.setProperty("jna.library.path", libraryPath);
   }
 
   def cvLBPHDistance(leftPath: String, rightPath: String): Double = {

@@ -135,7 +135,7 @@ trait ExtractorLike[E, D] {
 }
 
 object ExtractorLike {
-  val instances: Seq[Class[_]] = Seq(classOf[RawExtractor], classOf[SortExtractor])
+  val instances: Seq[Class[_]] = Seq(classOf[RawExtractor], classOf[SortExtractor], classOf[BRISKExtractor], classOf[FREAKExtractor])
 
   implicit def raw = new ExtractorLike[RawExtractor, RawDescriptor[Int]] {
     override def apply(extractor: RawExtractor) =
@@ -147,13 +147,16 @@ object ExtractorLike {
       ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 
-  // TODO: Enable
-
   implicit def brisk = new ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]] {
-//    override def apply(extractor: BRISKExtractor) = extractor.extract
+    //    override def apply(extractor: BRISKExtractor) = extractor.extract
     override def apply(extractor: BRISKExtractor) =
       ExtractorImpl.applySeveral(extractor.extractSingle)
   }
+  
+  implicit def freak = new ExtractorLike[FREAKExtractor, RawDescriptor[Boolean]] {
+    override def apply(extractor: FREAKExtractor) =
+      ExtractorImpl.applySeveral(extractor.extractSingle)
+  }  
 }
 
 object ExtractorImpl {
@@ -194,6 +197,35 @@ object ExtractorImpl {
       RawDescriptor(values)
     }
   }
+
+  def booleanExtractorFromEnum(enum: Int): ExtractorActionSingle[RawDescriptor[Boolean]] =
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      val extractor = DescriptorExtractor.create(enum)
+      val imageMat = OpenCVUtil.bufferedImageToMat(image)
+      // This will get overwritten, it just matters that |compute| gets
+      // a valid |CvMat|.
+      val descriptor = new Mat
+      extractor.compute(imageMat, new MatOfKeyPoint(keyPoint), descriptor)
+
+      if (descriptor.rows == 0 || descriptor.cols == 0) None
+      else {
+        assert(descriptor.rows == 1)
+        assert(descriptor.cols > 0)
+        assert(descriptor.`type` == CvType.CV_8UC1)
+
+        val bits = {
+          val ints = for (c <- 0 until descriptor.cols) yield {
+            val doubles = descriptor.get(0, c)
+            assert(doubles.size == 1)
+            doubles.head.toInt
+          }
+
+          ints.flatMap(Util.numToBits(8))
+        }
+
+        Some(RawDescriptor(bits))
+      }
+    }
 }
 
 sealed trait Extractor
@@ -243,63 +275,19 @@ case class BRISKExtractor(
   val normalizeScale: Boolean) extends Extractor {
   import ExtractorImpl._
 
-//  def extract: ExtractorAction[RawDescriptor[Boolean]] =
-//    (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
-//      val extractor = DescriptorExtractor.create(DescriptorExtractor.BRISK)
-//      val imageMat = OpenCVUtil.bufferedImageToMat(image)
-//      // This will get overwritten, it just matters that |compute| gets
-//      // a valid |CvMat|.
-//      val descriptor = new Mat
-//      extractor.compute(imageMat, new MatOfKeyPoint(keyPoint), descriptor)
-//
-//      if (descriptor.rows * descriptor.cols == 0) None
-//      else {
-//        assert(descriptor.rows == 1)
-//        assert(descriptor.cols > 0)
-//        assert(descriptor.`type` == CvType.CV_8UC1)
-//
-//        val bits = {
-//          val ints = for (c <- 0 until descriptor.cols) yield {
-//            val doubles = descriptor.get(0, c)
-//            assert(doubles.size == 1)
-//            doubles.head.toInt
-//          }
-//
-//          ints.flatMap(Util.numToBits(8))
-//        }
-//
-//        Some(RawDescriptor(bits))
-//      }
-//
-//      None    
-//  }
-  
+  // Doing this one by one is super slow.
+  // TODO: Make the native OpenCV api less awful.
   def extractSingle: ExtractorActionSingle[RawDescriptor[Boolean]] =
-    (image: BufferedImage, keyPoint: KeyPoint) => {     
-      val extractor = DescriptorExtractor.create(DescriptorExtractor.BRISK)
-      val imageMat = OpenCVUtil.bufferedImageToMat(image)
-      // This will get overwritten, it just matters that |compute| gets
-      // a valid |CvMat|.
-      val descriptor = new Mat
-      extractor.compute(imageMat, new MatOfKeyPoint(keyPoint), descriptor)
-      
-      if (descriptor.rows == 0 ||  descriptor.cols == 0) None
-      else {
-        assert(descriptor.rows == 1)
-        assert(descriptor.cols > 0)
-        assert(descriptor.`type` == CvType.CV_8UC1)
+    booleanExtractorFromEnum(DescriptorExtractor.BRISK)
+}
 
-        val bits = {
-          val ints = for (c <- 0 until descriptor.cols) yield {
-            val doubles = descriptor.get(0, c)
-            assert(doubles.size == 1)
-            doubles.head.toInt
-          }
+case class FREAKExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean) extends Extractor {
+  import ExtractorImpl._
 
-          ints.flatMap(Util.numToBits(8))
-        }
-
-        Some(RawDescriptor(bits))
-      }
-    }
+  // Doing this one by one is super slow.
+  // TODO: Make the native OpenCV api less awful.
+  def extractSingle: ExtractorActionSingle[RawDescriptor[Boolean]] =
+    booleanExtractorFromEnum(DescriptorExtractor.FREAK)
 }

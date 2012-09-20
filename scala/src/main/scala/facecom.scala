@@ -42,11 +42,11 @@ object FaceCom {
   }
 
   lazy val canonicalFaceBox: BufferedImage = {
-    val path = "/u/echristiansen/Dropbox/head_segmentation/SFSPipeline/data/average_male_small_HIE.bmp"
-    ImageIO.read(new File(path))
+    val url = getClass.getResource("/average_male_small_HIE.bmp")
+    ImageIO.read(new File(url.getFile))    
   }
 
-  val canonicalFile = new File("/u/echristiansen/Dropbox/head_segmentation/SFSPipeline/data/average_male_small.jpg")
+  val canonicalFile = new File(getClass.getResource("/average_male_small.jpg").getFile) 
 
   lazy val canonicalImage = ImageIO.read(canonicalFile)
 

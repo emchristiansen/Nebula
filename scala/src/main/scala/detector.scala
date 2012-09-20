@@ -12,7 +12,7 @@ trait DetectorLike[T] {
 }
 
 object DetectorLike {
-  val instances: Seq[Class[_]] = List(classOf[FASTDetector])
+  val instances: Seq[Class[_]] = List(classOf[FASTDetector], classOf[BRISKDetector])
 
   implicit def fast = new DetectorLike[FASTDetector] {
     override def apply(detector: FASTDetector) = detector.apply

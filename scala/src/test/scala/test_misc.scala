@@ -6,10 +6,15 @@ case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
 class TestMisc extends FunSuite {
   test("caseClassToStringMap") {
-    val person = Person("Eric", "Christiansen", 42, 3.14)
+    val person = Person("Arthur", "Dent", 42, 3.14)
 
     val map = Util.caseClassToStringMap(person)
-    val goldenMap = Map("jsonClass" -> "Person", "firstName" -> "Eric", "lastName" -> "Christiansen", "int" -> "42", "double" -> "3.14")
+    val goldenMap = Map(
+      "jsonClass" -> "Person",
+      "firstName" -> "Arthur",
+      "lastName" -> "Dent",
+      "int" -> "42",
+      "double" -> "3.14")
 
     assert(map === goldenMap)
 

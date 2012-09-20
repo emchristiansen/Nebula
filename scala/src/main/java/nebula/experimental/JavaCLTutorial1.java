@@ -48,9 +48,8 @@ public class JavaCLTutorial1 {
         CLBuffer<Float> out = context.createFloatBuffer(Usage.Output, n);
 
         // Read the program sources and compile them :
-        File srcFile = new File("/u/echristiansen/Dropbox/head_segmentation/SFSPipeline/src/scala/library/src/main/opencl/tutorial.cl");
+        File srcFile = new File(ClassLoader.getSystemResource("/opencl/tutorial.cl").getFile());
         String src = IOUtils.readText(srcFile);
-//        String src = IOUtils.readText(JavaCLTutorial1.class.getResource("/opencl/tutorial.cl"));
         CLProgram program = context.createProgram(src);
 
         // Get and call the kernel :
