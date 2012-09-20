@@ -43,6 +43,9 @@ case class RuntimeConfig(
 }
 
 object RuntimeConfig {
+  // TODO: Put this somewhere more appropriate.
+  System.loadLibrary("opencv_java")
+  
   def init(runtimeConfigFile: File) {
     val runtimeConfig = IO.interpretFile[RuntimeConfig](runtimeConfigFile)
     Global.runVar = Some(runtimeConfig)

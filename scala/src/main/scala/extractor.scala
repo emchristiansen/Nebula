@@ -2,6 +2,10 @@ package nebula
 
 import java.awt.image.BufferedImage
 import org.opencv.features2d.KeyPoint
+import org.opencv.features2d.DescriptorExtractor
+import org.opencv.core.Mat
+import org.opencv.core.MatOfKeyPoint
+import org.opencv.core.CvType
 
 // TODO: Given |D|, |E| can be determined statically. Figure
 // out how to reduce this to one parameter.
@@ -144,12 +148,12 @@ object ExtractorLike {
   }
 
   // TODO: Enable
-  
-//  implicit def brisk = new ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]] {
-//    //    override def apply(extractor: BRISKExtractor) = extractor.extract
-//    override def apply(extractor: BRISKExtractor) =
-//      ExtractorImpl.applySeveral(extractor.extractSingle)
-//  }
+
+  implicit def brisk = new ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]] {
+//    override def apply(extractor: BRISKExtractor) = extractor.extract
+    override def apply(extractor: BRISKExtractor) =
+      ExtractorImpl.applySeveral(extractor.extractSingle)
+  }
 }
 
 object ExtractorImpl {
@@ -178,27 +182,16 @@ object ExtractorImpl {
     for (
       patch <- patchOption
     ) yield {
-      // // TODO
-      // if (color == "Gray") {	
-      // 	RawDescriptor(Pixel.getPixelsGray(patch))
-      // } else if (color == "sRGB") {
-      // 	RawDescriptor(Pixel.getPixels(patch))
-      // } else {
       val values = color match {
-        case "Gray" => Pixel.getPixelsGray(patch)
-        case "sRGB" => Pixel.getPixels(patch)
+        case "Gray" => Pixel.getPixelsOriginal(patch).flatMap(_.gray)
+        case "sRGB" => Pixel.getPixelsOriginal(patch).flatMap(_.sRGB)
         case "lRGB" => Pixel.getPixelsOriginal(patch).flatMap(_.lRGB)
         case "HSB" => Pixel.getPixelsOriginal(patch).flatMap(_.hsb)
         case "Lab" => Pixel.getPixelsOriginal(patch).flatMap(_.lab)
         case "XYZ" => Pixel.getPixelsOriginal(patch).flatMap(_.xyz)
         case _ => sys.error("TODO")
-        // case "CIEXYZ" => ColorSpace.getInstance(ColorSpace.CS_CIEXYZ)
-        // case "LINEAR_RGB" => ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB)
-        // case "PYCC" => ColorSpace.getInstance(ColorSpace.CS_PYCC)
-        // case _ => sys.error("TODO")
       }
       RawDescriptor(values)
-      //      }
     }
   }
 }
@@ -245,52 +238,68 @@ case class SortExtractor(
     }
 }
 
-// TODO: Enable BRISK
+case class BRISKExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean) extends Extractor {
+  import ExtractorImpl._
 
-//case class BRISKExtractor(
-//  val normalizeRotation: Boolean,
-//  val normalizeScale: Boolean) extends Extractor {
-//  import ExtractorImpl._
-//
 //  def extract: ExtractorAction[RawDescriptor[Boolean]] =
 //    (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
-//      val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
-//      val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
+//      val extractor = DescriptorExtractor.create(DescriptorExtractor.BRISK)
+//      val imageMat = OpenCVUtil.bufferedImageToMat(image)
 //      // This will get overwritten, it just matters that |compute| gets
 //      // a valid |CvMat|.
-//      val descriptorMat = CvMat.create(1, 1, 1, 1)
-//      println(keyPoints.size)
-//      val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(keyPoints)
-//      println(keyPointsFuckingStupidDesign.capacity)
-//      extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
-//      println(keyPointsFuckingStupidDesign.capacity)
-//      println(descriptorMat.rows)
-//      println(descriptorMat.cols)
-//      sys.error("TODO")
-//    }
+//      val descriptor = new Mat
+//      extractor.compute(imageMat, new MatOfKeyPoint(keyPoint), descriptor)
 //
-//  def extractSingle: ExtractorActionSingle[RawDescriptor[Boolean]] =
-//    (image: BufferedImage, keyPoint: KeyPoint) => {
-//      val extractor = new BriskDescriptorExtractor(true, true, 1.0f)
-//      val imageMat = OpenCVUtil.bufferedImageToCvMat(image)
-//      // This will get overwritten, it just matters that |compute| gets
-//      // a valid |CvMat|.
-//      val descriptorMat = CvMat.create(1, 1, 1, 1)
-//      val keyPointsFuckingStupidDesign = KeyPointUtil.listToKeyPoints(Seq(keyPoint))
-//      extractor.compute(imageMat, keyPointsFuckingStupidDesign, descriptorMat)
-//      try {
-//        if (descriptorMat == null ||
-//          descriptorMat.rows == 0 ||
-//          descriptorMat.cols == 0) None
-//        else {
-//          val descriptorInts = OpenCVUtil.cvMatToSeq(descriptorMat).map(_.toInt)
-//          val booleans = descriptorInts.flatMap(Util.numToBits(8))
-//          Some(RawDescriptor(booleans.toIndexedSeq))
+//      if (descriptor.rows * descriptor.cols == 0) None
+//      else {
+//        assert(descriptor.rows == 1)
+//        assert(descriptor.cols > 0)
+//        assert(descriptor.`type` == CvType.CV_8UC1)
+//
+//        val bits = {
+//          val ints = for (c <- 0 until descriptor.cols) yield {
+//            val doubles = descriptor.get(0, c)
+//            assert(doubles.size == 1)
+//            doubles.head.toInt
+//          }
+//
+//          ints.flatMap(Util.numToBits(8))
 //        }
-//      } catch {
-//        // TODO: For some reason, I can't check for nullity of the native pointer
-//        // using " == null", so I'm using this ugly try-catch.
-//        case _: NullPointerException => None
+//
+//        Some(RawDescriptor(bits))
 //      }
-//    }
-//}
+//
+//      None    
+//  }
+  
+  def extractSingle: ExtractorActionSingle[RawDescriptor[Boolean]] =
+    (image: BufferedImage, keyPoint: KeyPoint) => {     
+      val extractor = DescriptorExtractor.create(DescriptorExtractor.BRISK)
+      val imageMat = OpenCVUtil.bufferedImageToMat(image)
+      // This will get overwritten, it just matters that |compute| gets
+      // a valid |CvMat|.
+      val descriptor = new Mat
+      extractor.compute(imageMat, new MatOfKeyPoint(keyPoint), descriptor)
+      
+      if (descriptor.rows == 0 ||  descriptor.cols == 0) None
+      else {
+        assert(descriptor.rows == 1)
+        assert(descriptor.cols > 0)
+        assert(descriptor.`type` == CvType.CV_8UC1)
+
+        val bits = {
+          val ints = for (c <- 0 until descriptor.cols) yield {
+            val doubles = descriptor.get(0, c)
+            assert(doubles.size == 1)
+            doubles.head.toInt
+          }
+
+          ints.flatMap(Util.numToBits(8))
+        }
+
+        Some(RawDescriptor(bits))
+      }
+    }
+}

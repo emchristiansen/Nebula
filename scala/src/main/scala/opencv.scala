@@ -51,9 +51,8 @@ object KeyPointUtil {
     val size = scaleFactor(homography, xyPoint) * keyPoint.size
 
     val angle = {
-      // TODO: Are we using radians or degrees?
-      assert(keyPoint.angle == -1)
-      -1
+      // TODO: Fix this
+      keyPoint.angle
     }
 
     val xyVector = homography.transform(new ArrayRealVector(Array(

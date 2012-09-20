@@ -45,5 +45,5 @@ case class FASTDetector(val maxKeyPoints: Int) extends Detector {
 case class BRISKDetector(val maxKeyPoints: Int) extends Detector {
   def apply = DetectorImpl(
     maxKeyPoints,
-    sys.error("TODO"))
+    FeatureDetector.create(FeatureDetector.BRISK))
 }

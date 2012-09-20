@@ -197,7 +197,7 @@ object Util {
 
   // TODO: This doesn't actually work. It always returns what are effectively
   // serial collections.
-  def parallelize[A](seq: Seq[A]) = {
+  def parallelize[A](seq: Seq[A]): collection.GenSeq[A] = {
     if (Global.run[RuntimeConfig].parallel) seq.par else seq
   }
 
