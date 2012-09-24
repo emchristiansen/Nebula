@@ -19,8 +19,6 @@ case class Point2D(val x: Double, val y: Double) {
   def toListHomogeneous: List[Double] = List(x, y, 1)
 }
 
-//case class Rectangle(val x: Int, val y: Int, val width: Int, val height: Int)
-
 case class FaceComFiducials(val leftEye: Point2D,
                             val rightEye: Point2D,
                             val nose: Point2D,
