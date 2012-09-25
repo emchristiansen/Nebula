@@ -1,16 +1,14 @@
 package nebula
 
 import java.awt.image.BufferedImage
-
 import scala.math.BigInt.int2bigInt
-
 import org.apache.commons.math3.linear.{Array2DRowRealMatrix, ArrayRealVector, LUDecomposition, RealVector}
 import org.opencv.core.Mat
 import org.opencv.features2d.{DMatch, KeyPoint}
 import org.opencv.highgui.Highgui.imread
-
 import javax.imageio.ImageIO
 import net.liftweb.json.{Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo}
+import java.io.File
 
 object KeyPointUtil {
   def isWithinBounds(width: Int, height: Int)(keyPoint: KeyPoint): Boolean = {
@@ -76,7 +74,7 @@ object KeyPointUtil {
 object OpenCVUtil {
   def bufferedImageToMat(image: BufferedImage): Mat = {
     // TODO: Figure out how to do this without IO.
-    val file = IO.createTempFile("bufferedImageToCvMat", ".bmp")
+    val file = File.createTempFile("bufferedImageToCvMat", ".bmp")
     ImageIO.write(image, "bmp", file)
     val mat = imread(file.toString)
     assert(mat != null)
