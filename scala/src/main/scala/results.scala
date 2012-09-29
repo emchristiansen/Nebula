@@ -4,7 +4,7 @@ import java.io.File
 import xml._
 
 import org.opencv.core.Mat
-import org.opencv.features2d.{DMatch, KeyPoint}
+import org.opencv.features2d.{ DMatch, KeyPoint }
 import org.opencv.highgui.Highgui.imread
 
 case class PredictionAndTruth(val prediction: Double, val truth: Boolean)
@@ -90,67 +90,103 @@ object CorrespondenceExperimentResults {
         val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Int]]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: RawExtractor, matcher: L1Matcher) => {
         val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[L1Matcher, RawDescriptor[Int]]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: RawExtractor, matcher: L2Matcher) => {
         val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[L2Matcher, RawDescriptor[Int]]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: SortExtractor, matcher: L0Matcher) => {
         val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[L0Matcher, SortDescriptor]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: SortExtractor, matcher: L1Matcher) => {
         val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[L1Matcher, SortDescriptor]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: SortExtractor, matcher: L2Matcher) => {
         val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[L2Matcher, SortDescriptor]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: SortExtractor, matcher: KendallTauMatcher) => {
         val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[KendallTauMatcher, SortDescriptor]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: SortExtractor, matcher: CayleyMatcher) => {
         val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[CayleyMatcher, SortDescriptor]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: SortExtractor, matcher: CayleyRotate4Matcher) => {
         val extractorAction = implicitly[ExtractorLike[SortExtractor, SortDescriptor]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[CayleyRotate4Matcher, SortDescriptor]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-          
+
       case (extractor: BRISKExtractor, matcher: L0Matcher) => {
         val extractorAction = implicitly[ExtractorLike[BRISKExtractor, RawDescriptor[Boolean]]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Boolean]]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
       }
-      
+
       case (extractor: FREAKExtractor, matcher: L0Matcher) => {
         val extractorAction = implicitly[ExtractorLike[FREAKExtractor, RawDescriptor[Boolean]]].apply(extractor)
         val matcherAction = implicitly[MatcherLike[L0Matcher, RawDescriptor[Boolean]]].apply(matcher)
         runWithActions(extractorAction, matcherAction)
-      }      
-      
+      }
+
+      case (extractor: ELUCIDExtractor, matcher: L0Matcher) => {
+        val extractorAction = implicitly[ExtractorLike[ELUCIDExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L0Matcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
+      }
+
+      case (extractor: ELUCIDExtractor, matcher: L1Matcher) => {
+        val extractorAction = implicitly[ExtractorLike[ELUCIDExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[L1Matcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
+      }
+
+      case (extractor: ELUCIDExtractor, matcher: CayleyMatcher) => {
+        val extractorAction = implicitly[ExtractorLike[ELUCIDExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[CayleyMatcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
+      }
+
+      case (extractor: ELUCIDExtractor, matcher: KendallTauMatcher) => {
+        val extractorAction = implicitly[ExtractorLike[ELUCIDExtractor, SortDescriptor]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[KendallTauMatcher, SortDescriptor]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
+      }
+
+      case (extractor: RawExtractor, matcher: RobustCayleyMatcher) => {
+        val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[RobustCayleyMatcher, RawDescriptor[Int]]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
+      }
+
+      case (extractor: RawExtractor, matcher: GeneralizedL0Matcher) => {
+        val extractorAction = implicitly[ExtractorLike[RawExtractor, RawDescriptor[Int]]].apply(extractor)
+        val matcherAction = implicitly[MatcherLike[GeneralizedL0Matcher, RawDescriptor[Int]]].apply(matcher)
+        runWithActions(extractorAction, matcherAction)
+      }
+
       case _ => sys.error("You must manually add the experiment to this list")
     }
   }

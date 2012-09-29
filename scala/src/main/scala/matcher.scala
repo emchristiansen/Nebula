@@ -2,6 +2,8 @@ package nebula
 
 import org.opencv.features2d.DMatch
 
+import Util.allSorts
+
 trait MatcherLike[M, D] {
   import MatcherImpl._
 
@@ -15,7 +17,9 @@ object MatcherLike {
     classOf[L2Matcher],
     classOf[KendallTauMatcher],
     classOf[CayleyMatcher],
-    classOf[CayleyRotate4Matcher])
+    classOf[CayleyRotate4Matcher],
+    classOf[RobustCayleyMatcher],
+    classOf[GeneralizedL0Matcher])
 
   implicit def l0[A] = new MatcherLike[L0Matcher, RawDescriptor[A]] {
     override def apply(matcher: L0Matcher) = matcher.apply[RawDescriptor[A], A]
@@ -53,6 +57,14 @@ object MatcherLike {
   implicit def cayleyRotate4 = new MatcherLike[CayleyRotate4Matcher, SortDescriptor] {
     override def apply(matcher: CayleyRotate4Matcher) = matcher.apply
   }
+
+  implicit def robustCayley = new MatcherLike[RobustCayleyMatcher, RawDescriptor[Int]] {
+    override def apply(matcher: RobustCayleyMatcher) = matcher.apply
+  }
+  
+  implicit def generalizedL0 = new MatcherLike[GeneralizedL0Matcher, RawDescriptor[Int]] {
+    override def apply(matcher: GeneralizedL0Matcher) = matcher.apply
+  }  
 }
 
 object MatcherImpl {
@@ -175,6 +187,40 @@ case class CayleyRotate4Matcher() extends Matcher {
   }
 }
 
+case class RobustCayleyMatcher() extends Matcher {
+  import MatcherImpl._
+
+  def apply[D](
+    allPairs: Boolean,
+    leftDescriptors: Seq[D],
+    rightDescriptors: Seq[D])(
+      implicit descriptorLike: DescriptorLike[D, Int]): Seq[DMatch] = {
+    applyIndividual(
+      (x: D, y: D) => Matcher.robustCayley(x, y),
+      allPairs,
+      leftDescriptors,
+      rightDescriptors)
+  }
+}
+
+case class GeneralizedL0Matcher() extends Matcher {
+  import MatcherImpl._
+
+  def apply[D](
+    allPairs: Boolean,
+    leftDescriptors: Seq[D],
+    rightDescriptors: Seq[D])(
+      implicit descriptorLike: DescriptorLike[D, Int]): Seq[DMatch] = {
+    applyIndividual(
+      (x: D, y: D) => Matcher.generalizedL0(x, y),
+      allPairs,
+      leftDescriptors,
+      rightDescriptors)
+  }
+}
+
+import collection._
+
 object Matcher {
   def l0[D, E](
     left: D,
@@ -256,5 +302,65 @@ object Matcher {
     val rightRotations = rotate4(right)
     val distances = rightRotations.map(r => cayley(left, r))
     distances.min
+  }
+
+  def robustCayley[D](
+    left: D,
+    right: D)(
+      implicit descriptorLike: DescriptorLike[D, Int]): Int = {
+    val distances = for (
+      leftSort <- allSorts(descriptorLike.values(left));
+      rightSort <- allSorts(descriptorLike.values(right))
+    ) yield {
+      cayley(SortDescriptor(leftSort.toIndexedSeq), SortDescriptor(rightSort.toIndexedSeq))
+    }
+    println("distances.size is ", distances.size)
+    distances.min
+  }
+  
+//  def pseudoCayley[D](
+//      left: D,
+//      right: D)(
+//        implicit descriptorLike: DescriptorLike[D, Int]): Int = {
+//    val leftValues = descriptorLike.values(left)
+//    val rightValues = descriptorLike.values(right)
+//    
+//    def listOfSets(values: IndexedSeq[Int]): IndexedSeq[Set[Int]] = {
+//      require(values.min >= 0)
+//      require(values.max <= 255)
+//      
+//      val list = IndexedSeq.fill(256)(mutable.Set[Int]())
+//      for ((value, index) <- values.zipWithIndex) list(value) += index
+//      list.map(_.toSet)
+//    }
+//    
+//    val leftSets = listOfSets(leftValues)
+//    val rightSets = listOfSets(rightValues)
+//    
+//  }
+  
+  def generalizedL0[D](
+      left: D,
+      right: D)(
+        implicit descriptorLike: DescriptorLike[D, Int]): Int = {
+    val leftValues = descriptorLike.values(left)
+    val rightValues = descriptorLike.values(right)
+    
+    val rightPermuted = leftValues.zip(rightValues).sortBy(_._1).map(_._2)
+    println(rightPermuted)
+    println(rightPermuted.sorted)
+    println(l0(RawDescriptor(rightPermuted), RawDescriptor(rightPermuted.sorted)))
+    l0(RawDescriptor(rightPermuted), RawDescriptor(rightPermuted.sorted))
+  }    
+  
+  def generalizedCayley[D](
+      left: D,
+      right: D)(
+        implicit descriptorLike: DescriptorLike[D, Int]): Int = {
+    val leftValues = descriptorLike.values(left)
+    val rightValues = descriptorLike.values(right)
+    
+    val rightPermuted = leftValues.zip(rightValues).sortBy(_._1).map(_._2)
+    Util.numTranspositionsToSort(rightPermuted)
   }
 }

@@ -135,7 +135,7 @@ trait ExtractorLike[E, D] {
 }
 
 object ExtractorLike {
-  val instances: Seq[Class[_]] = Seq(classOf[RawExtractor], classOf[SortExtractor], classOf[BRISKExtractor], classOf[FREAKExtractor])
+  val instances: Seq[Class[_]] = Seq(classOf[RawExtractor], classOf[SortExtractor], classOf[BRISKExtractor], classOf[FREAKExtractor], classOf[ELUCIDExtractor])
 
   implicit def raw = new ExtractorLike[RawExtractor, RawDescriptor[Int]] {
     override def apply(extractor: RawExtractor) =
@@ -152,9 +152,14 @@ object ExtractorLike {
     override def apply(extractor: BRISKExtractor) =
       ExtractorImpl.applySeveral(extractor.extractSingle)
   }
-  
+
   implicit def freak = new ExtractorLike[FREAKExtractor, RawDescriptor[Boolean]] {
     override def apply(extractor: FREAKExtractor) =
+      ExtractorImpl.applySeveral(extractor.extractSingle)
+  }
+  
+  implicit def elucid = new ExtractorLike[ELUCIDExtractor, SortDescriptor] {
+    override def apply(extractor: ELUCIDExtractor) =
       ExtractorImpl.applySeveral(extractor.extractSingle)
   }  
 }
@@ -167,6 +172,16 @@ object ExtractorImpl {
   def applySeveral[D](extractSingle: ExtractorActionSingle[D]): ExtractorAction[D] =
     (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
       keyPoints.map(k => extractSingle(image, k))
+
+  def interpretColor(color: String)(pixel: Pixel): Seq[Int] = color match {
+    case "Gray" => pixel.gray
+    case "sRGB" => pixel.sRGB
+    case "lRGB" => pixel.lRGB
+    case "HSB" => pixel.hsb
+    case "Lab" => pixel.lab
+    case "XYZ" => pixel.xyz
+    case _ => sys.error("Color not supported. Do you have a typo?")
+  }
 
   def rawPixels(
     normalizeRotation: Boolean,
@@ -185,15 +200,7 @@ object ExtractorImpl {
     for (
       patch <- patchOption
     ) yield {
-      val values = color match {
-        case "Gray" => Pixel.getPixelsOriginal(patch).flatMap(_.gray)
-        case "sRGB" => Pixel.getPixelsOriginal(patch).flatMap(_.sRGB)
-        case "lRGB" => Pixel.getPixelsOriginal(patch).flatMap(_.lRGB)
-        case "HSB" => Pixel.getPixelsOriginal(patch).flatMap(_.hsb)
-        case "Lab" => Pixel.getPixelsOriginal(patch).flatMap(_.lab)
-        case "XYZ" => Pixel.getPixelsOriginal(patch).flatMap(_.xyz)
-        case _ => sys.error("TODO")
-      }
+      val values = Pixel.getPixelsOriginal(patch).flatMap(interpretColor(color))
       RawDescriptor(values)
     }
   }
@@ -290,4 +297,62 @@ case class FREAKExtractor(
   // TODO: Make the native OpenCV api less awful.
   def extractSingle: ExtractorActionSingle[RawDescriptor[Boolean]] =
     booleanExtractorFromEnum(DescriptorExtractor.FREAK)
+}
+
+import breeze.linalg.DenseMatrix
+import breeze.linalg.DenseVector
+import RichImage._
+
+case class ELUCIDExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean,
+  val numSamplesPerRadius: Int,
+  val stepSize: Double,
+  val numRadii: Int,
+  val blurWidth: Int,
+  val color: String) extends Extractor {
+  import ExtractorImpl._
+
+  val numSamples = numRadii * numSamplesPerRadius + 1
+  val radii = (1 to numRadii).map(_ * stepSize)
+  val angles = (0 until numSamplesPerRadius).map(_ * 2 * math.Pi / numSamplesPerRadius)
+
+  def samplePattern(scaleFactor: Double, rotationOffset: Double): Seq[DenseVector[Double]] = {
+    require(scaleFactor > 0)
+    Seq(DenseVector(0.0, 0.0)) ++ (for (
+      angle <- angles;
+      radius <- radii
+    ) yield {
+      val scaledRadius = scaleFactor * radius
+      val offsetAngle = rotationOffset + angle
+      DenseVector(scaledRadius * math.cos(offsetAngle), scaledRadius * math.sin(offsetAngle))
+    })
+  }
+
+  def samplePoints(keyPoint: KeyPoint): Seq[DenseVector[Double]] = {
+    val scaleFactor = if (normalizeScale) {
+      assert(keyPoint.size > 0)
+      keyPoint.size / 10.0
+    } else 1
+
+    val rotationOffset = if (normalizeRotation) {
+      assert(keyPoint.angle != -1)
+      keyPoint.angle * 2 * math.Pi / 360
+    } else 0
+
+//    println(rotationOffset)
+    
+    samplePattern(scaleFactor, rotationOffset).map(_ + DenseVector(keyPoint.pt.x, keyPoint.pt.y))    
+  }
+  
+  def extractSingle: ExtractorActionSingle[SortDescriptor] = (image, keyPoint) => {
+    val blurred = ImageProcessing.boxBlur(blurWidth, image)    
+    
+    val pointOptions = samplePoints(keyPoint).map(point => blurred.getSubPixel(point(0), point(1)))
+    if (pointOptions.contains(None)) None
+    else {
+      val unsorted = pointOptions.flatten.flatMap(interpretColor(color))
+      Some(SortDescriptor.fromUnsorted(unsorted))
+    }
+  }
 }

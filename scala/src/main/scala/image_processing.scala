@@ -1,11 +1,11 @@
 package nebula
 
-import java.awt.{Color, Rectangle}
+import java.awt.{ Color, Rectangle }
 import java.awt.color.ColorSpace
 import java.awt.geom.AffineTransform
-import java.awt.image.{AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel}
+import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
 
-import scala.Array.{canBuildFrom, fallbackCanBuildFrom}
+import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }
 
 import org.opencv.features2d.KeyPoint
 
@@ -17,38 +17,39 @@ case class RichImage(image: BufferedImage) {
   }
 
   // Uses linear interpolation.
-  def getSubPixel(x: Double, y: Double): Pixel = {
-    require(x >= 0 && x < image.getWidth)
-    require(y >= 0 && y < image.getHeight)
-
-    def intsAndWeights(double: Double): List[Tuple2[Int, Double]] = {
-      val floor = double.floor
-      if (floor == double) {
-        List((double.toInt, 1.0))
-      } else {
-        val floorWeight = 1 - (double - floor)
-        val ceil = double.ceil
-        val ceilWeight = 1 - (ceil - double)
-        List((floor.toInt, floorWeight), (ceil.toInt, ceilWeight))
+  def getSubPixel(x: Double, y: Double): Option[Pixel] = {
+    if (!(x >= 0 && x <= image.getWidth - 1) ||
+      !(y >= 0 && y <= image.getHeight - 1)) None
+    else {
+      def intsAndWeights(double: Double): List[Tuple2[Int, Double]] = {
+        val floor = double.floor
+        if (floor == double) {
+          List((double.toInt, 1.0))
+        } else {
+          val floorWeight = 1 - (double - floor)
+          val ceil = double.ceil
+          val ceilWeight = 1 - (ceil - double)
+          List((floor.toInt, floorWeight), (ceil.toInt, ceilWeight))
+        }
       }
+
+      val xIntsAndWeights = intsAndWeights(x)
+      val yIntsAndWeights = intsAndWeights(y)
+
+      val summands = for (
+        (xInt, xWeight) <- xIntsAndWeights;
+        (yInt, yWeight) <- yIntsAndWeights
+      ) yield {
+        val weight = xWeight * yWeight
+        val pixel = getPixel(xInt, yInt)
+
+        val Pixel(a, r, g, b) = pixel
+        List(weight * a, weight * r, weight * g, weight * b)
+      }
+
+      val List(a, r, g, b) = summands.transpose.map(_.sum)
+      Some(Pixel(a.toInt, r.toInt, g.toInt, b.toInt))
     }
-
-    val xIntsAndWeights = intsAndWeights(x)
-    val yIntsAndWeights = intsAndWeights(y)
-
-    val summands = for (
-      (xInt, xWeight) <- xIntsAndWeights;
-      (yInt, yWeight) <- yIntsAndWeights
-    ) yield {
-      val weight = xWeight * yWeight
-      val pixel = getPixel(xInt, yInt)
-
-      val Pixel(a, r, g, b) = pixel
-      List(weight * a, weight * r, weight * g, weight * b)
-    }
-
-    val List(a, r, g, b) = summands.transpose.map(_.sum)
-    Pixel(a.toInt, r.toInt, g.toInt, b.toInt)
   }
 }
 
@@ -58,7 +59,7 @@ object RichImage {
 
 object ImageProcessing {
   import RichImage._
-  
+
   def boxBlur(boxWidth: Int, image: BufferedImage): BufferedImage = {
 
     val pixel = image.getSubPixel(0, 1)

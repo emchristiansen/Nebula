@@ -1,16 +1,16 @@
-package nebula
+package nebula  
 
 import java.awt.image.BufferedImage
 import java.io.File
 
 import scala.Array.canBuildFrom
-import scala.text.{DocText, Document}
+import scala.text.{ DocText, Document }
 import scala.util.Random
 
 import org.opencv.features2d.KeyPoint
 
-import net.liftweb.json.{JField, JObject, JString, Serialization}
-import net.liftweb.json.{ShortTypeHints, parse, render}
+import net.liftweb.json.{ JField, JObject, JString, Serialization }
+import net.liftweb.json.{ ShortTypeHints, parse, render }
 import net.liftweb.json.Serialization.write
 
 object Global {
@@ -28,6 +28,52 @@ object Global {
 }
 
 object Util {
+  def numTranspositionsToSort[A <% Ordered[A]](seq: Seq[A]): Int = {
+    if (seq.isEmpty) 0
+    else {
+      val (minElement, minIndex) = seq.zipWithIndex.minBy(_._1)
+      if (minElement == seq.head) numTranspositionsToSort(seq.tail)
+      else {
+        1 + numTranspositionsToSort(seq.tail.updated(minIndex - 1, seq.head))
+      }
+    }
+  }  
+  
+  // Like |tails|, but prefixes instead.
+  // This implementation seems a bit weird to me.
+  def prefixes[A](seq: Seq[A]): Seq[Seq[A]] =
+    seq.reverse.tails.toSeq.map(_.reverse).reverse
+
+  // Like list.permutations, but doesn't cull repeated elements.
+  def nonDistinctPermutations[A](seq: Seq[A]): Seq[Seq[A]] = {
+    val indexedSeq = seq.toIndexedSeq
+    for (permutation <- (0 until indexedSeq.size).permutations.toSeq) yield {
+      permutation.map(i => indexedSeq(i))
+    }
+  }
+
+  // Return all legal sorts of the given list.
+  def allSorts[T <% Ordered[T]](values: Seq[T]): Seq[Seq[Int]] = {
+    def helper(withIndex: Seq[Tuple2[T, Int]]): Seq[Seq[Tuple2[T, Int]]] = {
+      if (withIndex.isEmpty) List(Nil)
+      else {
+        val smaller = withIndex.filter(_._1 < withIndex.head._1)
+        val equal = withIndex.filter(x => !(x._1 < withIndex.head._1) && !(x._1 > withIndex.head._1))
+        val bigger = withIndex.filter(_._1 > withIndex.head._1)
+        assert(smaller.size + equal.size + bigger.size == withIndex.size)
+        for (
+          smallerSort <- helper(smaller);
+          equalSort <- equal.permutations;
+          biggerSort <- helper(bigger)
+        ) yield {
+          smallerSort ++ equalSort ++ biggerSort
+        }
+      }
+    }
+
+    helper(values.zipWithIndex).map(_.map(_._2))
+  }
+
   // The correct implementation of a % b.
   def modulo(a: Double, b: Double): Double = a - (a / b).floor * b
 

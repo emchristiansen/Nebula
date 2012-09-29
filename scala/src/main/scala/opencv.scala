@@ -10,6 +10,9 @@ import javax.imageio.ImageIO
 import net.liftweb.json.{Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo}
 import java.io.File
 
+import breeze.linalg._
+import math._
+
 object KeyPointUtil {
   def isWithinBounds(width: Int, height: Int)(keyPoint: KeyPoint): Boolean = {
     def linearBound(max: Int, pt: Double): Boolean = (pt >= 0) && (pt < max)
@@ -36,9 +39,32 @@ object KeyPointUtil {
       true)
     (new LUDecomposition(parallelepiped)).getDeterminant
   }
-
-  // TODO
-  //def angleAtPoint(homography: Homography, xyPoint: RealVector)
+  
+  // Consider the unit vector from |xyPoint| pointing in direction |angle|.
+  // Its image under the homography gives the new angle and a scaling factor.
+  // The angle is in degrees.
+  def locationAndSizeAndAngleUnderHomography(
+      homography: Homography,
+      basePoint: RealVector,
+      size: Double,
+      angleInDegrees: Double): Tuple3[RealVector, Double, Double] = {
+    val basePointImage = homography.transform(basePoint)
+    
+    val tipPointImage = {
+      val tipPoint = {
+        val angleInRadians = toRadians(angleInDegrees)
+        val x = basePoint.getEntry(0) + cos(angleInRadians)
+        val y = basePoint.getEntry(1) + sin(angleInRadians)
+        new ArrayRealVector(Array(x, y))
+      }
+      homography.transform(tipPoint)
+    }
+    
+    val delta = tipPointImage.subtract(basePointImage)
+    
+    val imageAngle = atan(delta.getEntry(1) / delta.getEntry(0))
+    (basePointImage, scaleFactor(homography, basePoint) * size, toDegrees(imageAngle))
+  }
   
   // A proper warping of a keypoint between images, mapping over the
   // size and angle under the homography.
@@ -49,22 +75,17 @@ object KeyPointUtil {
       keyPoint.pt.x,
       keyPoint.pt.y))
 
-    val size = scaleFactor(homography, xyPoint) * keyPoint.size
-
-    val angle = {
-      // TODO: Fix this
-      keyPoint.angle
-    }
-
-    val xyVector = homography.transform(new ArrayRealVector(Array(
-      keyPoint.pt.x,
-      keyPoint.pt.y)))
+    val (imagePoint, imageSize, imageAngle) = locationAndSizeAndAngleUnderHomography(
+        homography, 
+        xyPoint, 
+        keyPoint.size, 
+        keyPoint.angle)
 
     new KeyPoint(
-      xyVector.getEntry(0).toFloat,
-      xyVector.getEntry(1).toFloat,
-      size.toFloat,
-      angle,
+      imagePoint.getEntry(0).toFloat,
+      imagePoint.getEntry(1).toFloat,
+      imageSize.toFloat,
+      imageAngle.toFloat,
       keyPoint.response,
       keyPoint.octave,
       keyPoint.class_id)
