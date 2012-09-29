@@ -346,7 +346,9 @@ object Matcher {
     val leftValues = descriptorLike.values(left)
     val rightValues = descriptorLike.values(right)
     
-    val rightPermuted = leftValues.zip(rightValues).sortBy(_._1).map(_._2)
+    val (leftSorted, rightPermuted) = leftValues.zip(rightValues).sortBy(_._1).unzip
+    
+    
     println(rightPermuted)
     println(rightPermuted.sorted)
     println(l0(RawDescriptor(rightPermuted), RawDescriptor(rightPermuted.sorted)))

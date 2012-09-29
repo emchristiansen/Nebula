@@ -1,4 +1,4 @@
-package nebula  
+package nebula
 
 import java.awt.image.BufferedImage
 import java.io.File
@@ -28,6 +28,17 @@ object Global {
 }
 
 object Util {
+  // Groups consecutive identical elements into the same sublists.
+  def group[A](seq: List[A]): List[List[A]] = {
+    if (seq.isEmpty) List(Nil)
+    else {
+      seq.foldLeft(List(List(seq.head)))((left, right) => {
+        if (left.head.head == right) (right :: left.head) :: left.tail
+        else List(right) :: left
+      }).reverse
+    }
+  }
+
   def numTranspositionsToSort[A <% Ordered[A]](seq: Seq[A]): Int = {
     if (seq.isEmpty) 0
     else {
@@ -37,8 +48,8 @@ object Util {
         1 + numTranspositionsToSort(seq.tail.updated(minIndex - 1, seq.head))
       }
     }
-  }  
-  
+  }
+
   // Like |tails|, but prefixes instead.
   // This implementation seems a bit weird to me.
   def prefixes[A](seq: Seq[A]): Seq[Seq[A]] =
