@@ -28,11 +28,22 @@ object Global {
 }
 
 object Util {
+  def groupBySizes[A](sizes: Seq[Int], seq: Seq[A]): Seq[Seq[A]] = {
+    assert(sizes.sum == seq.size)
+    if (!sizes.isEmpty) assert(sizes.min > 0)
+    
+    if (sizes.isEmpty) {    
+     List()
+    } else {
+      Seq(seq.take(sizes.head)) ++ groupBySizes(sizes.tail, seq.drop(sizes.head))
+    }
+  }
+  
   // Groups consecutive identical elements into the same sublists.
   def group[A](seq: List[A]): List[List[A]] = {
     if (seq.isEmpty) List(Nil)
     else {
-      seq.foldLeft(List(List(seq.head)))((left, right) => {
+      seq.tail.foldLeft(List(List(seq.head)))((left, right) => {
         if (left.head.head == right) (right :: left.head) :: left.tail
         else List(right) :: left
       }).reverse

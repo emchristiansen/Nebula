@@ -35,7 +35,7 @@ object EpsilonL1Match {
     scale.map(epsilon => quantizeAndHash(epsilon, point))
   }
 
-  def mkHistogram[A](bins: List[A]): Histogram[A] = {
+  def mkHistogram[A](bins: Seq[A]): Histogram[A] = {
     bins.groupBy(x => x).mapValues(_.size)
   }
 
@@ -57,6 +57,11 @@ object EpsilonL1Match {
     intersections.sum
   }
 
+  def l1HistogramDistance[A](left: Histogram[A], right: Histogram[A]): Int = {
+    val allKeys = left.keys.toSet.union(right.keys.toSet).toList
+    allKeys.map(k => math.abs(left.getOrElse(k, 0) - right.getOrElse(k, 0))).sum
+  }
+  
   def l1Distance(left: Point, right: Point): Double = {
     left.zip(right).map({ case (l, r) => (l - r).abs }).sum
   }

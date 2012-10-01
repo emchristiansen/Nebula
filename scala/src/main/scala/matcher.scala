@@ -220,6 +220,7 @@ case class GeneralizedL0Matcher() extends Matcher {
 }
 
 import collection._
+import nebula.experimental.EpsilonL1Match._
 
 object Matcher {
   def l0[D, E](
@@ -347,12 +348,15 @@ object Matcher {
     val rightValues = descriptorLike.values(right)
     
     val (leftSorted, rightPermuted) = leftValues.zip(rightValues).sortBy(_._1).unzip
+    val groupSizes = Util.group(leftSorted.toList).map(_.size)
     
+    val rightPermutedGroups = Util.groupBySizes(groupSizes, rightPermuted)
+    val rightSortedGroups = Util.groupBySizes(groupSizes, rightPermuted.sorted)
     
-    println(rightPermuted)
-    println(rightPermuted.sorted)
-    println(l0(RawDescriptor(rightPermuted), RawDescriptor(rightPermuted.sorted)))
-    l0(RawDescriptor(rightPermuted), RawDescriptor(rightPermuted.sorted))
+    val permutedHistograms = rightPermutedGroups.map(mkHistogram)
+    val sortedHistograms = rightSortedGroups.map(mkHistogram)
+    
+    permutedHistograms.zip(sortedHistograms).map({ case (l, r) => l1HistogramDistance(l, r) }).sum
   }    
   
   def generalizedCayley[D](

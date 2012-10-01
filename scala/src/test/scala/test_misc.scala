@@ -61,6 +61,22 @@ class TestMisc extends FunSuite {
 
     assert(allSorts(List(2, 2, 4, 3)) === List(List(0, 1, 3, 2), List(1, 0, 3, 2)))
   }
+  
+  test("group") {
+    assert(Util.group(List()) === List(Nil))
+    
+    assert(Util.group(List(1, 2, 3)) === List(List(1), List(2), List(3)))
+    
+    assert(Util.group(List(2, 2, 1, 3, 3, 2, 2, 2)) === 
+      List(List(2, 2), List(1), List(3, 3), List(2, 2, 2)))
+  }
+  
+  test("groupBySizes") {
+    assert(Util.groupBySizes(List(), List()) === List())
+    
+    assert(Util.groupBySizes(List(2, 1, 2), List(1, 2, 3, 4, 5)) ===
+      List(List(1, 2), List(3), List(4, 5)))
+  }
 }
 
 object CheckMisc extends Properties("Util") {
