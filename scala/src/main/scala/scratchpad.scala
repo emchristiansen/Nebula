@@ -95,6 +95,6 @@ object Foo {
     if ((new util.Random).nextInt > 0) Foo[Int](() => 42, x => println("got int", x))
     else Foo[String](() => "hi", x => println("got string", x))
 
-  foo.insideBar
+//  foo.insideBar
   outsideBar(foo)
 }

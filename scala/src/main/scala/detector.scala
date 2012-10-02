@@ -5,21 +5,21 @@ import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ DescriptorExtractor, FeatureDetector, KeyPoint }
 import org.opencv.core.Mat
 
-trait DetectorLike[T] {
+trait Detector {
   import DetectorImpl._
 
-  def apply(detector: T): DetectorAction
+  def detect: DetectorAction
 }
 
-object DetectorLike {
+object Detector {
   val instances: Seq[Class[_]] = List(classOf[FASTDetector], classOf[BRISKDetector])
 
-  implicit def fast = new DetectorLike[FASTDetector] {
-    override def apply(detector: FASTDetector) = detector.apply
+  implicit def fast(detector: FASTDetector) = new Detector {
+    override def detect = detector.detect
   }
 
-  implicit def brisk = new DetectorLike[BRISKDetector] {
-    override def apply(detector: BRISKDetector) = detector.apply
+  implicit def brisk(detector: BRISKDetector) = new Detector {
+    override def detect = detector.detect
   }
 }
 
@@ -35,20 +35,18 @@ object DetectorImpl {
     }
 }
 
-sealed trait Detector
-
-case class FASTDetector(val maxKeyPoints: Int) extends Detector {
+case class FASTDetector(val maxKeyPoints: Int) {
   import DetectorImpl._
 
-  def apply: DetectorAction = DetectorImpl(
+  def detect: DetectorAction = DetectorImpl(
     maxKeyPoints,
     FeatureDetector.create(FeatureDetector.FAST))
 }
 
-case class BRISKDetector(val maxKeyPoints: Int) extends Detector {
+case class BRISKDetector(val maxKeyPoints: Int) {
   //  import DetectorImpl._
   //
-  //  def apply: DetectorAction = (image) => {
+  //  def detect: DetectorAction = (image) => {
   //    val detector = FeatureDetector.create(FeatureDetector.BRISK)
   //    val matImage = OpenCVUtil.bufferedImageToMat(image)
   //    val keyPoints = new MatOfKeyPoint
@@ -64,7 +62,7 @@ case class BRISKDetector(val maxKeyPoints: Int) extends Detector {
   //  }
   import DetectorImpl._
 
-  def apply: DetectorAction = DetectorImpl(
+  def detect: DetectorAction = DetectorImpl(
     maxKeyPoints,
     FeatureDetector.create(FeatureDetector.BRISK))
 }
