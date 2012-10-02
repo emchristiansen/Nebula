@@ -8,21 +8,17 @@ import org.opencv.core.MatOfKeyPoint
 import org.opencv.core.CvType
 
 trait PermutationLike[A] {
-  def invert(permutation: A): A
-  def compose(leftPermutation: A, rightPermutation: A): A
-  def numCycles(permutation: A): Int
+  def invert: A
+  def compose(otherPermutation: A): A
+  def numCycles: Int
 }
 
 object PermutationLike {
-  implicit def sortDescriptor = new PermutationLike[SortDescriptor] {
-    override def invert(permutation: SortDescriptor) =
-      SortDescriptor.invert(permutation)
-    override def compose(
-      leftPermutation: SortDescriptor,
-      rightPermutation: SortDescriptor) =
-      SortDescriptor.compose(leftPermutation, rightPermutation)
-    override def numCycles(permutation: SortDescriptor) =
-      SortDescriptor.numCycles(permutation)
+  implicit def sortDescriptor(sort: SortDescriptor) = new PermutationLike[SortDescriptor] {
+    override def invert = SortDescriptor.invert(sort)
+    override def compose(otherPermutation: SortDescriptor) =
+      SortDescriptor.compose(sort, otherPermutation)
+    override def numCycles = SortDescriptor.numCycles(sort)
   }
 }
 
