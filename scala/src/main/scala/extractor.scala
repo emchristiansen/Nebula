@@ -7,20 +7,6 @@ import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.core.CvType
 
-//trait VectorLike[E] {
-//  def values: IndexedSeq[E]
-//}
-//
-//object VectorLike {
-//  implicit def indexedSeq[E](vector: IndexedSeq[E]) = new VectorLike[E] {
-//    override def values = vector
-//  }
-//
-//  implicit def sort = new DescriptorLike[SortDescriptor, Int] {
-//    override def values(descriptor: SortDescriptor) = descriptor.values
-//  }
-//}
-
 trait PermutationLike[A] {
   def invert(permutation: A): A
   def compose(leftPermutation: A, rightPermutation: A): A
