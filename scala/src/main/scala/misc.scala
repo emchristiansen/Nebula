@@ -41,7 +41,7 @@ object Util {
   
   // Groups consecutive identical elements into the same sublists.
   def group[A](seq: List[A]): List[List[A]] = {
-    if (seq.isEmpty) List(Nil)
+    if (seq.isEmpty) List()
     else {
       seq.tail.foldLeft(List(List(seq.head)))((left, right) => {
         if (left.head.head == right) (right :: left.head) :: left.tail

@@ -63,7 +63,7 @@ class TestMisc extends FunSuite {
   }
   
   test("group") {
-    assert(Util.group(List()) === List(Nil))
+    assert(Util.group(List()) === List())
     
     assert(Util.group(List(1, 2, 3)) === List(List(1), List(2), List(3)))
     

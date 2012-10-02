@@ -315,7 +315,7 @@ object Matcher {
     ) yield {
       cayley(SortDescriptor(leftSort.toIndexedSeq), SortDescriptor(rightSort.toIndexedSeq))
     }
-    println("distances.size is ", distances.size)
+//    println("distances.size is ", distances.size)
     distances.min
   }
   
@@ -356,7 +356,7 @@ object Matcher {
     val permutedHistograms = rightPermutedGroups.map(mkHistogram)
     val sortedHistograms = rightSortedGroups.map(mkHistogram)
     
-    permutedHistograms.zip(sortedHistograms).map({ case (l, r) => l1HistogramDistance(l, r) }).sum
+    permutedHistograms.zip(sortedHistograms).map({ case (l, r) => l1HistogramDistance(l, r) }).sum / 2
   }    
   
   def generalizedCayley[D](

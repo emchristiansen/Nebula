@@ -55,4 +55,8 @@ class TestAnything extends FunSuite {
     //    val y = DenseMatrix.tabulate(4, 3)((i, j) => "hi")
     //    println(y)
   }
+  
+  test("BLAH") {
+    Matcher.generalizedL0(RawDescriptor(IndexedSeq[Int]()), RawDescriptor(IndexedSeq[Int]()))
+  }
 }
