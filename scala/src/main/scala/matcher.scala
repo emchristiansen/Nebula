@@ -32,38 +32,6 @@ object MatcherParameterized {
     classOf[RobustCayleyMatcher],
     classOf[GeneralizedL0Matcher])
 
-//  implicit def l0[A](matcher: L0Matcher) = new MatcherParameterized[IndexedSeq[A]] {
-//    override def doMatch = matcher.apply
-//  }
-//
-//  implicit def l1(matcher: L1Matcher) = new MatcherParameterized[IndexedSeq[Int]] {
-//    override def doMatch = matcher.apply
-//  }
-//
-//  implicit def l2(matcher: L2Matcher) = new MatcherParameterized[IndexedSeq[Int]] {
-//    override def doMatch = matcher.apply
-//  }
-//
-//  implicit def kendallTau(matcher: KendallTauMatcher) = new MatcherParameterized[SortDescriptor] {
-//    override def doMatch = matcher.apply
-//  }
-//
-//  implicit def cayley(matcher: CayleyMatcher) = new MatcherParameterized[SortDescriptor] {
-//    override def doMatch = matcher.apply
-//  }
-//
-//  implicit def cayleyRotate4(matcher: CayleyRotate4Matcher) = new MatcherParameterized[SortDescriptor] {
-//    override def doMatch = matcher.apply
-//  }
-//
-//  implicit def robustCayley(matcher: RobustCayleyMatcher) = new MatcherParameterized[IndexedSeq[Int]] {
-//    override def doMatch = matcher.apply
-//  }
-//
-//  implicit def generalizedL0(matcher: GeneralizedL0Matcher) = new MatcherParameterized[IndexedSeq[Int]] {
-//    override def doMatch = matcher.apply
-//  }
-
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
     (left, right).zipped.count({ case (l, r) => l != r })
 
