@@ -13,14 +13,6 @@ trait Detector {
 
 object Detector {
   val instances: Seq[Class[_]] = List(classOf[FASTDetector], classOf[BRISKDetector])
-
-  implicit def fast(detector: FASTDetector) = new Detector {
-    override def detect = detector.detect
-  }
-
-  implicit def brisk(detector: BRISKDetector) = new Detector {
-    override def detect = detector.detect
-  }
 }
 
 object DetectorImpl {
@@ -35,7 +27,7 @@ object DetectorImpl {
     }
 }
 
-case class FASTDetector(val maxKeyPoints: Int) {
+case class FASTDetector(val maxKeyPoints: Int) extends Detector {
   import DetectorImpl._
 
   def detect: DetectorAction = DetectorImpl(
@@ -43,7 +35,7 @@ case class FASTDetector(val maxKeyPoints: Int) {
     FeatureDetector.create(FeatureDetector.FAST))
 }
 
-case class BRISKDetector(val maxKeyPoints: Int) {
+case class BRISKDetector(val maxKeyPoints: Int) extends Detector {
   //  import DetectorImpl._
   //
   //  def detect: DetectorAction = (image) => {
