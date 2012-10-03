@@ -118,6 +118,7 @@ object ExtractorParameterized {
   val instances: Seq[Class[_]] = Seq(
     classOf[RawExtractor],
     classOf[SortExtractor],
+    classOf[RankExtractor],
     classOf[BRISKExtractor],
     classOf[FREAKExtractor],
     classOf[ELUCIDExtractor])
@@ -228,6 +229,30 @@ case class SortExtractor(
         color)(image, keyPoint)
       for (unsorted <- unsortedOption) yield {
         SortDescriptor.fromUnsorted(unsorted)
+      }
+    }
+}
+
+case class RankExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean,
+  val patchWidth: Int,
+  val blurWidth: Int,
+  val color: String) extends ExtractorParameterized[SortDescriptor] {
+  import ExtractorImpl._
+  
+  def extract = applySeveral(extractSingle)
+
+  def extractSingle: ExtractorActionSingle[SortDescriptor] =
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      val unsortedOption = rawPixels(
+        normalizeRotation,
+        normalizeScale,
+        patchWidth,
+        blurWidth,
+        color)(image, keyPoint)
+      for (unsorted <- unsortedOption) yield {
+        SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(unsorted))
       }
     }
 }

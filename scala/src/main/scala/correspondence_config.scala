@@ -2,6 +2,8 @@ package nebula
 
 import javax.imageio.ImageIO
 
+//trait CorrespondenceExperiment
+
 case class CorrespondenceExperiment (
   val imageClass: String,
   val otherImage: Int,
