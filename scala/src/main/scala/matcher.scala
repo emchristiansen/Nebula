@@ -7,15 +7,21 @@ import Util.allSorts
 import collection._
 import nebula.experimental.EpsilonL1Match._
 
-    import PermutationLike.sortDescriptor
+import PermutationLike.sortDescriptor
 
-trait Matcher[D] {
+trait Matcher {
+  type DescriptorType
+}
+
+trait MatcherParameterized[D] extends Matcher {
   import MatcherImpl._
+
+  override type DescriptorType = D
 
   def doMatch: MatcherAction[D]
 }
 
-object Matcher {
+object MatcherParameterized {
   val instances: List[java.lang.Class[_]] = List(
     classOf[L0Matcher],
     classOf[L1Matcher],
@@ -26,44 +32,43 @@ object Matcher {
     classOf[RobustCayleyMatcher],
     classOf[GeneralizedL0Matcher])
 
-  implicit def l0[A](matcher: L0Matcher) = new Matcher[IndexedSeq[A]] {
+  implicit def l0[A](matcher: L0Matcher) = new MatcherParameterized[IndexedSeq[A]] {
     override def doMatch = matcher.apply
   }
 
-  implicit def l1(matcher: L1Matcher) = new Matcher[IndexedSeq[Int]] {
+  implicit def l1(matcher: L1Matcher) = new MatcherParameterized[IndexedSeq[Int]] {
     override def doMatch = matcher.apply
   }
 
-  implicit def l2(matcher: L2Matcher) = new Matcher[IndexedSeq[Int]] {
+  implicit def l2(matcher: L2Matcher) = new MatcherParameterized[IndexedSeq[Int]] {
     override def doMatch = matcher.apply
-  }  
+  }
 
-  implicit def kendallTau(matcher: KendallTauMatcher) = new Matcher[SortDescriptor] {
+  implicit def kendallTau(matcher: KendallTauMatcher) = new MatcherParameterized[SortDescriptor] {
     override def doMatch = matcher.apply
   }
-  
-  implicit def cayley(matcher: CayleyMatcher) = new Matcher[SortDescriptor] {
+
+  implicit def cayley(matcher: CayleyMatcher) = new MatcherParameterized[SortDescriptor] {
     override def doMatch = matcher.apply
   }
-  
-  implicit def cayleyRotate4(matcher: CayleyRotate4Matcher) = new Matcher[SortDescriptor] {
+
+  implicit def cayleyRotate4(matcher: CayleyRotate4Matcher) = new MatcherParameterized[SortDescriptor] {
     override def doMatch = matcher.apply
   }
-  
-  implicit def robustCayley(matcher: RobustCayleyMatcher) = new Matcher[IndexedSeq[Int]] {
+
+  implicit def robustCayley(matcher: RobustCayleyMatcher) = new MatcherParameterized[IndexedSeq[Int]] {
     override def doMatch = matcher.apply
   }
-  
-  implicit def generalizedL0(matcher: GeneralizedL0Matcher) = new Matcher[IndexedSeq[Int]] {
+
+  implicit def generalizedL0(matcher: GeneralizedL0Matcher) = new MatcherParameterized[IndexedSeq[Int]] {
     override def doMatch = matcher.apply
-  } 
-  
+  }
+
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
     (left, right).zipped.count({ case (l, r) => l != r })
 
-  def l1(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int = 
+  def l1(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int =
     (left, right).zipped.map({ case (l, r) => (l - r).abs }).sum
-  
 
   def l2(left: IndexedSeq[Int], right: IndexedSeq[Int]): Double = {
     math.sqrt((left, right).zipped.map({ case (l, r) => math.pow(l - r, 2) }).sum)
@@ -81,7 +86,7 @@ object Matcher {
 
   def cayley(left: SortDescriptor, right: SortDescriptor): Int = {
     assert(left.size == right.size)
-    
+
     val rightInverse = right.invert
     val composition = left.compose(rightInverse)
     left.size - composition.numCycles
@@ -129,24 +134,24 @@ object Matcher {
     }
     distances.min
   }
-  
-  def generalizedL0(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int = {    
+
+  def generalizedL0(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int = {
     val (leftSorted, rightPermuted) = left.zip(right).sortBy(_._1).unzip
     val groupSizes = Util.group(leftSorted.toList).map(_.size)
-    
+
     val rightPermutedGroups = Util.groupBySizes(groupSizes, rightPermuted)
     val rightSortedGroups = Util.groupBySizes(groupSizes, rightPermuted.sorted)
-    
+
     val permutedHistograms = rightPermutedGroups.map(mkHistogram)
     val sortedHistograms = rightSortedGroups.map(mkHistogram)
-    
+
     permutedHistograms.zip(sortedHistograms).map({ case (l, r) => l1HistogramDistance(l, r) }).sum / 2
-  }    
-  
-  def generalizedCayley(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int = {    
+  }
+
+  def generalizedCayley(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int = {
     val rightPermuted = left.zip(right).sortBy(_._1).map(_._2)
     Util.numTranspositionsToSort(rightPermuted)
-  }  
+  }
 }
 
 object MatcherImpl {
@@ -182,7 +187,7 @@ case class L0Matcher() {
     leftDescriptors: Seq[IndexedSeq[Any]],
     rightDescriptors: Seq[IndexedSeq[Any]]): Seq[DMatch] = {
     applyIndividual(
-      (x: IndexedSeq[Any], y: IndexedSeq[Any]) => Matcher.l0(x, y),
+      (x: IndexedSeq[Any], y: IndexedSeq[Any]) => MatcherParameterized.l0(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -197,7 +202,7 @@ case class L1Matcher() {
     leftDescriptors: Seq[IndexedSeq[Int]],
     rightDescriptors: Seq[IndexedSeq[Int]]): Seq[DMatch] = {
     applyIndividual(
-      (x: IndexedSeq[Int], y: IndexedSeq[Int]) => Matcher.l1(x, y),
+      (x: IndexedSeq[Int], y: IndexedSeq[Int]) => MatcherParameterized.l1(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -212,7 +217,7 @@ case class L2Matcher() {
     leftDescriptors: Seq[IndexedSeq[Int]],
     rightDescriptors: Seq[IndexedSeq[Int]]): Seq[DMatch] = {
     applyIndividual(
-      (x: IndexedSeq[Int], y: IndexedSeq[Int]) => Matcher.l2(x, y),
+      (x: IndexedSeq[Int], y: IndexedSeq[Int]) => MatcherParameterized.l2(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -227,7 +232,7 @@ case class KendallTauMatcher() {
     leftDescriptors: Seq[SortDescriptor],
     rightDescriptors: Seq[SortDescriptor]): Seq[DMatch] = {
     applyIndividual(
-      (x: SortDescriptor, y: SortDescriptor) => Matcher.kendallTau(x, y),
+      (x: SortDescriptor, y: SortDescriptor) => MatcherParameterized.kendallTau(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -242,7 +247,7 @@ case class CayleyMatcher() {
     leftDescriptors: Seq[SortDescriptor],
     rightDescriptors: Seq[SortDescriptor]): Seq[DMatch] = {
     applyIndividual(
-      (x: SortDescriptor, y: SortDescriptor) => Matcher.cayley(x, y),
+      (x: SortDescriptor, y: SortDescriptor) => MatcherParameterized.cayley(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -257,7 +262,7 @@ case class CayleyRotate4Matcher() {
     leftDescriptors: Seq[SortDescriptor],
     rightDescriptors: Seq[SortDescriptor]): Seq[DMatch] = {
     applyIndividual(
-      (x: SortDescriptor, y: SortDescriptor) => Matcher.cayleyRotate4(x, y),
+      (x: SortDescriptor, y: SortDescriptor) => MatcherParameterized.cayleyRotate4(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -272,7 +277,7 @@ case class RobustCayleyMatcher() {
     leftDescriptors: Seq[IndexedSeq[Int]],
     rightDescriptors: Seq[IndexedSeq[Int]]): Seq[DMatch] = {
     applyIndividual(
-      (x: IndexedSeq[Int], y: IndexedSeq[Int]) => Matcher.robustCayley(x, y),
+      (x: IndexedSeq[Int], y: IndexedSeq[Int]) => MatcherParameterized.robustCayley(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -287,7 +292,7 @@ case class GeneralizedL0Matcher() {
     leftDescriptors: Seq[IndexedSeq[Int]],
     rightDescriptors: Seq[IndexedSeq[Int]]): Seq[DMatch] = {
     applyIndividual(
-      (x: IndexedSeq[Int], y: IndexedSeq[Int]) => Matcher.generalizedL0(x, y),
+      (x: IndexedSeq[Int], y: IndexedSeq[Int]) => MatcherParameterized.generalizedL0(x, y),
       allPairs,
       leftDescriptors,
       rightDescriptors)

@@ -8,21 +8,21 @@ class TestSortDescriptor extends FunSuite {
   val sort2 = SortDescriptor(IndexedSeq(3, 2, 1, 0))
 
   test("l0") {
-    assert(Matcher.l0(sort0, sort0) === 0)
-    assert(Matcher.l0(sort0, sort1) === 3)
+    assert(MatcherParameterized.l0(sort0, sort0) === 0)
+    assert(MatcherParameterized.l0(sort0, sort1) === 3)
   }
 
   test("l1") {
-    assert(Matcher.l1(sort0, sort0) === 0)
-    assert(Matcher.l1(sort0, sort1) === 6)
+    assert(MatcherParameterized.l1(sort0, sort0) === 0)
+    assert(MatcherParameterized.l1(sort0, sort1) === 6)
   }
 
   test("kendallTau") {
-    assert(Matcher.kendallTau(sort0, sort0) === 0)
-    assert(Matcher.kendallTau(sort0, sort1) === 4)
-    assert(Matcher.kendallTau(sort1, sort0) === 4)
-    assert(Matcher.kendallTau(sort1, sort1) === 0)
-    assert(Matcher.kendallTau(sort0, sort2) === 6)
+    assert(MatcherParameterized.kendallTau(sort0, sort0) === 0)
+    assert(MatcherParameterized.kendallTau(sort0, sort1) === 4)
+    assert(MatcherParameterized.kendallTau(sort1, sort0) === 4)
+    assert(MatcherParameterized.kendallTau(sort1, sort1) === 0)
+    assert(MatcherParameterized.kendallTau(sort0, sort2) === 6)
   }
   
   test("countSort") {

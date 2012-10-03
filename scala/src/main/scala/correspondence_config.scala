@@ -2,12 +2,20 @@ package nebula
 
 import javax.imageio.ImageIO
 
-case class CorrespondenceExperiment[D] (
+case class CorrespondenceExperiment (
   val imageClass: String,
   val otherImage: Int,
   val detector: Detector,
-  val extractor: Extractor[D],
-  val matcher: Matcher[D]) extends Experiment {
+  val extractor: Extractor,
+  val matcher: Matcher) extends Experiment {
+
+  // This block ensures the extractor and matcher types agree.
+  def compareTypes[L <: Extractor, R <: Matcher](left: L, right: R)(
+    implicit ev: L#DescriptorType =:= R#DescriptorType = null
+  ): Boolean = ev != null  
+  assert(compareTypes(extractor, matcher))
+  
+  
   val parameterAbbreviations: Seq[String] = "IC OI D E M".split(" ").toList
   val parameterValues: Seq[String] = List(
     imageClass,

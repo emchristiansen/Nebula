@@ -57,6 +57,6 @@ class TestAnything extends FunSuite {
   }
   
   test("BLAH") {
-    Matcher.generalizedL0(RawDescriptor(IndexedSeq[Int]()), RawDescriptor(IndexedSeq[Int]()))
+    MatcherParameterized.generalizedL0(RawDescriptor(IndexedSeq[Int]()), RawDescriptor(IndexedSeq[Int]()))
   }
 }

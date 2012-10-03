@@ -102,13 +102,19 @@ case class ImagePoint(val x: Int, val y: Int, val z: Int)
 
 //------------------------------------------------------------------------------
 
-trait Extractor[D] {
-  import ExtractorImpl._
+trait Extractor {
+  type DescriptorType
+}
 
+trait ExtractorParameterized[D] extends Extractor {
+  import ExtractorImpl._
+  
+  override type DescriptorType = D
+  
   def extract: ExtractorAction[D]
 }
 
-object Extractor {
+object ExtractorParameterized {
   val instances: Seq[Class[_]] = Seq(
     classOf[RawExtractor],
     classOf[SortExtractor],
@@ -116,23 +122,23 @@ object Extractor {
     classOf[FREAKExtractor],
     classOf[ELUCIDExtractor])
 
-  implicit def raw(extractor: RawExtractor) = new Extractor[IndexedSeq[Int]] {
+  implicit def raw(extractor: RawExtractor) = new ExtractorParameterized[IndexedSeq[Int]] {
     override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 
-  implicit def sort(extractor: SortExtractor) = new Extractor[SortDescriptor] {
+  implicit def sort(extractor: SortExtractor) = new ExtractorParameterized[SortDescriptor] {
     override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 
-  implicit def brisk(extractor: BRISKExtractor) = new Extractor[IndexedSeq[Boolean]] {
+  implicit def brisk(extractor: BRISKExtractor) = new ExtractorParameterized[IndexedSeq[Boolean]] {
     override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 
-  implicit def freak(extractor: FREAKExtractor) = new Extractor[IndexedSeq[Boolean]] {
+  implicit def freak(extractor: FREAKExtractor) = new ExtractorParameterized[IndexedSeq[Boolean]] {
     override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 
-  implicit def elucid(extractor: ELUCIDExtractor) = new Extractor[SortDescriptor] {
+  implicit def elucid(extractor: ELUCIDExtractor) = new ExtractorParameterized[SortDescriptor] {
     override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
   }
 }

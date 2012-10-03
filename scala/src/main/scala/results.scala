@@ -25,7 +25,7 @@ object ResultsData {
 }
 
 case class CorrespondenceExperimentResults(
-  experiment: CorrespondenceExperiment[_],
+  experiment: CorrespondenceExperiment,
   dmatches: Seq[DMatch]) {
   def save {
     println("Writing to %s".format(experiment.path))
@@ -37,8 +37,8 @@ case class CorrespondenceExperimentResults(
 }
 
 object CorrespondenceExperimentResults {
-  def runExperiment[D](
-    experiment: CorrespondenceExperiment[D]): CorrespondenceExperimentResults = {
+  def runExperiment(
+    experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
 
 
       println("Running %s".format(experiment))
@@ -57,24 +57,30 @@ object CorrespondenceExperimentResults {
 
       println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 
+      // Use the explicit descriptor type to cast the extractor and matcher to their
+      // true dynamic types.
+      type DescriptorType = experiment.extractor.DescriptorType
+      val extractor = experiment.extractor.asInstanceOf[ExtractorParameterized[DescriptorType]]
+      val matcher = experiment.matcher.asInstanceOf[MatcherParameterized[DescriptorType]]
+      
       val (leftDescriptors, rightDescriptors) = {
-        val leftDescriptors = experiment.extractor.extract(leftImage, leftKeyPoints)
-        val rightDescriptors = experiment.extractor.extract(rightImage, rightKeyPoints)
+        val leftDescriptors = extractor.extract(leftImage, leftKeyPoints)
+        val rightDescriptors = extractor.extract(rightImage, rightKeyPoints)
 
         for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
       } unzip
 
       println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
 
-      val dmatches = experiment.matcher.doMatch(true, leftDescriptors, rightDescriptors)
+      val dmatches = matcher.doMatch(true, leftDescriptors, rightDescriptors)
 
       val results = CorrespondenceExperimentResults(experiment, dmatches)
       results.save
       results
   }
 
-  def fromExperiment[D](
-    experiment: CorrespondenceExperiment[D]): CorrespondenceExperimentResults = {
+  def fromExperiment(
+    experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
     if (experiment.alreadyRun) {
       val Some(file) = experiment.existingResultsFile
       println("Reading %s".format(file))

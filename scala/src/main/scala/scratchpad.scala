@@ -98,3 +98,30 @@ object Foo {
 //  foo.insideBar
   outsideBar(foo)
 }
+
+trait Bar {
+  type MyType
+}
+
+object Bar {
+  def compareTypes[L <: Bar, R <: Bar](left: L, right: R)(
+    implicit ev: L#MyType =:= R#MyType = null
+  ): Boolean = ev != null
+}
+
+//val intBar1 = new Bar { type MyType = Int }
+//val intBar2 = new Bar { type MyType = Int }
+//val strBar1 = new Bar { type MyType = String }
+//
+//Bar.compareTypes(intBar1, intBar2)
+
+
+//object Bar extends Bar {
+//  def compareTypes(left: Bar, right: Bar): Boolean = (left.MyType == right.MyType)
+//}
+
+
+
+
+
+
