@@ -108,9 +108,9 @@ trait Extractor {
 
 trait ExtractorParameterized[D] extends Extractor {
   import ExtractorImpl._
-  
+
   override type DescriptorType = D
-  
+
   def extract: ExtractorAction[D]
 }
 
@@ -121,26 +121,6 @@ object ExtractorParameterized {
     classOf[BRISKExtractor],
     classOf[FREAKExtractor],
     classOf[ELUCIDExtractor])
-
-  implicit def raw(extractor: RawExtractor) = new ExtractorParameterized[IndexedSeq[Int]] {
-    override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
-  }
-
-  implicit def sort(extractor: SortExtractor) = new ExtractorParameterized[SortDescriptor] {
-    override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
-  }
-
-  implicit def brisk(extractor: BRISKExtractor) = new ExtractorParameterized[IndexedSeq[Boolean]] {
-    override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
-  }
-
-  implicit def freak(extractor: FREAKExtractor) = new ExtractorParameterized[IndexedSeq[Boolean]] {
-    override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
-  }
-
-  implicit def elucid(extractor: ELUCIDExtractor) = new ExtractorParameterized[SortDescriptor] {
-    override def extract = ExtractorImpl.applySeveral(extractor.extractSingle)
-  }
 }
 
 object ExtractorImpl {
@@ -214,8 +194,10 @@ case class RawExtractor(
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: String) {
+  val color: String) extends ExtractorParameterized[IndexedSeq[Int]] {
   import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
 
   // TODO: It's dumb I have to pass these parameters explicitly.
   def extractSingle: ExtractorActionSingle[IndexedSeq[Int]] = rawPixels(
@@ -231,8 +213,10 @@ case class SortExtractor(
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: String) {
+  val color: String) extends ExtractorParameterized[SortDescriptor] {
   import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
 
   def extractSingle: ExtractorActionSingle[SortDescriptor] =
     (image: BufferedImage, keyPoint: KeyPoint) => {
@@ -250,8 +234,10 @@ case class SortExtractor(
 
 case class BRISKExtractor(
   val normalizeRotation: Boolean,
-  val normalizeScale: Boolean) {
+  val normalizeScale: Boolean) extends ExtractorParameterized[IndexedSeq[Boolean]] {
   import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
 
   // Doing this one by one is super slow.
   // TODO: Make the native OpenCV api less awful.
@@ -261,8 +247,10 @@ case class BRISKExtractor(
 
 case class FREAKExtractor(
   val normalizeRotation: Boolean,
-  val normalizeScale: Boolean) {
+  val normalizeScale: Boolean) extends ExtractorParameterized[IndexedSeq[Boolean]] {
   import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
 
   // Doing this one by one is super slow.
   // TODO: Make the native OpenCV api less awful.
@@ -281,8 +269,10 @@ case class ELUCIDExtractor(
   val stepSize: Double,
   val numRadii: Int,
   val blurWidth: Int,
-  val color: String) {
+  val color: String) extends ExtractorParameterized[SortDescriptor] {
   import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
 
   val numSamples = numRadii * numSamplesPerRadius + 1
   val radii = (1 to numRadii).map(_ * stepSize)
