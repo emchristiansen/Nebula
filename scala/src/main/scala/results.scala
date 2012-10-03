@@ -7,9 +7,9 @@ import org.opencv.core.Mat
 import org.opencv.features2d.{ DMatch, KeyPoint }
 import org.opencv.highgui.Highgui.imread
 
-    import DetectorImpl._
-    import ExtractorImpl._
-    import MatcherImpl._
+import DetectorImpl._
+import ExtractorImpl._
+import MatcherImpl._
 
 case class PredictionAndTruth(val prediction: Double, val truth: Boolean)
 
@@ -40,29 +40,23 @@ object CorrespondenceExperimentResults {
   def runExperiment(
     experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
 
+    println("Running %s".format(experiment))
 
-      println("Running %s".format(experiment))
+    val leftImage = experiment.leftImage
+    val rightImage = experiment.rightImage
 
-      val leftImage = experiment.leftImage
-      val rightImage = experiment.rightImage
+    val (leftKeyPoints, rightKeyPoints) = {
+      val leftKeyPoints = experiment.detector.detect(leftImage)
+      Util.pruneKeyPoints(
+        leftImage,
+        rightImage,
+        experiment.homography,
+        leftKeyPoints).unzip
+    }
 
-      val (leftKeyPoints, rightKeyPoints) = {
-        val leftKeyPoints = experiment.detector.detect(leftImage)
-        Util.pruneKeyPoints(
-          leftImage,
-          rightImage,
-          experiment.homography,
-          leftKeyPoints).unzip
-      }
+    println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 
-      println("Number of KeyPoints: %s".format(leftKeyPoints.size))
-
-      // Use the explicit descriptor type to cast the extractor and matcher to their
-      // true dynamic types.
-      type DescriptorType = experiment.extractor.DescriptorType
-      val extractor = experiment.extractor.asInstanceOf[ExtractorParameterized[DescriptorType]]
-      val matcher = experiment.matcher.asInstanceOf[MatcherParameterized[DescriptorType]]
-      
+    def explicit[D](extractor: ExtractorParameterized[D], matcher: MatcherParameterized[D]) = {
       val (leftDescriptors, rightDescriptors) = {
         val leftDescriptors = extractor.extract(leftImage, leftKeyPoints)
         val rightDescriptors = extractor.extract(rightImage, rightKeyPoints)
@@ -77,6 +71,23 @@ object CorrespondenceExperimentResults {
       val results = CorrespondenceExperimentResults(experiment, dmatches)
       results.save
       results
+    }
+
+    // Use the explicit descriptor type to cast the extractor and matcher to their
+    // true dynamic types.
+    type DescriptorType = experiment.extractor.DescriptorType
+    val extractor = experiment.extractor.asInstanceOf[ExtractorParameterized[DescriptorType]]
+    val matcher = experiment.matcher.asInstanceOf[MatcherParameterized[DescriptorType]]    
+    
+    (experiment.extractor, experiment.matcher) match {
+      case (e: ExtractorParameterized[IndexedSeq[Int]], 
+          m: MatcherParameterized[IndexedSeq[Int]]) => explicit(e, m)
+      case (e: ExtractorParameterized[SortDescriptor],
+          m: MatcherParameterized[SortDescriptor]) => explicit(e, m)
+      case _ => sys.error("descriptor type not recognized")
+    }
+    
+    explicit(extractor, matcher)
   }
 
   def fromExperiment(

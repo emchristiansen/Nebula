@@ -2,7 +2,7 @@ package nebula
 
 import javax.imageio.ImageIO
 
-//trait CorrespondenceExperiment
+//trait CorrespondenceExperiment extends Experiment
 
 case class CorrespondenceExperiment (
   val imageClass: String,
