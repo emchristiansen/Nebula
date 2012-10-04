@@ -38,12 +38,19 @@ case class CorrespondenceExperimentResults(
 
 object CorrespondenceExperimentResults {
   def runExperiment(experiment: CorrespondenceExperiment) = {
-    type ExtractorDescriptorType = experiment.extractor.DescriptorType
-    type MatcherDescriptorType = experiment.matcher.DescriptorType
-    val explicit = experiment.asInstanceOf[CorrespondenceExperimentParameterized[MatcherDescriptorType, ExtractorDescriptorType]]
-    runExperimentParameterized(explicit)(experiment.descriptorConverter)
+    val explicit = {
+      val matched = experiment match {
+        case x: CorrespondenceExperimentParameterized[_, _] => x
+      }
+      type ExtractorDescriptorType = matched.extractor.DescriptorType
+      type MatcherDescriptorType = matched.matcher.DescriptorType
+
+      matched.asInstanceOf[CorrespondenceExperimentParameterized[MatcherDescriptorType, ExtractorDescriptorType]]
+    }
+
+    runExperimentParameterized(explicit)(explicit.descriptorConverter)
   }
-  
+
   def runExperimentParameterized[MD, ED <% MD](
     experiment: CorrespondenceExperimentParameterized[MD, ED]): CorrespondenceExperimentResults = {
 
@@ -63,41 +70,41 @@ object CorrespondenceExperimentResults {
 
     println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 
-//    def explicit[D](extractor: ExtractorParameterized[D], matcher: MatcherParameterized[D]) = {
-      val (leftDescriptors, rightDescriptors) = {
-        val leftDescriptors = experiment.extractor.extract(leftImage, leftKeyPoints)
-        val rightDescriptors = experiment.extractor.extract(rightImage, rightKeyPoints)
+    //    def explicit[D](extractor: ExtractorParameterized[D], matcher: MatcherParameterized[D]) = {
+    val (leftDescriptors, rightDescriptors) = {
+      val leftDescriptors = experiment.extractor.extract(leftImage, leftKeyPoints)
+      val rightDescriptors = experiment.extractor.extract(rightImage, rightKeyPoints)
 
-        for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
-      } unzip
+      for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
+    } unzip
 
-      println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
+    println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
 
-      val edToMD = implicitly[ED => MD]
-      
-      val dmatches = experiment.matcher.doMatch(true, leftDescriptors.map(edToMD), rightDescriptors.map(edToMD))
+    val edToMD = implicitly[ED => MD]
 
-      val results = CorrespondenceExperimentResults(experiment, dmatches)
-      results.save
-      results
-//    }
+    val dmatches = experiment.matcher.doMatch(true, leftDescriptors.map(edToMD), rightDescriptors.map(edToMD))
 
-//    // Use the explicit descriptor type to cast the extractor and matcher to their
-//    // true dynamic types.
-//    type DescriptorType = experiment.extractor.DescriptorType
-//    val extractor = experiment.extractor.asInstanceOf[ExtractorParameterized[DescriptorType]]
-//    val matcher = experiment.matcher.asInstanceOf[MatcherParameterized[DescriptorType]]    
-    
-//    // TODO
-//    (experiment.extractor, experiment.matcher) match {
-//      case (e: ExtractorParameterized[IndexedSeq[Int]], 
-//          m: MatcherParameterized[IndexedSeq[Int]]) => explicit(e, m)
-//      case (e: ExtractorParameterized[SortDescriptor],
-//          m: MatcherParameterized[SortDescriptor]) => explicit(e, m)
-//      case _ => sys.error("descriptor type not recognized")
-//    }
-    
-//    explicit(extractor, matcher)
+    val results = CorrespondenceExperimentResults(experiment, dmatches)
+    results.save
+    results
+    //    }
+
+    //    // Use the explicit descriptor type to cast the extractor and matcher to their
+    //    // true dynamic types.
+    //    type DescriptorType = experiment.extractor.DescriptorType
+    //    val extractor = experiment.extractor.asInstanceOf[ExtractorParameterized[DescriptorType]]
+    //    val matcher = experiment.matcher.asInstanceOf[MatcherParameterized[DescriptorType]]    
+
+    //    // TODO
+    //    (experiment.extractor, experiment.matcher) match {
+    //      case (e: ExtractorParameterized[IndexedSeq[Int]], 
+    //          m: MatcherParameterized[IndexedSeq[Int]]) => explicit(e, m)
+    //      case (e: ExtractorParameterized[SortDescriptor],
+    //          m: MatcherParameterized[SortDescriptor]) => explicit(e, m)
+    //      case _ => sys.error("descriptor type not recognized")
+    //    }
+
+    //    explicit(extractor, matcher)
   }
 
   def fromExperiment(

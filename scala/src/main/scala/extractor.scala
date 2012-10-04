@@ -7,6 +7,7 @@ import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.core.CvType
 
+// TODO: Delete Descriptor
 trait Descriptor
 
 trait DescriptorExpl[E] extends Descriptor {
@@ -120,14 +121,12 @@ case class ImagePoint(val x: Int, val y: Int, val z: Int)
 
 //------------------------------------------------------------------------------
 
-trait Extractor {
-  type DescriptorType
-}
+sealed trait Extractor
 
 trait ExtractorParameterized[D] extends Extractor {
   import ExtractorImpl._
 
-  override type DescriptorType = D
+  type DescriptorType = D
 
   def extract: ExtractorAction[D]
 }
@@ -141,6 +140,8 @@ object ExtractorParameterized {
     classOf[FREAKExtractor],
     classOf[ELUCIDExtractor])
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 object ExtractorImpl {
   type ExtractorActionSingle[D] = (BufferedImage, KeyPoint) => Option[D]

@@ -9,14 +9,12 @@ import nebula.experimental.EpsilonL1Match._
 
 import PermutationLike.sortDescriptor
 
-trait Matcher {
-  type DescriptorType
-}
+sealed trait Matcher
 
 trait MatcherParameterized[D] extends Matcher {
   import MatcherImpl._
 
-  override type DescriptorType = D
+  type DescriptorType = D
 
   def doMatch: MatcherAction[D]
 }
@@ -121,6 +119,8 @@ object MatcherParameterized {
     Util.numTranspositionsToSort(rightPermuted)
   }
 }
+
+/////////////////////////////////////////////////////////////////////////////
 
 object MatcherImpl {
   type MatcherAction[D] = (Boolean, Seq[D], Seq[D]) => Seq[DMatch]

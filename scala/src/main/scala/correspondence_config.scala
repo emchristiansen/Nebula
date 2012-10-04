@@ -2,22 +2,36 @@ package nebula
 
 import javax.imageio.ImageIO
 
-//trait CorrespondenceExperiment extends Experiment
+sealed trait CorrespondenceExperiment extends Experiment {
+  // TODO: Remove this.
+  def stringMap: Map[String,String]
+}
 
-abstract class CorrespondenceExperiment(
+//abstract class CorrespondenceExperiment(
+//  val imageClass: String,
+//  val otherImage: Int,
+//  val detector: Detector,
+//  val extractor: Extractor,
+//  val matcher: Matcher) extends Experiment
+
+case class CorrespondenceExperimentParameterized[MD, ED <% MD](
   val imageClass: String,
   val otherImage: Int,
   val detector: Detector,
-  val extractor: Extractor,
-  val matcher: Matcher) extends Experiment {
-  val descriptorConverter: extractor.DescriptorType => matcher.DescriptorType
+  val extractor: ExtractorParameterized[ED],
+  val matcher: MatcherParameterized[MD]) extends CorrespondenceExperiment {
+  val descriptorConverter = implicitly[ED => MD]
   
-  // TODO: Uncomment
-  //  // This block ensures the extractor and matcher types agree.
-  //  def compareTypes[L <: Extractor, R <: Matcher](left: L, right: R)(
-  //    implicit ev: L#DescriptorType =:= R#DescriptorType = null
-  //  ): Boolean = ev != null
-  //  assert(compareTypes(extractor, matcher))
+  
+//  val extractorParameterized: ExtractorParameterized[_] = extractor match {
+//    case x: ExtractorParameterized[_] => x
+//  }
+//  
+//  val matcherParameterized: MatcherParameterized[_] = matcher match {
+//    case x: MatcherParameterized[_] => x
+//  }  
+//  
+//  val descriptorConverter: extractorParameterized.DescriptorType => matcherParameterized.DescriptorType
 
   val parameterAbbreviations: Seq[String] = "IC OI D E M".split(" ").toList
   val parameterValues: Seq[String] = List(
@@ -27,28 +41,14 @@ abstract class CorrespondenceExperiment(
     Util.abbreviate(extractor),
     Util.abbreviate(matcher))
 
-  def stringMap = parameterAbbreviations.zip(parameterValues).toMap
+  override def stringMap = parameterAbbreviations.zip(parameterValues).toMap
 
   lazy val leftImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img1.bmp".format(imageClass))
   def leftImage = ImageIO.read(leftImageFile)
   lazy val rightImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img%s.bmp".format(imageClass, otherImage))
   def rightImage = ImageIO.read(rightImageFile)
   lazy val homographyFile = Global.run[RuntimeConfig].projectChildPath("data/%s/homographies/H1to%sp".format(imageClass, otherImage))
-  def homography = Homography.fromFile(homographyFile)
-}
-
-case class CorrespondenceExperimentParameterized[MD, ED <% MD](
-  override val imageClass: String,
-  override val otherImage: Int,
-  override val detector: Detector,
-  override val extractor: ExtractorParameterized[ED],
-  override val matcher: MatcherParameterized[MD]) extends CorrespondenceExperiment(
-  imageClass,
-  otherImage,
-  detector,
-  extractor,
-  matcher) {
-  override val descriptorConverter = implicitly[ED => MD]
+  def homography = Homography.fromFile(homographyFile)  
 }
 
 //case class CorrespondenceExperiment(

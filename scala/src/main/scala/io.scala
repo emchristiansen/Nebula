@@ -60,7 +60,7 @@ object ExperimentIO {
     classOf[Extractor],
     classOf[Matcher],
     classOf[CorrespondenceExperiment],
-//    classOf[CorrespondenceExperimentParameterized[IndexedSeq[Int]]],
+//    classOf[CorrespondenceExperimentParameterized[SortDescriptor, SortDescriptor]],
 //    classOf[CorrespondenceExperimentParameterized[SortDescriptor]],
     classOf[CorrespondenceExperimentResults]) ++
     Detector.instances ++
