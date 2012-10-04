@@ -81,23 +81,23 @@ object MyApp {
   RuntimeConfig.run(config)
 }
 
-case class Foo[A](val makeIt: () => A, val eatIt: A => Unit) {
-  def insideBar = Foo.outsideBar(this)
-}
-
-object Foo {
-  def outsideBar[A](foo: Foo[A]) {
-    val it: A = foo.makeIt()
-    foo.eatIt(it)
-  }
-
-  val foo =
-    if ((new util.Random).nextInt > 0) Foo[Int](() => 42, x => println("got int", x))
-    else Foo[String](() => "hi", x => println("got string", x))
-
-//  foo.insideBar
-  outsideBar(foo)
-}
+//case class Foo[A](val makeIt: () => A, val eatIt: A => Unit) {
+//  def insideBar = Foo.outsideBar(this)
+//}
+//
+//object Foo {
+//  def outsideBar[A](foo: Foo[A]) {
+//    val it: A = foo.makeIt()
+//    foo.eatIt(it)
+//  }
+//
+//  val foo =
+//    if ((new util.Random).nextInt > 0) Foo[Int](() => 42, x => println("got int", x))
+//    else Foo[String](() => "hi", x => println("got string", x))
+//
+////  foo.insideBar
+//  outsideBar(foo)
+//}
 
 trait Bar {
   type MyType
@@ -107,6 +107,12 @@ object Bar {
   def compareTypes[L <: Bar, R <: Bar](left: L, right: R)(
     implicit ev: L#MyType =:= R#MyType = null
   ): Boolean = ev != null
+}
+
+object Foo {
+  def foo[A, B <% A](a: A, b: B) {}
+  
+  foo(1.0, 1)
 }
 
 //val intBar1 = new Bar { type MyType = Int }

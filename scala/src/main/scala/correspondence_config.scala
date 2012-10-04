@@ -4,13 +4,13 @@ import javax.imageio.ImageIO
 
 //trait CorrespondenceExperiment extends Experiment
 
-class CorrespondenceExperiment(
+abstract class CorrespondenceExperiment(
   val imageClass: String,
   val otherImage: Int,
   val detector: Detector,
   val extractor: Extractor,
   val matcher: Matcher) extends Experiment {
-  type DescriptorType
+  val descriptorConverter: extractor.DescriptorType => matcher.DescriptorType
   
   // TODO: Uncomment
   //  // This block ensures the extractor and matcher types agree.
@@ -37,18 +37,18 @@ class CorrespondenceExperiment(
   def homography = Homography.fromFile(homographyFile)
 }
 
-case class CorrespondenceExperimentParameterized[D](
+case class CorrespondenceExperimentParameterized[MD, ED <% MD](
   override val imageClass: String,
   override val otherImage: Int,
   override val detector: Detector,
-  override val extractor: ExtractorParameterized[D],
-  override val matcher: MatcherParameterized[D]) extends CorrespondenceExperiment(
+  override val extractor: ExtractorParameterized[ED],
+  override val matcher: MatcherParameterized[MD]) extends CorrespondenceExperiment(
   imageClass,
   otherImage,
   detector,
   extractor,
   matcher) {
-  override type DescriptorType = D
+  override val descriptorConverter = implicitly[ED => MD]
 }
 
 //case class CorrespondenceExperiment(

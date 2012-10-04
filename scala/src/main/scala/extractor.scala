@@ -7,6 +7,23 @@ import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.core.CvType
 
+trait Descriptor
+
+trait DescriptorExpl[E] extends Descriptor {
+  val values: IndexedSeq[E]
+}
+
+//object DescriptorExpl {
+//  implicit def toIndexedSeq[E](x: DescriptorExpl[E]) = x.values
+//}
+
+case class RawDescriptor[E](
+  override val values: IndexedSeq[E]) extends DescriptorExpl[E]
+
+//object RawDescriptor {
+//  implicit def fromIndexedSeq[E](x: IndexedSeq[E]) = RawDescriptor(x)
+//}
+
 trait PermutationLike[A] {
   def invert: A
   def compose(otherPermutation: A): A
@@ -22,7 +39,8 @@ object PermutationLike {
   }
 }
 
-case class SortDescriptor(val values: IndexedSeq[Int]) {
+case class SortDescriptor(
+  override val values: IndexedSeq[Int]) extends DescriptorExpl[Int] {
   assert(values.sorted == (0 until values.size))
 }
 
@@ -240,7 +258,7 @@ case class RankExtractor(
   val blurWidth: Int,
   val color: String) extends ExtractorParameterized[SortDescriptor] {
   import ExtractorImpl._
-  
+
   def extract = applySeveral(extractSingle)
 
   def extractSingle: ExtractorActionSingle[SortDescriptor] =

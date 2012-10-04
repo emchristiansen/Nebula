@@ -38,14 +38,14 @@ case class CorrespondenceExperimentResults(
 
 object CorrespondenceExperimentResults {
   def runExperiment(experiment: CorrespondenceExperiment) = {
-    type DescriptorType = experiment.DescriptorType
-    assert(experiment.isInstanceOf[CorrespondenceExperimentParameterized[DescriptorType]])
-    val explicit = experiment.asInstanceOf[CorrespondenceExperimentParameterized[DescriptorType]]
-    runExperimentParameterized(explicit)
+    type ExtractorDescriptorType = experiment.extractor.DescriptorType
+    type MatcherDescriptorType = experiment.matcher.DescriptorType
+    val explicit = experiment.asInstanceOf[CorrespondenceExperimentParameterized[MatcherDescriptorType, ExtractorDescriptorType]]
+    runExperimentParameterized(explicit)(experiment.descriptorConverter)
   }
   
-  def runExperimentParameterized[D](
-    experiment: CorrespondenceExperimentParameterized[D]): CorrespondenceExperimentResults = {
+  def runExperimentParameterized[MD, ED <% MD](
+    experiment: CorrespondenceExperimentParameterized[MD, ED]): CorrespondenceExperimentResults = {
 
     println("Running %s".format(experiment))
 
@@ -73,7 +73,9 @@ object CorrespondenceExperimentResults {
 
       println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
 
-      val dmatches = experiment.matcher.doMatch(true, leftDescriptors, rightDescriptors)
+      val edToMD = implicitly[ED => MD]
+      
+      val dmatches = experiment.matcher.doMatch(true, leftDescriptors.map(edToMD), rightDescriptors.map(edToMD))
 
       val results = CorrespondenceExperimentResults(experiment, dmatches)
       results.save
