@@ -7,10 +7,8 @@ import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.core.CvType
 
-// TODO: Delete Descriptor
 sealed trait Descriptor {
   val thisType: Manifest[_]
-//  val values: IndexedSeq[Any]
   
   def asType[E : Manifest]: E = {
     assert(thisType <:< implicitly[Manifest[E]])
@@ -57,7 +55,6 @@ case class SortDescriptor(
 
 object SortDescriptor {
   implicit def toIndexedSeq(sort: SortDescriptor) = sort.values
-  //  implicit def toSortDescriptor(values: IndexedSeq[Int]) = SortDescriptor(values)
 
   def fromUnsorted[A <% Ordered[A]](values: Seq[A]): SortDescriptor = {
     val permutation = values.zipWithIndex.sortBy(_._1).map(_._2)

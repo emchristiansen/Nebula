@@ -143,24 +143,6 @@ object MatcherImpl {
   }
 }
 
-//case class L0Matcher() extends Matcher {
-//  import MatcherImpl._
-//
-//  override def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) => 
-//        MatcherParameterized.l0(
-//            x.asType[RawDescriptor[Any]].values, 
-//            y.asType[RawDescriptor[Any]].values),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-
 case class L0Matcher() extends Matcher {
   import MatcherImpl._
 
