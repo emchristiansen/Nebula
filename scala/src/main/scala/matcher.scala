@@ -12,7 +12,7 @@ import PermutationLike.sortDescriptor
 sealed trait Matcher {
   import MatcherImpl._
 
-  def doMatch: MatcherAction  
+  def doMatch: MatcherAction
 }
 
 object MatcherParameterized {
@@ -151,10 +151,10 @@ case class L0Matcher() extends Matcher {
     leftDescriptors: Seq[Descriptor],
     rightDescriptors: Seq[Descriptor]) => {
     applyIndividual(
-      (x: Descriptor, y: Descriptor) => 
+      (x: Descriptor, y: Descriptor) =>
         MatcherParameterized.l0(
-            x.values[Any], 
-            y.values[Any]),
+          x.values[Any],
+          y.values[Any]),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -167,12 +167,12 @@ case class L1Matcher() extends Matcher {
   def doMatch = (
     allPairs: Boolean,
     leftDescriptors: Seq[Descriptor],
-    rightDescriptors: Seq[Descriptor]) => {      
+    rightDescriptors: Seq[Descriptor]) => {
     applyIndividual(
-      (x: Descriptor, y: Descriptor) => 
+      (x: Descriptor, y: Descriptor) =>
         MatcherParameterized.l1(
-            x.values[Int], 
-            y.values[Int]),
+          x.values[Int],
+          y.values[Int]),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -187,10 +187,10 @@ case class L2Matcher() extends Matcher {
     leftDescriptors: Seq[Descriptor],
     rightDescriptors: Seq[Descriptor]) => {
     applyIndividual(
-      (x: Descriptor, y: Descriptor) => 
+      (x: Descriptor, y: Descriptor) =>
         MatcherParameterized.l2(
-            x.values[Int], 
-            y.values[Int]),
+          x.values[Int],
+          y.values[Int]),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -206,7 +206,7 @@ case class KendallTauMatcher() extends Matcher {
     rightDescriptors: Seq[Descriptor]) => {
     applyIndividual(
       (x: Descriptor, y: Descriptor) => MatcherParameterized.kendallTau(
-          x.asType[SortDescriptor], y.asType[SortDescriptor]),
+        x.asType[SortDescriptor], y.asType[SortDescriptor]),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -222,7 +222,7 @@ case class CayleyMatcher() extends Matcher {
     rightDescriptors: Seq[Descriptor]) => {
     applyIndividual(
       (x: Descriptor, y: Descriptor) => MatcherParameterized.cayley(
-          x.asType[SortDescriptor], y.asType[SortDescriptor]),
+        x.asType[SortDescriptor], y.asType[SortDescriptor]),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -238,7 +238,7 @@ case class CayleyRotate4Matcher() extends Matcher {
     rightDescriptors: Seq[Descriptor]) => {
     applyIndividual(
       (x: Descriptor, y: Descriptor) => MatcherParameterized.cayleyRotate4(
-          x.asType[SortDescriptor], y.asType[SortDescriptor]),
+        x.asType[SortDescriptor], y.asType[SortDescriptor]),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -254,7 +254,7 @@ case class RobustCayleyMatcher() extends Matcher {
     rightDescriptors: Seq[Descriptor]) => {
     applyIndividual(
       (x: Descriptor, y: Descriptor) => MatcherParameterized.robustCayley(
-          x.values[Int], y.values[Int]),
+        x.values[Int], y.values[Int]),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -270,7 +270,7 @@ case class GeneralizedL0Matcher() extends Matcher {
     rightDescriptors: Seq[Descriptor]) => {
     applyIndividual(
       (x: Descriptor, y: Descriptor) => MatcherParameterized.generalizedL0(
-          x.values[Int], y.values[Int]),
+        x.values[Int], y.values[Int]),
       allPairs,
       leftDescriptors,
       rightDescriptors)

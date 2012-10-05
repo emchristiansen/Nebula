@@ -37,23 +37,6 @@ case class CorrespondenceExperimentResults(
 }
 
 object CorrespondenceExperimentResults {
-//  def runExperiment(experiment: CorrespondenceExperiment) = {
-//    val explicit = {
-//      val explicit = CorrespondenceExperimentParameterized(experiment)
-//      explicit
-////      val matched = experiment match {
-////        case x: CorrespondenceExperimentParameterized[_, _] => x
-////      }
-//      
-////      type ExtractorDescriptorType = explicit.extractor.DescriptorType
-////      type MatcherDescriptorType = explicit.matcher.DescriptorType
-////
-////      matched.asInstanceOf[CorrespondenceExperimentParameterized[MatcherDescriptorType, ExtractorDescriptorType]]
-//    }
-//
-//    runExperimentParameterized(explicit)//(explicit.descriptorConverter)
-//  }
-
   def runExperiment(
     experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
 
@@ -73,7 +56,6 @@ object CorrespondenceExperimentResults {
 
     println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 
-    //    def explicit[D](extractor: ExtractorParameterized[D], matcher: MatcherParameterized[D]) = {
     val (leftDescriptors, rightDescriptors) = {
       val leftDescriptors = experiment.extractor.extract(leftImage, leftKeyPoints)
       val rightDescriptors = experiment.extractor.extract(rightImage, rightKeyPoints)
@@ -88,24 +70,6 @@ object CorrespondenceExperimentResults {
     val results = CorrespondenceExperimentResults(experiment, dmatches)
     results.save
     results
-    //    }
-
-    //    // Use the explicit descriptor type to cast the extractor and matcher to their
-    //    // true dynamic types.
-    //    type DescriptorType = experiment.extractor.DescriptorType
-    //    val extractor = experiment.extractor.asInstanceOf[ExtractorParameterized[DescriptorType]]
-    //    val matcher = experiment.matcher.asInstanceOf[MatcherParameterized[DescriptorType]]    
-
-    //    // TODO
-    //    (experiment.extractor, experiment.matcher) match {
-    //      case (e: ExtractorParameterized[IndexedSeq[Int]], 
-    //          m: MatcherParameterized[IndexedSeq[Int]]) => explicit(e, m)
-    //      case (e: ExtractorParameterized[SortDescriptor],
-    //          m: MatcherParameterized[SortDescriptor]) => explicit(e, m)
-    //      case _ => sys.error("descriptor type not recognized")
-    //    }
-
-    //    explicit(extractor, matcher)
   }
 
   def fromExperiment(

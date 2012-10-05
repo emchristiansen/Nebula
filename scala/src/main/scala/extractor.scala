@@ -9,16 +9,16 @@ import org.opencv.core.CvType
 
 sealed trait Descriptor {
   val thisType: Manifest[_]
-  
-  def asType[E : Manifest]: E = {
+
+  def asType[E: Manifest]: E = {
     assert(thisType <:< implicitly[Manifest[E]])
     this.asInstanceOf[E]
   }
-  
-  def values[E : Manifest]: IndexedSeq[E] = {
+
+  def values[E: Manifest]: IndexedSeq[E] = {
     val manifest = implicitly[Manifest[E]]
     this match {
-      case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest => 
+      case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest =>
         d.values.asInstanceOf[IndexedSeq[E]]
       case d: RawDescriptor[_] if d.elementType <:< manifest =>
         d.values.asInstanceOf[IndexedSeq[E]]
@@ -27,7 +27,7 @@ sealed trait Descriptor {
   }
 }
 
-case class RawDescriptor[E : Manifest](val values: IndexedSeq[E]) extends Descriptor {
+case class RawDescriptor[E: Manifest](val values: IndexedSeq[E]) extends Descriptor {
   val elementType = implicitly[Manifest[E]]
   override val thisType = implicitly[Manifest[RawDescriptor[E]]]
 }

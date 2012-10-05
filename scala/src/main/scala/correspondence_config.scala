@@ -2,7 +2,7 @@ package nebula
 
 import javax.imageio.ImageIO
 
-case class CorrespondenceExperiment (
+case class CorrespondenceExperiment(
   val imageClass: String,
   val otherImage: Int,
   val detector: Detector,
@@ -24,5 +24,5 @@ case class CorrespondenceExperiment (
   lazy val rightImageFile = Global.run[RuntimeConfig].projectChildPath("data/%s/images/img%s.bmp".format(imageClass, otherImage))
   def rightImage = ImageIO.read(rightImageFile)
   lazy val homographyFile = Global.run[RuntimeConfig].projectChildPath("data/%s/homographies/H1to%sp".format(imageClass, otherImage))
-  def homography = Homography.fromFile(homographyFile)  
+  def homography = Homography.fromFile(homographyFile)
 }
