@@ -7,35 +7,35 @@ import javax.imageio.ImageIO
 //  def stringMap: Map[String,String]
 //}
 
-case class CorrespondenceExperiment(
-  val imageClass: String,
-  val otherImage: Int,
-  val detector: Detector,
-  val extractor: ExtractorParameterized[_],
-  val matcher: MatcherParameterized[_],
-  val descriptorConverter: _ => _) extends Experiment {
-  // TODO: Remove this.
-  val parameterAbbreviations: Seq[String] = "IC OI D E M".split(" ").toList
-  val parameterValues: Seq[String] = List(
-    imageClass,
-    otherImage.toString,
-    Util.abbreviate(detector),
-    Util.abbreviate(extractor),
-    Util.abbreviate(matcher))
-
-  def stringMap = parameterAbbreviations.zip(parameterValues).toMap 
-} 
-
-object CorrespondenceExperiment {
-  def apply(experiment: CorrespondenceExperimentParameterized[_, _]) =
-    new CorrespondenceExperiment(
-        experiment.imageClass,
-        experiment.otherImage,
-        experiment.detector,
-        experiment.extractor,
-        experiment.matcher,
-        experiment.descriptorConverter)
-}
+//case class CorrespondenceExperiment(
+//  val imageClass: String,
+//  val otherImage: Int,
+//  val detector: Detector,
+//  val extractor: ExtractorParameterized[_],
+//  val matcher: MatcherParameterized[_],
+//  val descriptorConverter: _ => _) extends Experiment {
+//  // TODO: Remove this.
+//  val parameterAbbreviations: Seq[String] = "IC OI D E M".split(" ").toList
+//  val parameterValues: Seq[String] = List(
+//    imageClass,
+//    otherImage.toString,
+//    Util.abbreviate(detector),
+//    Util.abbreviate(extractor),
+//    Util.abbreviate(matcher))
+//
+//  def stringMap = parameterAbbreviations.zip(parameterValues).toMap 
+//} 
+//
+//object CorrespondenceExperiment {
+//  def apply(experiment: CorrespondenceExperimentParameterized[_, _]) =
+//    new CorrespondenceExperiment(
+//        experiment.imageClass,
+//        experiment.otherImage,
+//        experiment.detector,
+//        experiment.extractor,
+//        experiment.matcher,
+//        experiment.descriptorConverter)
+//}
 
 //abstract class CorrespondenceExperiment(
 //  val imageClass: String,
@@ -44,14 +44,12 @@ object CorrespondenceExperiment {
 //  val extractor: Extractor,
 //  val matcher: Matcher) extends Experiment
 
-case class CorrespondenceExperimentParameterized[MD, ED <% MD](
+case class CorrespondenceExperiment (
   val imageClass: String,
   val otherImage: Int,
   val detector: Detector,
-  val extractor: ExtractorParameterized[ED],
-  val matcher: MatcherParameterized[MD]) {
-  val descriptorConverter = implicitly[ED => MD]
-  
+  val extractor: Extractor,
+  val matcher: Matcher) extends Experiment {
   
 //  val extractorParameterized: ExtractorParameterized[_] = extractor match {
 //    case x: ExtractorParameterized[_] => x
@@ -81,22 +79,22 @@ case class CorrespondenceExperimentParameterized[MD, ED <% MD](
   def homography = Homography.fromFile(homographyFile)  
 }
 
-object CorrespondenceExperimentParameterized {
-  def apply(experiment: CorrespondenceExperiment) = {
-    type ExtractorType = experiment.extractor.DescriptorType
-    type MatcherType = experiment.matcher.DescriptorType
-    val extractor = experiment.extractor.asInstanceOf[ExtractorParameterized[ExtractorType]]
-    val matcher = experiment.matcher.asInstanceOf[MatcherParameterized[MatcherType]]
-    val converter = experiment.descriptorConverter.asInstanceOf[ExtractorType => MatcherType]
-    
-    new CorrespondenceExperimentParameterized(
-        experiment.imageClass,
-        experiment.otherImage,
-        experiment.detector,
-        extractor,
-        matcher)(converter)
-  }
-}
+//object CorrespondenceExperiment {
+//  def apply(experiment: CorrespondenceExperiment) = {
+//    type ExtractorType = experiment.extractor.DescriptorType
+//    type MatcherType = experiment.matcher.DescriptorType
+//    val extractor = experiment.extractor.asInstanceOf[ExtractorParameterized[ExtractorType]]
+//    val matcher = experiment.matcher.asInstanceOf[MatcherParameterized[MatcherType]]
+//    val converter = experiment.descriptorConverter.asInstanceOf[ExtractorType => MatcherType]
+//    
+//    new CorrespondenceExperimentParameterized(
+//        experiment.imageClass,
+//        experiment.otherImage,
+//        experiment.detector,
+//        extractor,
+//        matcher)(converter)
+//  }
+//}
 
 //case class CorrespondenceExperiment(
 //  val imageClass: String,

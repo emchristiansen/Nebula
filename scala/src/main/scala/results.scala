@@ -37,25 +37,25 @@ case class CorrespondenceExperimentResults(
 }
 
 object CorrespondenceExperimentResults {
-  def runExperiment(experiment: CorrespondenceExperiment) = {
-    val explicit = {
-      val explicit = CorrespondenceExperimentParameterized(experiment)
-      explicit
-//      val matched = experiment match {
-//        case x: CorrespondenceExperimentParameterized[_, _] => x
-//      }
-      
-//      type ExtractorDescriptorType = explicit.extractor.DescriptorType
-//      type MatcherDescriptorType = explicit.matcher.DescriptorType
+//  def runExperiment(experiment: CorrespondenceExperiment) = {
+//    val explicit = {
+//      val explicit = CorrespondenceExperimentParameterized(experiment)
+//      explicit
+////      val matched = experiment match {
+////        case x: CorrespondenceExperimentParameterized[_, _] => x
+////      }
+//      
+////      type ExtractorDescriptorType = explicit.extractor.DescriptorType
+////      type MatcherDescriptorType = explicit.matcher.DescriptorType
+////
+////      matched.asInstanceOf[CorrespondenceExperimentParameterized[MatcherDescriptorType, ExtractorDescriptorType]]
+//    }
 //
-//      matched.asInstanceOf[CorrespondenceExperimentParameterized[MatcherDescriptorType, ExtractorDescriptorType]]
-    }
+//    runExperimentParameterized(explicit)//(explicit.descriptorConverter)
+//  }
 
-    runExperimentParameterized(explicit)//(explicit.descriptorConverter)
-  }
-
-  def runExperimentParameterized[MD, ED <% MD](
-    experiment: CorrespondenceExperimentParameterized[MD, ED]): CorrespondenceExperimentResults = {
+  def runExperiment(
+    experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
 
     println("Running %s".format(experiment))
 
@@ -83,11 +83,9 @@ object CorrespondenceExperimentResults {
 
     println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
 
-    val edToMD = implicitly[ED => MD]
+    val dmatches = experiment.matcher.doMatch(true, leftDescriptors, rightDescriptors)
 
-    val dmatches = experiment.matcher.doMatch(true, leftDescriptors.map(edToMD), rightDescriptors.map(edToMD))
-
-    val results = CorrespondenceExperimentResults(CorrespondenceExperiment(experiment), dmatches)
+    val results = CorrespondenceExperimentResults(experiment, dmatches)
     results.save
     results
     //    }

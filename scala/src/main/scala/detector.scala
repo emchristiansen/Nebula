@@ -5,7 +5,7 @@ import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ DescriptorExtractor, FeatureDetector, KeyPoint }
 import org.opencv.core.Mat
 
-trait Detector {
+sealed trait Detector {
   import DetectorImpl._
 
   def detect: DetectorAction

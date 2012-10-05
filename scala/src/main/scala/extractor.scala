@@ -8,22 +8,31 @@ import org.opencv.core.MatOfKeyPoint
 import org.opencv.core.CvType
 
 // TODO: Delete Descriptor
-trait Descriptor
-
-trait DescriptorExpl[E] extends Descriptor {
-  val values: IndexedSeq[E]
+sealed trait Descriptor {
+  val thisType: Manifest[_]
+//  val values: IndexedSeq[Any]
+  
+  def asType[E : Manifest]: E = {
+    assert(thisType <:< implicitly[Manifest[E]])
+    this.asInstanceOf[E]
+  }
+  
+  def values[E : Manifest]: IndexedSeq[E] = {
+    val manifest = implicitly[Manifest[E]]
+    this match {
+      case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest => 
+        d.values.asInstanceOf[IndexedSeq[E]]
+      case d: RawDescriptor[_] if d.elementType <:< manifest =>
+        d.values.asInstanceOf[IndexedSeq[E]]
+      case _ => sys.error("failed match")
+    }
+  }
 }
 
-//object DescriptorExpl {
-//  implicit def toIndexedSeq[E](x: DescriptorExpl[E]) = x.values
-//}
-
-case class RawDescriptor[E](
-  override val values: IndexedSeq[E]) extends DescriptorExpl[E]
-
-//object RawDescriptor {
-//  implicit def fromIndexedSeq[E](x: IndexedSeq[E]) = RawDescriptor(x)
-//}
+case class RawDescriptor[E : Manifest](val values: IndexedSeq[E]) extends Descriptor {
+  val elementType = implicitly[Manifest[E]]
+  override val thisType = implicitly[Manifest[RawDescriptor[E]]]
+}
 
 trait PermutationLike[A] {
   def invert: A
@@ -41,8 +50,9 @@ object PermutationLike {
 }
 
 case class SortDescriptor(
-  override val values: IndexedSeq[Int]) extends DescriptorExpl[Int] {
+  val values: IndexedSeq[Int]) extends Descriptor {
   assert(values.sorted == (0 until values.size))
+  override val thisType = implicitly[Manifest[SortDescriptor]]
 }
 
 object SortDescriptor {
@@ -121,14 +131,10 @@ case class ImagePoint(val x: Int, val y: Int, val z: Int)
 
 //------------------------------------------------------------------------------
 
-sealed trait Extractor
-
-trait ExtractorParameterized[D] extends Extractor {
+sealed trait Extractor {
   import ExtractorImpl._
 
-  type DescriptorType = D
-
-  def extract: ExtractorAction[D]
+  def extract: ExtractorAction
 }
 
 object ExtractorParameterized {
@@ -144,11 +150,11 @@ object ExtractorParameterized {
 ///////////////////////////////////////////////////////////////////////////////
 
 object ExtractorImpl {
-  type ExtractorActionSingle[D] = (BufferedImage, KeyPoint) => Option[D]
+  type ExtractorActionSingle = (BufferedImage, KeyPoint) => Option[Descriptor]
 
-  type ExtractorAction[D] = (BufferedImage, Seq[KeyPoint]) => Seq[Option[D]]
+  type ExtractorAction = (BufferedImage, Seq[KeyPoint]) => Seq[Option[Descriptor]]
 
-  def applySeveral[D](extractSingle: ExtractorActionSingle[D]): ExtractorAction[D] =
+  def applySeveral(extractSingle: ExtractorActionSingle): ExtractorAction =
     (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
       keyPoints.map(k => extractSingle(image, k))
 
@@ -169,7 +175,7 @@ object ExtractorImpl {
     blurWidth: Int,
     color: String)(
       image: BufferedImage,
-      keyPoint: KeyPoint): Option[IndexedSeq[Int]] = {
+      keyPoint: KeyPoint): Option[RawDescriptor[Int]] = {
     // TODO
     assert(!normalizeRotation)
     assert(!normalizeScale)
@@ -179,11 +185,12 @@ object ExtractorImpl {
     for (
       patch <- patchOption
     ) yield {
-      Pixel.getPixelsOriginal(patch).flatMap(interpretColor(color))
+      val values = Pixel.getPixelsOriginal(patch).flatMap(interpretColor(color))
+      RawDescriptor(values)
     }
   }
 
-  def booleanExtractorFromEnum(enum: Int): ExtractorActionSingle[IndexedSeq[Boolean]] =
+  def booleanExtractorFromEnum(enum: Int): ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
       val extractor = DescriptorExtractor.create(enum)
       val imageMat = OpenCVUtil.bufferedImageToMat(image)
@@ -204,7 +211,7 @@ object ExtractorImpl {
           doubles.head.toInt
         }
 
-        Some(ints.flatMap(Util.numToBits(8)))
+        Some(RawDescriptor(ints.flatMap(Util.numToBits(8))))
       }
     }
 }
@@ -214,13 +221,13 @@ case class RawExtractor(
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: String) extends ExtractorParameterized[IndexedSeq[Int]] {
+  val color: String) extends Extractor {
   import ExtractorImpl._
 
   def extract = applySeveral(extractSingle)
 
   // TODO: It's dumb I have to pass these parameters explicitly.
-  def extractSingle: ExtractorActionSingle[IndexedSeq[Int]] = rawPixels(
+  def extractSingle: ExtractorActionSingle = rawPixels(
     normalizeRotation,
     normalizeScale,
     patchWidth,
@@ -233,12 +240,12 @@ case class SortExtractor(
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: String) extends ExtractorParameterized[SortDescriptor] {
+  val color: String) extends Extractor {
   import ExtractorImpl._
 
   def extract = applySeveral(extractSingle)
 
-  def extractSingle: ExtractorActionSingle[SortDescriptor] =
+  def extractSingle: ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
       val unsortedOption = rawPixels(
         normalizeRotation,
@@ -247,7 +254,7 @@ case class SortExtractor(
         blurWidth,
         color)(image, keyPoint)
       for (unsorted <- unsortedOption) yield {
-        SortDescriptor.fromUnsorted(unsorted)
+        SortDescriptor.fromUnsorted(unsorted.values)
       }
     }
 }
@@ -257,12 +264,12 @@ case class RankExtractor(
   val normalizeScale: Boolean,
   val patchWidth: Int,
   val blurWidth: Int,
-  val color: String) extends ExtractorParameterized[SortDescriptor] {
+  val color: String) extends Extractor {
   import ExtractorImpl._
 
   def extract = applySeveral(extractSingle)
 
-  def extractSingle: ExtractorActionSingle[SortDescriptor] =
+  def extractSingle: ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
       val unsortedOption = rawPixels(
         normalizeRotation,
@@ -271,34 +278,34 @@ case class RankExtractor(
         blurWidth,
         color)(image, keyPoint)
       for (unsorted <- unsortedOption) yield {
-        SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(unsorted))
+        SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(unsorted.values))
       }
     }
 }
 
 case class BRISKExtractor(
   val normalizeRotation: Boolean,
-  val normalizeScale: Boolean) extends ExtractorParameterized[IndexedSeq[Boolean]] {
+  val normalizeScale: Boolean) extends Extractor {
   import ExtractorImpl._
 
   def extract = applySeveral(extractSingle)
 
   // Doing this one by one is super slow.
   // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle[IndexedSeq[Boolean]] =
+  def extractSingle: ExtractorActionSingle =
     booleanExtractorFromEnum(DescriptorExtractor.BRISK)
 }
 
 case class FREAKExtractor(
   val normalizeRotation: Boolean,
-  val normalizeScale: Boolean) extends ExtractorParameterized[IndexedSeq[Boolean]] {
+  val normalizeScale: Boolean) extends Extractor {
   import ExtractorImpl._
 
   def extract = applySeveral(extractSingle)
 
   // Doing this one by one is super slow.
   // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle[IndexedSeq[Boolean]] =
+  def extractSingle: ExtractorActionSingle =
     booleanExtractorFromEnum(DescriptorExtractor.FREAK)
 }
 
@@ -313,7 +320,7 @@ case class ELUCIDExtractor(
   val stepSize: Double,
   val numRadii: Int,
   val blurWidth: Int,
-  val color: String) extends ExtractorParameterized[SortDescriptor] {
+  val color: String) extends Extractor {
   import ExtractorImpl._
 
   def extract = applySeveral(extractSingle)
@@ -350,7 +357,7 @@ case class ELUCIDExtractor(
     samplePattern(scaleFactor, rotationOffset).map(_ + DenseVector(keyPoint.pt.x, keyPoint.pt.y))
   }
 
-  def extractSingle: ExtractorActionSingle[SortDescriptor] = (image, keyPoint) => {
+  def extractSingle: ExtractorActionSingle = (image, keyPoint) => {
     val blurred = ImageProcessing.boxBlur(blurWidth, image)
 
     val pointOptions = samplePoints(keyPoint).map(point => blurred.getSubPixel(point(0), point(1)))
