@@ -32,6 +32,10 @@ case class RawDescriptor[E: Manifest](val values: IndexedSeq[E]) extends Descrip
   override val thisType = implicitly[Manifest[RawDescriptor[E]]]
 }
 
+object RawDescriptor {
+  implicit def toIndexedSeq[E](d: RawDescriptor[E]) = d.values
+}
+
 trait PermutationLike[A] {
   def invert: A
   def compose(otherPermutation: A): A
@@ -137,14 +141,35 @@ sealed trait Extractor {
 object ExtractorParameterized {
   val instances: Seq[Class[_]] = Seq(
     classOf[RawExtractor],
+    classOf[NormalizeExtractor],
     classOf[SortExtractor],
     classOf[RankExtractor],
+    classOf[UniformRankExtractor],
     classOf[BRISKExtractor],
+    classOf[BRISKRawExtractor],
+    classOf[BRISKRankExtractor],
+    classOf[BRISKOrderExtractor],
     classOf[FREAKExtractor],
+    classOf[BRIEFExtractor],
+    classOf[ORBExtractor],
     classOf[ELUCIDExtractor])
+
+  // Computes something like the rank, but pixels with the same value receive
+  // the same rank, so there is no noise from sort ambiguity.
+  // This particular algorithm is quite inefficient.
+  def uniformRank(descriptor: RawDescriptor[Int]): RawDescriptor[Int] = {
+    val distinctPixelValues = descriptor.values.toSet.toList
+    val rank = SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor.values)).toArray
+    for (value <- distinctPixelValues) {
+      val indices = descriptor.values.zipWithIndex.filter(_._1 == value).map(_._2)
+      val meanRank = (indices.map(rank.apply).sum.toDouble / indices.size).round.toInt
+      indices.foreach(i => rank(i) = meanRank)
+    }
+    RawDescriptor(rank.toIndexedSeq)
+  }
 }
 
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
 
 object ExtractorImpl {
   type ExtractorActionSingle = (BufferedImage, KeyPoint) => Option[Descriptor]
@@ -187,12 +212,10 @@ object ExtractorImpl {
     }
   }
 
-  def booleanExtractorFromEnum(enum: Int): ExtractorActionSingle =
+  def extractorFromEnum(enum: Int): ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
       val extractor = DescriptorExtractor.create(enum)
       val imageMat = OpenCVUtil.bufferedImageToMat(image)
-      // This will get overwritten, it just matters that |compute| gets
-      // a valid |CvMat|.
       val descriptor = new Mat
       extractor.compute(imageMat, new MatOfKeyPoint(keyPoint), descriptor)
 
@@ -202,13 +225,29 @@ object ExtractorImpl {
         assert(descriptor.cols > 0)
         assert(descriptor.`type` == CvType.CV_8UC1)
 
-        val ints = for (c <- 0 until descriptor.cols) yield {
+        val doubles = for (c <- 0 until descriptor.cols) yield {
           val doubles = descriptor.get(0, c)
           assert(doubles.size == 1)
-          doubles.head.toInt
+          doubles.head
         }
 
-        Some(RawDescriptor(ints.flatMap(Util.numToBits(8))))
+        Some(RawDescriptor(doubles))
+      }
+    }
+
+  def booleanExtractorFromEnum(enum: Int): ExtractorActionSingle =
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      for (descriptor <- extractorFromEnum(enum)(image, keyPoint)) yield {
+        val doubles = descriptor.values[Double]
+        RawDescriptor(doubles.map(_.toInt).flatMap(Util.numToBits(8)))
+      }
+    }
+
+  def intExtractorFromEnum(enum: Int): ExtractorActionSingle =
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      for (descriptor <- extractorFromEnum(enum)(image, keyPoint)) yield {
+        val doubles = descriptor.values[Double]
+        RawDescriptor(doubles.map(_.toInt))
       }
     }
 }
@@ -230,6 +269,37 @@ case class RawExtractor(
     patchWidth,
     blurWidth,
     color)
+}
+
+case class NormalizeExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean,
+  val patchWidth: Int,
+  val blurWidth: Int,
+  val color: String) extends Extractor {
+  import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
+
+  def extractSingle: ExtractorActionSingle =
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      val rawOption = rawPixels(
+        normalizeRotation,
+        normalizeScale,
+        patchWidth,
+        blurWidth,
+        color)(image, keyPoint)
+      for (raw <- rawOption) yield {
+        val values = raw.values
+        val min = values.min
+        val range = values.max - min
+        assert(range != 0)
+        val normalized = values.map(x => ((x - min) * 255.0 / range).round.toInt)
+        assert(normalized.min == 0)
+        assert(normalized.max == 255)
+        RawDescriptor(normalized)
+      }
+    }
 }
 
 case class SortExtractor(
@@ -280,6 +350,30 @@ case class RankExtractor(
     }
 }
 
+case class UniformRankExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean,
+  val patchWidth: Int,
+  val blurWidth: Int,
+  val color: String) extends Extractor {
+  import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
+
+  def extractSingle: ExtractorActionSingle =
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      val unsortedOption = rawPixels(
+        normalizeRotation,
+        normalizeScale,
+        patchWidth,
+        blurWidth,
+        color)(image, keyPoint)
+      for (unsorted <- unsortedOption) yield {
+        ExtractorParameterized.uniformRank(unsorted)
+      }
+    }
+}
+
 case class BRISKExtractor(
   val normalizeRotation: Boolean,
   val normalizeScale: Boolean) extends Extractor {
@@ -293,6 +387,49 @@ case class BRISKExtractor(
     booleanExtractorFromEnum(DescriptorExtractor.BRISK)
 }
 
+case class BRISKRawExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean) extends Extractor {
+  import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
+
+  // Doing this one by one is super slow.
+  // TODO: Make the native OpenCV api less awful.
+  def extractSingle: ExtractorActionSingle = //sys.error("TODO")
+    intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)
+}
+
+case class BRISKOrderExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean) extends Extractor {
+  import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
+
+  // Doing this one by one is super slow.
+  // TODO: Make the native OpenCV api less awful.
+  def extractSingle: ExtractorActionSingle = (image, keyPoint) => {
+//    sys.error("TODO")
+    for (descriptor <- intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)) yield SortDescriptor.fromUnsorted(descriptor.values[Int])
+  }
+}
+
+case class BRISKRankExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean) extends Extractor {
+  import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
+
+  // Doing this one by one is super slow.
+  // TODO: Make the native OpenCV api less awful.
+  def extractSingle: ExtractorActionSingle = (image, keyPoint) => {
+//    sys.error("TODO")
+    for (descriptor <- intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)) yield SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor.values[Int]))
+  }
+}
+
 case class FREAKExtractor(
   val normalizeRotation: Boolean,
   val normalizeScale: Boolean) extends Extractor {
@@ -304,6 +441,32 @@ case class FREAKExtractor(
   // TODO: Make the native OpenCV api less awful.
   def extractSingle: ExtractorActionSingle =
     booleanExtractorFromEnum(DescriptorExtractor.FREAK)
+}
+
+case class BRIEFExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean) extends Extractor {
+  import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
+
+  // Doing this one by one is super slow.
+  // TODO: Make the native OpenCV api less awful.
+  def extractSingle: ExtractorActionSingle =
+    booleanExtractorFromEnum(DescriptorExtractor.BRIEF)
+}
+
+case class ORBExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean) extends Extractor {
+  import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
+
+  // Doing this one by one is super slow.
+  // TODO: Make the native OpenCV api less awful.
+  def extractSingle: ExtractorActionSingle =
+    booleanExtractorFromEnum(DescriptorExtractor.ORB)
 }
 
 import breeze.linalg.DenseMatrix

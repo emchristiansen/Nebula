@@ -19,6 +19,7 @@ object MatcherParameterized {
   val instances: List[java.lang.Class[_]] = List(
     classOf[L0Matcher],
     classOf[L1Matcher],
+    classOf[L1IntervalMatcher],
     classOf[L2Matcher],
     classOf[KendallTauMatcher],
     classOf[CayleyMatcher],
@@ -114,6 +115,40 @@ object MatcherParameterized {
     val rightPermuted = left.zip(right).sortBy(_._1).map(_._2)
     Util.numTranspositionsToSort(rightPermuted)
   }
+
+  ///////////////////////////////////////////////////////////  
+
+  case class IntervalRanking(val values: IndexedSeq[Tuple2[Int, Int]]) {
+    values.foreach(t => assert(t._1 <= t._2))
+  }
+
+  def intervalRanking(descriptor: RawDescriptor[Int]): IntervalRanking = {
+    val distinctPixelValues = descriptor.values.toSet.toList
+    val rank = SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor.values))
+    val intervals = Array.fill(rank.size)((-1, -1))
+    for (value <- distinctPixelValues) {
+      val indices = descriptor.values.zipWithIndex.filter(_._1 == value).map(_._2)
+      val minRank = indices.map(rank.apply).min
+      val maxRank = indices.map(rank.apply).max
+      indices.foreach(i => intervals(i) = (minRank, maxRank))
+    }
+    IntervalRanking(intervals.toIndexedSeq)
+  }
+
+  def l1IntervalDistance(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int = {
+    val leftIntervals = intervalRanking(RawDescriptor(left))
+    val rightIntervals = intervalRanking(RawDescriptor(right))
+
+    def l1Distance(leftInterval: Tuple2[Int, Int], rightInterval: Tuple2[Int, Int]): Int = {
+      // Dumb but def correct.
+      (for (
+        l <- leftInterval._1 to leftInterval._2;
+        r <- rightInterval._1 to rightInterval._2
+      ) yield math.abs(l - r)).min
+    }
+
+    leftIntervals.values.zip(rightIntervals.values).map({ case (l, r) => l1Distance(l, r) }).sum
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -171,6 +206,24 @@ case class L1Matcher() extends Matcher {
     applyIndividual(
       (x: Descriptor, y: Descriptor) =>
         MatcherParameterized.l1(
+          x.values[Int],
+          y.values[Int]),
+      allPairs,
+      leftDescriptors,
+      rightDescriptors)
+  }
+}
+
+case class L1IntervalMatcher() extends Matcher {
+  import MatcherImpl._
+
+  def doMatch = (
+    allPairs: Boolean,
+    leftDescriptors: Seq[Descriptor],
+    rightDescriptors: Seq[Descriptor]) => {
+    applyIndividual(
+      (x: Descriptor, y: Descriptor) =>
+        MatcherParameterized.l1IntervalDistance(
           x.values[Int],
           y.values[Int]),
       allPairs,

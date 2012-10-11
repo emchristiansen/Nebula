@@ -24,7 +24,7 @@ class TestELUCID extends FunSuite {
   test("bikes") {
     def drawPointsOnBikes(image: BufferedImage, file: File) {
       val detector = BRISKDetector(maxKeyPoints = 60)
-      val keyPoints = detector.apply(image)
+      val keyPoints = detector.detect(image)
 
       val extractor = ELUCIDExtractor(
         true,

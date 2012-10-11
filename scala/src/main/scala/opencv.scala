@@ -1,17 +1,18 @@
 package nebula
 
 import java.awt.image.BufferedImage
+import java.io.File
+
+import scala.math.{atan, cos, sin, toDegrees, toRadians}
 import scala.math.BigInt.int2bigInt
+
 import org.apache.commons.math3.linear.{Array2DRowRealMatrix, ArrayRealVector, LUDecomposition, RealVector}
 import org.opencv.core.Mat
 import org.opencv.features2d.{DMatch, KeyPoint}
 import org.opencv.highgui.Highgui.imread
+
 import javax.imageio.ImageIO
 import net.liftweb.json.{Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo}
-import java.io.File
-
-import breeze.linalg._
-import math._
 
 object KeyPointUtil {
   def isWithinBounds(width: Int, height: Int)(keyPoint: KeyPoint): Boolean = {
@@ -81,14 +82,25 @@ object KeyPointUtil {
         keyPoint.size, 
         keyPoint.angle)
 
+        // TODO: This is probably broken.
+        // 0, 0, 0, -1, 0, 0, -1
     new KeyPoint(
       imagePoint.getEntry(0).toFloat,
       imagePoint.getEntry(1).toFloat,
-      imageSize.toFloat,
-      imageAngle.toFloat,
+      keyPoint.size,
+      keyPoint.angle,
       keyPoint.response,
       keyPoint.octave,
-      keyPoint.class_id)
+      keyPoint.class_id)        
+        
+//    new KeyPoint(
+//      imagePoint.getEntry(0).toFloat,
+//      imagePoint.getEntry(1).toFloat,
+//      imageSize.toFloat,
+//      imageAngle.toFloat,
+//      keyPoint.response,
+//      keyPoint.octave,
+//      keyPoint.class_id)
   }
 }
 
@@ -96,28 +108,12 @@ object OpenCVUtil {
   def bufferedImageToMat(image: BufferedImage): Mat = {
     // TODO: Figure out how to do this without IO.
     val file = File.createTempFile("bufferedImageToCvMat", ".bmp")
+    file.deleteOnExit
     ImageIO.write(image, "bmp", file)
     val mat = imread(file.toString)
     assert(mat != null)
     mat
   }
-
-  // TODO: Delete this crap. 
-  
-  //  def cvMatStringToSeq(matString: String): Seq[Double] = {
-  //    val tokens = matString.replace("[", "").replace("]", "").split(",")
-  //    val noWhitespace = tokens.map(_.replace(" ", ""))
-  //    tokens.map(_.toDouble)
-  //  }
-  //
-  //  // We're going to get the string representation of the |CvMat|,
-  //  // and parse it to get out its values.
-  //  // Yes, the JavaCV interface really is this broken.
-  //  def cvMatToSeq(mat: CvMat): Seq[Double] = {
-  //    assert(mat.rows == 1)
-  //    assert(mat.cols > 0)
-  //    cvMatStringToSeq(mat.toString)
-  //  }
 }
 
 class DMatchSerializer extends Serializer[DMatch] {

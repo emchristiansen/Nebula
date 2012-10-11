@@ -34,6 +34,7 @@ object SFSPipelineBuild extends Build {
       "com.twitter" % "util-eval" % "5.3.6",
 //      "com.chuusai" %% "shapeless" % "1.2.2",
 //      "play" % "play_2.9.1" % "2.0.3",
+      "org.clapper" %% "grizzled-scala" % "1.0.13",
       "org.scalanlp" %% "breeze-math" % "0.1",
       "org.scalanlp" %% "breeze-learn" % "0.1",
       "org.scalanlp" %% "breeze-process" % "0.1",

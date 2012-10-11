@@ -8,6 +8,8 @@ import nebula._
 import org.apache.xmlgraphics.image.loader.ImageManager
 import org.opencv.core.Mat
 
+import org.opencv.core.MatOfKeyPoint
+
 class TestAnything extends FunSuite {
   val source = """
   import nebula._
@@ -36,9 +38,20 @@ class TestAnything extends FunSuite {
 
     //    keyPoints2.foreach(println)
 
-    val extractor = BRISKDescriptorExtractor.create
-    val descriptors = new Mat
-    val rawPixels = new Mat
+    val extractor = ExtractorImpl.extractorFromEnum(DescriptorExtractor.BRISKLUCID)
+    
+    val rawPixels = extractor(image, keyPoints2.head)
+//    println(rawPixels)
+    
+//    val extractor = DescriptorExtractor.create(DescriptorExtractor.BRISKLUCID)
+//    val rawPixels = new Mat
+//    extractor.compute(matImage, new MatOfKeyPoint(keyPoints2.head), rawPixels)
+//    
+//    println(rawPixels.)
+    
+//    val extractor = BRISKDescriptorExtractor.create
+//    val descriptors = new Mat
+//    val rawPixels = new Mat
     //    extractor.getRawPixels(
     //        matImage,
     //        new Mat,
@@ -56,7 +69,4 @@ class TestAnything extends FunSuite {
     //    println(y)
   }
   
-  test("BLAH") {
-    MatcherParameterized.generalizedL0(RawDescriptor(IndexedSeq[Int]()), RawDescriptor(IndexedSeq[Int]()))
-  }
 }
