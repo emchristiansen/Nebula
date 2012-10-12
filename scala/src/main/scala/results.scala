@@ -24,9 +24,13 @@ object ResultsData {
   }
 }
 
+case class SmallBaselineExperimentResults(
+  val experiment: SmallBaselineExperiment,
+  val dmatches: Seq[DMatch])
+  
 case class CorrespondenceExperimentResults(
-  experiment: CorrespondenceExperiment,
-  dmatches: Seq[DMatch]) {
+  val experiment: CorrespondenceExperiment,
+  val dmatches: Seq[DMatch]) {
   def save {
     println("Writing to %s".format(experiment.path))
     IO.toJSONFileAbstract(

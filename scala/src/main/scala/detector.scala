@@ -18,20 +18,31 @@ object Detector {
 object DetectorImpl {
   type DetectorAction = BufferedImage => Seq[KeyPoint]
 
-  def apply(maxKeyPoints: Int, detector: FeatureDetector): DetectorAction =
+  def apply(maxKeyPoints: Option[Int], detector: FeatureDetector): DetectorAction =
     (image: BufferedImage) => {
       val matImage = OpenCVUtil.bufferedImageToMat(image)
       val keyPoints = new MatOfKeyPoint
       detector.detect(matImage, keyPoints)
-      keyPoints.toArray.sortBy(_.response).reverse.take(maxKeyPoints)
+      val sorted = keyPoints.toArray.sortBy(_.response).reverse
+      
+      if (maxKeyPoints.isDefined) sorted.take(maxKeyPoints.get)
+      else sorted
     }
+}
+
+case class DenseDetector() extends Detector {
+  import DetectorImpl._
+
+  def detect: DetectorAction = DetectorImpl(
+    None,
+    FeatureDetector.create(FeatureDetector.DENSE))  
 }
 
 case class FASTDetector(val maxKeyPoints: Int) extends Detector {
   import DetectorImpl._
 
   def detect: DetectorAction = DetectorImpl(
-    maxKeyPoints,
+    Some(maxKeyPoints),
     FeatureDetector.create(FeatureDetector.FAST))
 }
 
@@ -55,6 +66,6 @@ case class BRISKDetector(val maxKeyPoints: Int) extends Detector {
   import DetectorImpl._
 
   def detect: DetectorAction = DetectorImpl(
-    maxKeyPoints,
+    Some(maxKeyPoints),
     FeatureDetector.create(FeatureDetector.BRISK))
 }
