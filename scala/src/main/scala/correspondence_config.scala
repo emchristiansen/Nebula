@@ -36,7 +36,7 @@ case class SmallBaselineExperiment(
   val matcher: Matcher)
 
 object SmallBaselineExperiment {
-  implicit def addRun(self: SmallBaselineExperiment) = new {
+  implicit def implicitRun(self: SmallBaselineExperiment) = new {
     def run {
       val SmallBaselinePair(leftImage, rightImage, trueFlow) = SmallBaselinePair.fromName(
         Global.run[RuntimeConfig].projectChildPath("data/middleburyImages"),

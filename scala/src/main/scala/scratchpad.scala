@@ -168,3 +168,41 @@ object MyApp {
   val result = experiment.matcher.doMatch(descriptor)
 }
 
+trait MyPrint {
+  def myPrint: Any
+}
+
+trait MyIntPrint extends MyPrint {
+  def myIntPrint: Any
+}
+
+trait MyStringPrint extends MyPrint {
+  def myStringPrint: Any
+}
+
+case class D1(value: Int)
+
+object D1 {
+  implicit def implicitMyIntPrint(self: D1) = new MyIntPrint {
+    def myPrint = myIntPrint
+    def myIntPrint = "int" + self.value
+  }
+}
+
+case class D2(value: String)
+
+object D2 {
+  implicit def implicitMyStringPrint(self: D1) = new MyStringPrint {
+    def myPrint = myStringPrint
+    def myStringPrint = "string" + self.value
+  }
+}
+
+case class HasPrinter(printer: MyPrint)
+
+object MyApp2 {
+  val d1 = D1(10)
+  val hasPrinter = HasPrinter(d1)
+  hasPrinter.printer.myPrint
+}
+
