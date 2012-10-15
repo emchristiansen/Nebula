@@ -57,43 +57,11 @@ trait Experiment {
   def name: String
   // Parameter names and values
   def parameters: Seq[Tuple2[String, String]]
-
-  def resultsTypeManifest: Manifest[_]
-  protected def uncheckedRun[A]: A
   
-  ///////////////////////////////////////////////////////////
-
-  def run[A : Manifest]: A = { 
-    assert(resultsTypeManifest <:< implicitly[Manifest[A]])
-    uncheckedRun[A]
-  }  
+  /////////////////////////////////////////////////////////// 
   
   val unixEpoch = System.currentTimeMillis / 1000L
 
   def stringMap = parameters.toMap
-  
-  def filenameNoTime: String =
-    name + "_" + parameters.map(p => p._1 + "-" + p._2).mkString("_") + ".json"
-
-  def filename: String = unixEpoch + "_" + filenameNoTime
-
-  def outDirectory: File = Global.run[RuntimeConfig].projectChildPath("results/experiment_data")
-
-  def path: File = new File(outDirectory, filename)
-
-  def existingResultsFiles: Seq[File] = {
-    val allPaths = outDirectory.list.toList.map(path => outDirectory + "/" + path.toString)
-    val matchingPaths = allPaths.filter(_.contains(filenameNoTime))
-    matchingPaths.sortBy(identity).reverse.map(path => new File(path))
-  }
-
-  def existingResultsFile: Option[File] = {
-    existingResultsFiles match {
-      case Nil => None
-      case file :: _ => Some(file)
-    }
-  }
-
-  def alreadyRun: Boolean = !existingResultsFile.isEmpty
 }
 
