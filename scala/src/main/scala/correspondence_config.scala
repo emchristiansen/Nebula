@@ -17,6 +17,13 @@ case class WideBaselineExperiment(
   val matcher: Matcher)
 
 object WideBaselineExperiment {
+  implicit def implicitHomography(self: WideBaselineExperiment) = new {
+    def homography = {
+      val homographyFile = Global.run[RuntimeConfig].projectChildPath("data/oxfordImages/%s/homographies/H1to%sp".format(self.imageClass, self.otherImage))
+      Homography.fromFile(homographyFile)
+    }
+  }  
+  
   implicit def implicitExperiment(self: WideBaselineExperiment): Experiment =
     new Experiment {
       override def name = "WideBaselineExperiment"
@@ -27,9 +34,39 @@ object WideBaselineExperiment {
         ("E", Util.abbreviate(self.extractor)),
         ("M", Util.abbreviate(self.matcher)))
       // TODO: asInstanceOf should not be necessary.
-      override type ResultsType = WideBaselineExperimentResults
-      override def run =
-        WideBaselineExperimentResults.runExperiment(self)
+      override def resultsTypeManifest = implicitly[Manifest[WideBaselineExperimentResults]]
+      override def uncheckedRun[A] = {
+        println("Running %s".format(self))
+
+        val leftImage = self.leftImage
+        val rightImage = self.rightImage
+
+        val (leftKeyPoints, rightKeyPoints) = {
+          val leftKeyPoints = self.detector.detect(leftImage)
+          Util.pruneKeyPoints(
+            leftImage,
+            rightImage,
+            self.homography,
+            leftKeyPoints).unzip
+        }
+
+        println("Number of KeyPoints: %s".format(leftKeyPoints.size))
+
+        val (leftDescriptors, rightDescriptors) = {
+          val leftDescriptors = self.extractor.extract(leftImage, leftKeyPoints)
+          val rightDescriptors = self.extractor.extract(rightImage, rightKeyPoints)
+
+          for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
+        } unzip
+
+        println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
+
+        val dmatches = self.matcher.doMatch(true, leftDescriptors, rightDescriptors)
+
+        val results = WideBaselineExperimentResults(self, dmatches)
+        results.save
+        results.asInstanceOf[A]
+      }
     }
 
   implicit def implicitImagePairLike(self: WideBaselineExperiment): ImagePairLike = {
@@ -42,13 +79,6 @@ object WideBaselineExperiment {
         val file = Global.run[RuntimeConfig].projectChildPath("data/oxfordImages/%s/images/img%s.bmp".format(self.imageClass, self.otherImage))
         ImageIO.read(file)
       }
-    }
-  }
-
-  implicit def implicitHomography(self: WideBaselineExperiment) = new {
-    def homography = {
-      val homographyFile = Global.run[RuntimeConfig].projectChildPath("data/oxfordImages/%s/homographies/H1to%sp".format(self.imageClass, self.otherImage))
-      Homography.fromFile(homographyFile)
     }
   }
 }
@@ -68,8 +98,8 @@ object SmallBaselineExperiment {
         ("IC", self.imageClass),
         ("E", Util.abbreviate(self.extractor)),
         ("M", Util.abbreviate(self.matcher)))
-      override type ResultsType = Unit
-      override def run = {
+      override def resultsTypeManifest = implicitly[Manifest[SmallBaselineExperimentResults]]
+      override def uncheckedRun[A] = {
         val SmallBaselinePair(leftImage, rightImage, trueFlow) = SmallBaselinePair.fromName(
           Global.run[RuntimeConfig].projectChildPath("data/middleburyImages"),
           self.imageClass)
@@ -131,6 +161,8 @@ object SmallBaselineExperiment {
         }
 
         println("l2 distance is: %.4f".format(flow.l2Distance(trueFlow)))
+        
+        SmallBaselineExperimentResults(self, Seq()).asInstanceOf[A]
       }
     }
 }

@@ -24,63 +24,72 @@ object ResultsData {
   }
 }
 
+trait ExperimentResults {
+  def experiment: Experiment
+  def save: Unit
+  
+  def run: this.type
+  
+  ///////////////////////////////////////////////////////////
+  
+  val unixEpoch = System.currentTimeMillis / 1000L
+
+  def stringMap = parameters.toMap
+  
+  def filenameNoTime: String =
+    name + "_" + parameters.map(p => p._1 + "-" + p._2).mkString("_") + ".json"
+
+  def filename: String = unixEpoch + "_" + filenameNoTime
+
+  def outDirectory: File = Global.run[RuntimeConfig].projectChildPath("results/experiment_data")
+
+  def path: File = new File(outDirectory, filename)
+
+  def existingResultsFiles: Seq[File] = {
+    val allPaths = outDirectory.list.toList.map(path => outDirectory + "/" + path.toString)
+    val matchingPaths = allPaths.filter(_.contains(filenameNoTime))
+    matchingPaths.sortBy(identity).reverse.map(path => new File(path))
+  }
+
+  def existingResultsFile: Option[File] = {
+    existingResultsFiles match {
+      case Nil => None
+      case file :: _ => Some(file)
+    }
+  }
+
+  def alreadyRun: Boolean = !existingResultsFile.isEmpty  
+}
+
+// TODO
 case class SmallBaselineExperimentResults(
   val experiment: SmallBaselineExperiment,
   val dmatches: Seq[DMatch])
-  
+
 case class WideBaselineExperimentResults(
-  val experiment: WideBaselineExperiment, 
-  val dmatches: Seq[DMatch]) {
-  def save {
-    println("Writing to %s".format(experiment.path))
-    IO.toJSONFileAbstract(
-      ExperimentIO.formats,      WideBaselineExperimentResults.this,      experiment.path)
-  }
-}
+  val experiment: WideBaselineExperiment,
+  val dmatches: Seq[DMatch])
 
 object WideBaselineExperimentResults {
-  def runExperiment(
-    experiment: WideBaselineExperiment): WideBaselineExperimentResults = {
-
-    println("Running %s".format(experiment))
-
-    val leftImage = experiment.leftImage
-    val rightImage = experiment.rightImage
-
-    val (leftKeyPoints, rightKeyPoints) = {
-      val leftKeyPoints = experiment.detector.detect(leftImage)
-      Util.pruneKeyPoints(
-        leftImage,
-        rightImage,
-        experiment.homography,
-        leftKeyPoints).unzip
-    }
-
-    println("Number of KeyPoints: %s".format(leftKeyPoints.size))
-
-    val (leftDescriptors, rightDescriptors) = {
-      val leftDescriptors = experiment.extractor.extract(leftImage, leftKeyPoints)
-      val rightDescriptors = experiment.extractor.extract(rightImage, rightKeyPoints)
-
-      for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
-    } unzip
-
-    println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
-
-    val dmatches = experiment.matcher.doMatch(true, leftDescriptors, rightDescriptors)
-
-    val results = WideBaselineExperimentResults(experiment, dmatches)
-    results.save
-    results
-  }
-
-  def fromExperiment(
+  def apply(
     experiment: WideBaselineExperiment): WideBaselineExperimentResults = {
     if (experiment.alreadyRun) {
       val Some(file) = experiment.existingResultsFile
       println("Reading %s".format(file))
       IO.fromJSONFileAbstract[WideBaselineExperimentResults](ExperimentIO.formats, file)
-    } else runExperiment(experiment)
-  }
+    } else experiment.run
+  }  
+  
+  implicit def implicitExperimentResults(self: WideBaselineExperimentResults): ExperimentResults =
+    new ExperimentResults {
+      override def experiment = self.experiment
+      override def save = {
+        println("Writing to %s".format(experiment.path))
+        IO.toJSONFileAbstract(
+          ExperimentIO.formats,
+          WideBaselineExperimentResults.this,
+          experiment.path)
+      }
+    }
 }
 

@@ -58,11 +58,16 @@ trait Experiment {
   // Parameter names and values
   def parameters: Seq[Tuple2[String, String]]
 
-  type ResultsType 
-  def run: ResultsType
+  def resultsTypeManifest: Manifest[_]
+  protected def uncheckedRun[A]: A
   
   ///////////////////////////////////////////////////////////
 
+  def run[A : Manifest]: A = { 
+    assert(resultsTypeManifest <:< implicitly[Manifest[A]])
+    uncheckedRun[A]
+  }  
+  
   val unixEpoch = System.currentTimeMillis / 1000L
 
   def stringMap = parameters.toMap
@@ -91,3 +96,4 @@ trait Experiment {
 
   def alreadyRun: Boolean = !existingResultsFile.isEmpty
 }
+
