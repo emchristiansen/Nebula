@@ -75,16 +75,12 @@ object SmallBaselineExperimentResults {
   }
 
   private def run(self: SmallBaselineExperiment): SmallBaselineExperimentResults = {
-    val SmallBaselinePair(leftImage, rightImage, trueFlow) = SmallBaselinePair.fromName(
-      Global.run[RuntimeConfig].projectChildPath("data/middleburyImages"),
-      self.imageClass)
-
     val detector = DenseDetector()
-    val keyPoints = detector.detect(leftImage)
+    val keyPoints = detector.detect(self.leftImage)
 
     val (finalKeyPoints, leftDescriptors, rightDescriptors) = {
-      val leftDescriptors = self.extractor.extract(leftImage, keyPoints)
-      val rightDescriptors = self.extractor.extract(rightImage, keyPoints)
+      val leftDescriptors = self.extractor.extract(self.leftImage, keyPoints)
+      val rightDescriptors = self.extractor.extract(self.rightImage, keyPoints)
 
       val zipped = for (((keyPoint, Some(left)), Some(right)) <- keyPoints.zip(leftDescriptors).zip(rightDescriptors)) yield (keyPoint, left, right)
       (zipped.map(_._1), zipped.map(_._2), zipped.map(_._3))
@@ -93,7 +89,7 @@ object SmallBaselineExperimentResults {
     println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
 
     def getDescriptorMatrix(descriptors: Seq[Descriptor]): DenseMatrix[Option[Descriptor]] = {
-      val matrix = DenseMatrix.fill[Option[Descriptor]](leftImage.getHeight, leftImage.getWidth)(None)
+      val matrix = DenseMatrix.fill[Option[Descriptor]](self.leftImage.getHeight, self.leftImage.getWidth)(None)
       for ((keyPoint, descriptor) <- finalKeyPoints.zip(descriptors)) {
         matrix(keyPoint.pt.y.round.toInt, keyPoint.pt.x.round.toInt) = Some(descriptor)
       }
@@ -126,7 +122,7 @@ object SmallBaselineExperimentResults {
     }
 
     val flow = {
-      val flow = DenseMatrix.fill[Option[FlowVector]](leftImage.getHeight, leftImage.getWidth)(None)
+      val flow = DenseMatrix.fill[Option[FlowVector]](self.leftImage.getHeight, self.leftImage.getWidth)(None)
       for ((leftRow, leftColumn, bestRightRow, bestRightColumn) <- flowTuples) {
         val dX = bestRightColumn - leftColumn
         val dY = bestRightRow - leftRow
@@ -135,7 +131,7 @@ object SmallBaselineExperimentResults {
       FlowField(flow)
     }
 
-    println("l2 distance is: %.4f".format(flow.l2Distance(trueFlow)))
+    println("l2 distance is: %.4f".format(flow.l2Distance(self.groundTruth)))
 
     SmallBaselineExperimentResults(self, Seq())
   }
@@ -175,7 +171,7 @@ object WideBaselineExperimentResults {
       Util.pruneKeyPoints(
         leftImage,
         rightImage,
-        self.homography,
+        self.groundTruth,
         leftKeyPoints).unzip
     }
 

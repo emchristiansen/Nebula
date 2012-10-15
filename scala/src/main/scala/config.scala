@@ -1,6 +1,7 @@
 package nebula
 
 import java.io.File
+import java.awt.image.BufferedImage
 
 trait RuntimeConfigTrait {
   val projectRoot: File
@@ -52,6 +53,21 @@ object RuntimeConfig {
     println(runtimeConfig)
   }
 }
+
+///////////////////////////////////////////////////////////
+
+trait ImagePairLike {
+  def leftImage: BufferedImage
+  def rightImage: BufferedImage
+}
+
+///////////////////////////////////////////////////////////
+
+trait HasGroundTruth[A] {
+  def groundTruth: A
+}
+
+///////////////////////////////////////////////////////////
 
 trait Experiment {
   def name: String
