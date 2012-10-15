@@ -17,9 +17,9 @@ object Summary {
   }
 
   def experimentTable(
-    baseExperiment: CorrespondenceExperiment,
-    rowMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment],
-    columnMutations: Seq[CorrespondenceExperiment => CorrespondenceExperiment]): Seq[Seq[CorrespondenceExperiment]] = {
+    baseExperiment: WideBaselineExperiment,
+    rowMutations: Seq[WideBaselineExperiment => WideBaselineExperiment],
+    columnMutations: Seq[WideBaselineExperiment => WideBaselineExperiment]): Seq[Seq[WideBaselineExperiment]] = {
     for (row <- rowMutations) yield {
       for (column <- columnMutations) yield {
         column(row(baseExperiment))
@@ -53,8 +53,8 @@ case class TableUnrendered(
   val title: String,
   val rowLabels: Seq[String],
   val columnLabels: Seq[String],
-  val entries: Seq[Seq[CorrespondenceExperiment]]) {
-  def toTSV(toString: CorrespondenceExperiment => String): String = {
+  val entries: Seq[Seq[WideBaselineExperiment]]) {
+  def toTSV(toString: WideBaselineExperiment => String): String = {
     val topRow = Seq(title) ++ columnLabels
     val stringEntries: Seq[Seq[String]] = entries.map(_.map(toString))
     val otherRows: Seq[Seq[String]] = rowLabels.zip(stringEntries).map({ case (title, entries) => Seq(title) ++ entries })
@@ -63,7 +63,7 @@ case class TableUnrendered(
     stringsTable.map(_.mkString("\t")).mkString("\n")
   }
 
-  def render(summarize: CorrespondenceExperiment => Seq[ExperimentSummary]): Table = {
+  def render(summarize: WideBaselineExperiment => Seq[ExperimentSummary]): Table = {
     Table(
       title,
       rowLabels,
@@ -71,7 +71,7 @@ case class TableUnrendered(
       entries.map(_.map(summarize)))
   }
 
-  def toBag[A](convert: (String, String, CorrespondenceExperiment) => A): Seq[A] = {
+  def toBag[A](convert: (String, String, WideBaselineExperiment) => A): Seq[A] = {
     for (
       (rowLabel, row) <- rowLabels.zip(entries);
       (columnLabel, entry) <- columnLabels.zip(row)
@@ -85,10 +85,10 @@ case class TableUnrendered(
 }
 
 object TableUnrendered {
-  def recognitionRate: CorrespondenceExperiment => Double = experiment =>
+  def recognitionRate: WideBaselineExperiment => Double = experiment =>
     Summary.recognitionRate(CorrespondenceExperimentResults.fromExperiment(experiment).dmatches)
 
-  def apply(experiments: Seq[Seq[CorrespondenceExperiment]]): TableUnrendered = {
+  def apply(experiments: Seq[Seq[WideBaselineExperiment]]): TableUnrendered = {
     // TODO: Replace with |everywhere| from shapeless when Scala 2.10 comes out.
     val experimentsFirstRow = experiments.head
     val experimentsFirstColumn = experiments.map(_.head)
@@ -137,7 +137,7 @@ case class Histogram(
 }
 
 object Histogram {
-  def apply(experiment: CorrespondenceExperiment, title: String): Histogram = {
+  def apply(experiment: WideBaselineExperiment, title: String): Histogram = {
     val results = CorrespondenceExperimentResults.fromExperiment(experiment)
     val (same, different) = results.dmatches.partition(dmatch => dmatch.queryIdx == dmatch.trainIdx)
     Histogram(title, same.map(_.distance.toDouble), different.map(_.distance.toDouble))
@@ -178,12 +178,12 @@ object SummaryUtil {
     components.mkString("_")
   }
 
-  def tableTitle(experiments: Seq[CorrespondenceExperiment]): String = {
+  def tableTitle(experiments: Seq[WideBaselineExperiment]): String = {
     val maps = experiments.map(_.stringMap).toSet
     summarizeStructure(maps)
   }
 
-  def tableEntryTitles(experiments: Seq[CorrespondenceExperiment]): Seq[String] = {
+  def tableEntryTitles(experiments: Seq[WideBaselineExperiment]): Seq[String] = {
     val experimentMaps = experiments.map(_.stringMap)
     val union = mapUnion(experimentMaps.toSet)
     val variableKeys = union.filter(_._2.size > 1).keys.toSet

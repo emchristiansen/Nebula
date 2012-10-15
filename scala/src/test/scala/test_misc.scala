@@ -1,7 +1,7 @@
 import org.scalacheck.Prop.{ forAll, propBoolean }
 import org.scalacheck.Properties
 import org.scalatest.FunSuite
-import nebula.{ CorrespondenceExperiment, FASTDetector, L0Matcher, SortExtractor, Util }
+import nebula.{ WideBaselineExperiment, FASTDetector, L0Matcher, SortExtractor, Util }
 import nebula.Util.{ allSorts, prefixes }
 import nebula.Util._
 

@@ -45,7 +45,7 @@ case class RuntimeConfig(
 object RuntimeConfig {
   // TODO: Put this somewhere more appropriate.
   System.loadLibrary("opencv_java")
-  
+
   def init(runtimeConfigFile: File) {
     val runtimeConfig = IO.interpretFile[RuntimeConfig](runtimeConfigFile)
     Global.runVar = Some(runtimeConfig)
@@ -54,23 +54,25 @@ object RuntimeConfig {
 }
 
 trait Experiment {
-  val parameterAbbreviations: Seq[String]
-  val parameterValues: Seq[String]
+  def name: String
+  // Parameter names and values
+  def parameters: Seq[Tuple2[String, String]]
 
-  lazy val filenameNoTime: String = {
-    assert(parameterAbbreviations.size == parameterValues.size)
-    val parts = (parameterAbbreviations, parameterValues).zipped.map(_ + "-" + _)
-    parts.mkString("_") + ".json"
-  }
+  type ResultsType 
+  def run: ResultsType
+  
+  ///////////////////////////////////////////////////////////
 
-  lazy val unixEpoch = System.currentTimeMillis / 1000L
-  lazy val filename: String = unixEpoch + "_" + filenameNoTime
+  val unixEpoch = System.currentTimeMillis / 1000L
 
-  lazy val outDirectory: File = Global.run[RuntimeConfig].projectChildPath("results/experiment_data")
+  def filenameNoTime: String =
+    name + "_" + parameters.map(p => p._1 + "-" + p._2).mkString("_") + ".json"
 
-  lazy val path: File = {
-    new File(outDirectory, filename)
-  }
+  def filename: String = unixEpoch + "_" + filenameNoTime
+
+  def outDirectory: File = Global.run[RuntimeConfig].projectChildPath("results/experiment_data")
+
+  def path: File = new File(outDirectory, filename)
 
   def existingResultsFiles: Seq[File] = {
     val allPaths = outDirectory.list.toList.map(path => outDirectory + "/" + path.toString)

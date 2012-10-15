@@ -29,7 +29,7 @@ case class SmallBaselineExperimentResults(
   val dmatches: Seq[DMatch])
   
 case class CorrespondenceExperimentResults(
-  val experiment: CorrespondenceExperiment,
+  val experiment: WideBaselineExperiment,
   val dmatches: Seq[DMatch]) {
   def save {
     println("Writing to %s".format(experiment.path))
@@ -42,7 +42,7 @@ case class CorrespondenceExperimentResults(
 
 object CorrespondenceExperimentResults {
   def runExperiment(
-    experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
+    experiment: WideBaselineExperiment): CorrespondenceExperimentResults = {
 
     println("Running %s".format(experiment))
 
@@ -77,7 +77,7 @@ object CorrespondenceExperimentResults {
   }
 
   def fromExperiment(
-    experiment: CorrespondenceExperiment): CorrespondenceExperimentResults = {
+    experiment: WideBaselineExperiment): CorrespondenceExperimentResults = {
     if (experiment.alreadyRun) {
       val Some(file) = experiment.existingResultsFile
       println("Reading %s".format(file))
