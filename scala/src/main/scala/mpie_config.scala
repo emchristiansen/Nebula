@@ -76,74 +76,74 @@ object MPIECondition {
   }
 }
 
-case class MPIEExperiment(
-  val roi: String,
-  val distance: String,
-  val leftCondition: MPIECondition,
-  val rightCondition: MPIECondition) extends Experiment {
-  if (roi == "CFR") assert(leftCondition.pose == "051" && rightCondition.pose == "051")
-
-  val parameterAbbreviations: List[String] =
-    "R D P I L N J M B".split(" ").toList
-
-  val parameterValues = {
-    def xPattern(left: String, right: String): String = left + "x" + right
-
-    val pose = xPattern(leftCondition.pose, rightCondition.pose)
-    val illumination = xPattern(leftCondition.illumination,
-      rightCondition.illumination)
-    val blur = xPattern(leftCondition.blur, rightCondition.blur)
-    val noise = xPattern(leftCondition.noise, rightCondition.noise)
-    val jpeg = xPattern(leftCondition.jpeg, rightCondition.jpeg)
-    val misalignment = xPattern(leftCondition.misalignment,
-      rightCondition.misalignment)
-    val background = xPattern(leftCondition.background,
-      rightCondition.background)
-    val conditions =
-      List(pose, illumination, blur, noise, jpeg, misalignment, background)
-
-    List(roi, distance) ++ conditions
-  }
-}
-
-object MPIEExperiment {
-  val parameterNames: List[String] = {
-    "roi distance pose illumination blur noise jpeg misalignment background".split(" ").toList
-  }
-
-  def fromConfig(config: MPIEExperimentConfig): List[MPIEExperiment] = {
-    val conditions =
-      for (
-        p <- config.pose;
-        i <- config.illumination;
-        b <- config.blur;
-        n <- config.noise;
-        j <- config.jpeg;
-        m <- config.misalignment;
-        k <- config.background
-      ) yield {
-        MPIECondition(p, i, b, n, j, m, k)
-      }
-
-    val validPairs = for (
-      l <- conditions;
-      r <- conditions;
-      if MPIECondition.validPair(l, r)
-    ) yield (l, r)
-
-    val finalPairs = validPairs.filter({ case (l, r) => MPIECondition.respectsCrossCondition(config, l, r) })
-
-    for (
-      o <- config.roi;
-      d <- config.distance;
-      (l, r) <- finalPairs;
-      if ((o != "CFR" || (l.pose == "051" && r.pose == "051")) &&
-        (o != "SPB" || (l.pose == "240" && r.pose == "240")))
-    ) yield {
-      MPIEExperiment(o, d, l, r)
-    }
-  }
-}
+//case class MPIEExperiment(
+//  val roi: String,
+//  val distance: String,
+//  val leftCondition: MPIECondition,
+//  val rightCondition: MPIECondition) extends Experiment {
+//  if (roi == "CFR") assert(leftCondition.pose == "051" && rightCondition.pose == "051")
+//
+//  val parameterAbbreviations: List[String] =
+//    "R D P I L N J M B".split(" ").toList
+//
+//  val parameterValues = {
+//    def xPattern(left: String, right: String): String = left + "x" + right
+//
+//    val pose = xPattern(leftCondition.pose, rightCondition.pose)
+//    val illumination = xPattern(leftCondition.illumination,
+//      rightCondition.illumination)
+//    val blur = xPattern(leftCondition.blur, rightCondition.blur)
+//    val noise = xPattern(leftCondition.noise, rightCondition.noise)
+//    val jpeg = xPattern(leftCondition.jpeg, rightCondition.jpeg)
+//    val misalignment = xPattern(leftCondition.misalignment,
+//      rightCondition.misalignment)
+//    val background = xPattern(leftCondition.background,
+//      rightCondition.background)
+//    val conditions =
+//      List(pose, illumination, blur, noise, jpeg, misalignment, background)
+//
+//    List(roi, distance) ++ conditions
+//  }
+//}
+//
+//object MPIEExperiment {
+//  val parameterNames: List[String] = {
+//    "roi distance pose illumination blur noise jpeg misalignment background".split(" ").toList
+//  }
+//
+//  def fromConfig(config: MPIEExperimentConfig): List[MPIEExperiment] = {
+//    val conditions =
+//      for (
+//        p <- config.pose;
+//        i <- config.illumination;
+//        b <- config.blur;
+//        n <- config.noise;
+//        j <- config.jpeg;
+//        m <- config.misalignment;
+//        k <- config.background
+//      ) yield {
+//        MPIECondition(p, i, b, n, j, m, k)
+//      }
+//
+//    val validPairs = for (
+//      l <- conditions;
+//      r <- conditions;
+//      if MPIECondition.validPair(l, r)
+//    ) yield (l, r)
+//
+//    val finalPairs = validPairs.filter({ case (l, r) => MPIECondition.respectsCrossCondition(config, l, r) })
+//
+//    for (
+//      o <- config.roi;
+//      d <- config.distance;
+//      (l, r) <- finalPairs;
+//      if ((o != "CFR" || (l.pose == "051" && r.pose == "051")) &&
+//        (o != "SPB" || (l.pose == "240" && r.pose == "240")))
+//    ) yield {
+//      MPIEExperiment(o, d, l, r)
+//    }
+//  }
+//}
 
 case class MPIEProperties(val id: String, val session: String, val expression: String, val pose: String, val illumination: String) {
   assert(id.size == 3)

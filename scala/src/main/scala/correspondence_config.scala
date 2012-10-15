@@ -27,8 +27,8 @@ object WideBaselineExperiment {
         ("E", Util.abbreviate(self.extractor)),
         ("M", Util.abbreviate(self.matcher)))
       // TODO: asInstanceOf should not be necessary.
-      override def ResultsType = CorrespondenceExperimentResults
-      override def run: CorrespondenceExperimentResults =
+      override type ResultsType = CorrespondenceExperimentResults
+      override def run =
         CorrespondenceExperimentResults.runExperiment(self)
     }
 
@@ -46,7 +46,7 @@ object WideBaselineExperiment {
   }
 
   implicit def implicitHomography(self: WideBaselineExperiment) = new {
-    override def homography = {
+    def homography = {
       val homographyFile = Global.run[RuntimeConfig].projectChildPath("data/oxfordImages/%s/homographies/H1to%sp".format(self.imageClass, self.otherImage))
       Homography.fromFile(homographyFile)
     }
@@ -68,8 +68,8 @@ object SmallBaselineExperiment {
         ("IC", self.imageClass),
         ("E", Util.abbreviate(self.extractor)),
         ("M", Util.abbreviate(self.matcher)))
-      override def ResultsType = Unit
-      override def run: Unit = {
+      override type ResultsType = Unit
+      override def run = {
         val SmallBaselinePair(leftImage, rightImage, trueFlow) = SmallBaselinePair.fromName(
           Global.run[RuntimeConfig].projectChildPath("data/middleburyImages"),
           self.imageClass)

@@ -29,7 +29,7 @@ class TestMisc extends FunSuite {
 
     assert(map === goldenMap)
 
-    val experiment1 = CorrespondenceExperiment(
+    val experiment1 = WideBaselineExperiment(
       "bikes",
       2,
       FASTDetector(100),

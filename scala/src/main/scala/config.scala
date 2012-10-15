@@ -65,6 +65,8 @@ trait Experiment {
 
   val unixEpoch = System.currentTimeMillis / 1000L
 
+  def stringMap = parameters.toMap
+  
   def filenameNoTime: String =
     name + "_" + parameters.map(p => p._1 + "-" + p._2).mkString("_") + ".json"
 
