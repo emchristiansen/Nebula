@@ -3,11 +3,11 @@ package nebula
 import javax.imageio.ImageIO
 
 case class WideBaselineExperiment(
-  val imageClass: String,
-  val otherImage: Int,
-  val detector: Detector,
-  val extractor: Extractor,
-  val matcher: Matcher)
+  imageClass: String,
+  otherImage: Int,
+  detector: Detector,
+  extractor: Extractor,
+  matcher: Matcher)
 
 object WideBaselineExperiment {
   implicit def implicitHasGroundTruth(self: WideBaselineExperiment): HasGroundTruth[Homography] =

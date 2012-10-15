@@ -30,10 +30,10 @@ object MatcherParameterized {
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
     (left, right).zipped.count({ case (l, r) => l != r })
 
-  def l1(left: IndexedSeq[Double], right: IndexedSeq[Double]): Double =
+  def l1[A <% Double](left: IndexedSeq[A], right: IndexedSeq[A]): Double =
     (left, right).zipped.map({ case (l, r) => (l - r).abs }).sum
 
-  def l2(left: IndexedSeq[Double], right: IndexedSeq[Double]): Double = {
+  def l2[A <% Double](left: IndexedSeq[A], right: IndexedSeq[A]): Double = {
     math.sqrt((left, right).zipped.map({ case (l, r) => math.pow(l - r, 2) }).sum)
   }
 

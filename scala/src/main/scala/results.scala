@@ -13,7 +13,11 @@ import DetectorImpl._
 import ExtractorImpl._
 import MatcherImpl._
 
+///////////////////////////////////////////////////////////
+
 case class PredictionAndTruth(val prediction: Double, val truth: Boolean)
+
+///////////////////////////////////////////////////////////
 
 case class ResultsData(val predictionsAndTruths: Seq[PredictionAndTruth])
 
@@ -25,6 +29,8 @@ object ResultsData {
     ResultsData(predictionsAndTruths)
   }
 }
+
+///////////////////////////////////////////////////////////
 
 trait ExperimentResults {
   def experiment: Experiment
