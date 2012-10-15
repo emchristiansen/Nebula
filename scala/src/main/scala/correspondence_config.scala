@@ -27,9 +27,9 @@ object WideBaselineExperiment {
         ("E", Util.abbreviate(self.extractor)),
         ("M", Util.abbreviate(self.matcher)))
       // TODO: asInstanceOf should not be necessary.
-      override type ResultsType = CorrespondenceExperimentResults
+      override type ResultsType = WideBaselineExperimentResults
       override def run =
-        CorrespondenceExperimentResults.runExperiment(self)
+        WideBaselineExperimentResults.runExperiment(self)
     }
 
   implicit def implicitImagePairLike(self: WideBaselineExperiment): ImagePairLike = {
@@ -130,7 +130,7 @@ object SmallBaselineExperiment {
           FlowField(flow)
         }
 
-        println("l2 distance is: %.4f", flow.l2Distance(trueFlow))
+        println("l2 distance is: %.4f".format(flow.l2Distance(trueFlow)))
       }
     }
 }

@@ -28,21 +28,19 @@ case class SmallBaselineExperimentResults(
   val experiment: SmallBaselineExperiment,
   val dmatches: Seq[DMatch])
   
-case class CorrespondenceExperimentResults(
-  val experiment: WideBaselineExperiment,
+case class WideBaselineExperimentResults(
+  val experiment: WideBaselineExperiment, 
   val dmatches: Seq[DMatch]) {
   def save {
     println("Writing to %s".format(experiment.path))
     IO.toJSONFileAbstract(
-      ExperimentIO.formats,
-      this,
-      experiment.path)
+      ExperimentIO.formats,      WideBaselineExperimentResults.this,      experiment.path)
   }
 }
 
-object CorrespondenceExperimentResults {
+object WideBaselineExperimentResults {
   def runExperiment(
-    experiment: WideBaselineExperiment): CorrespondenceExperimentResults = {
+    experiment: WideBaselineExperiment): WideBaselineExperimentResults = {
 
     println("Running %s".format(experiment))
 
@@ -71,17 +69,17 @@ object CorrespondenceExperimentResults {
 
     val dmatches = experiment.matcher.doMatch(true, leftDescriptors, rightDescriptors)
 
-    val results = CorrespondenceExperimentResults(experiment, dmatches)
+    val results = WideBaselineExperimentResults(experiment, dmatches)
     results.save
     results
   }
 
   def fromExperiment(
-    experiment: WideBaselineExperiment): CorrespondenceExperimentResults = {
+    experiment: WideBaselineExperiment): WideBaselineExperimentResults = {
     if (experiment.alreadyRun) {
       val Some(file) = experiment.existingResultsFile
       println("Reading %s".format(file))
-      IO.fromJSONFileAbstract[CorrespondenceExperimentResults](ExperimentIO.formats, file)
+      IO.fromJSONFileAbstract[WideBaselineExperimentResults](ExperimentIO.formats, file)
     } else runExperiment(experiment)
   }
 }

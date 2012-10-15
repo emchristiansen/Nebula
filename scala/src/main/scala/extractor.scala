@@ -7,6 +7,8 @@ import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.core.CvType
 
+import grizzled.math._
+
 sealed trait Descriptor {
   val thisType: Manifest[_]
 
@@ -16,14 +18,26 @@ sealed trait Descriptor {
   }
 
   def values[E: Manifest]: IndexedSeq[E] = {
-    val manifest = implicitly[Manifest[E]]
-    this match {
-      case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest =>
-        d.values.asInstanceOf[IndexedSeq[E]]
-      case d: RawDescriptor[_] if d.elementType <:< manifest =>
-        d.values.asInstanceOf[IndexedSeq[E]]
-      case _ => sys.error("failed match")
+    def helper[E : Manifest] = {
+      val manifest = implicitly[Manifest[E]]
+      this match {
+        case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest =>
+          d.values.asInstanceOf[IndexedSeq[E]]
+        case d: RawDescriptor[_] if d.elementType <:< manifest =>
+          d.values.asInstanceOf[IndexedSeq[E]]
+        case _ => sys.error("failed match")
+      }
     }
+
+    val manifest = implicitly[Manifest[E]]
+    // A hack to deal with Doubles.
+    if (manifest == implicitly[Manifest[Double]]) {
+      try {
+        helper[Double].asInstanceOf[IndexedSeq[E]]
+      } catch {
+        case _ => helper[Int].map(_.toDouble).asInstanceOf[IndexedSeq[E]]
+      }
+    } else helper[E]
   }
 }
 
@@ -142,6 +156,7 @@ object ExtractorParameterized {
   val instances: Seq[Class[_]] = Seq(
     classOf[RawExtractor],
     classOf[NormalizeExtractor],
+    classOf[NCCExtractor],
     classOf[SortExtractor],
     classOf[RankExtractor],
     classOf[UniformRankExtractor],
@@ -302,6 +317,36 @@ case class NormalizeExtractor(
     }
 }
 
+case class NCCExtractor(
+  val normalizeRotation: Boolean,
+  val normalizeScale: Boolean,
+  val patchWidth: Int,
+  val blurWidth: Int,
+  val color: String) extends Extractor {
+  import ExtractorImpl._
+
+  def extract = applySeveral(extractSingle)
+
+  def extractSingle: ExtractorActionSingle =
+    (image: BufferedImage, keyPoint: KeyPoint) => {
+      val rawOption = rawPixels(
+        normalizeRotation,
+        normalizeScale,
+        patchWidth,
+        blurWidth,
+        color)(image, keyPoint)
+      for (raw <- rawOption) yield {
+        val values = raw.values
+        val mean = stats.mean(values: _*)
+        val std = stats.sampleStdDev(values: _*)
+        val normalized = values.map(x => (x - mean) / std)
+        assert(stats.mean(normalized: _*).abs < 0.0001)
+        assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
+        RawDescriptor(normalized)
+      }
+    }
+}
+
 case class SortExtractor(
   val normalizeRotation: Boolean,
   val normalizeScale: Boolean,
@@ -410,7 +455,7 @@ case class BRISKOrderExtractor(
   // Doing this one by one is super slow.
   // TODO: Make the native OpenCV api less awful.
   def extractSingle: ExtractorActionSingle = (image, keyPoint) => {
-//    sys.error("TODO")
+    //    sys.error("TODO")
     for (descriptor <- intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)) yield SortDescriptor.fromUnsorted(descriptor.values[Int])
   }
 }
@@ -425,7 +470,7 @@ case class BRISKRankExtractor(
   // Doing this one by one is super slow.
   // TODO: Make the native OpenCV api less awful.
   def extractSingle: ExtractorActionSingle = (image, keyPoint) => {
-//    sys.error("TODO")
+    //    sys.error("TODO")
     for (descriptor <- intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)) yield SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor.values[Int]))
   }
 }

@@ -30,10 +30,10 @@ object MatcherParameterized {
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
     (left, right).zipped.count({ case (l, r) => l != r })
 
-  def l1(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int =
+  def l1(left: IndexedSeq[Double], right: IndexedSeq[Double]): Double =
     (left, right).zipped.map({ case (l, r) => (l - r).abs }).sum
 
-  def l2(left: IndexedSeq[Int], right: IndexedSeq[Int]): Double = {
+  def l2(left: IndexedSeq[Double], right: IndexedSeq[Double]): Double = {
     math.sqrt((left, right).zipped.map({ case (l, r) => math.pow(l - r, 2) }).sum)
   }
 
@@ -206,8 +206,8 @@ case class L1Matcher() extends Matcher {
     applyIndividual(
       (x: Descriptor, y: Descriptor) =>
         MatcherParameterized.l1(
-          x.values[Int],
-          y.values[Int]),
+          x.values[Double],
+          y.values[Double]),
       allPairs,
       leftDescriptors,
       rightDescriptors)
@@ -242,8 +242,8 @@ case class L2Matcher() extends Matcher {
     applyIndividual(
       (x: Descriptor, y: Descriptor) =>
         MatcherParameterized.l2(
-          x.values[Int],
-          y.values[Int]),
+          x.values[Double],
+          y.values[Double]),
       allPairs,
       leftDescriptors,
       rightDescriptors)

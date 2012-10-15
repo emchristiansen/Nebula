@@ -62,7 +62,7 @@ object ExperimentIO {
     classOf[WideBaselineExperiment],
 //    classOf[CorrespondenceExperimentParameterized[SortDescriptor, SortDescriptor]],
 //    classOf[CorrespondenceExperimentParameterized[SortDescriptor]],
-    classOf[CorrespondenceExperimentResults]) ++
+    classOf[WideBaselineExperimentResults]) ++
     Detector.instances ++
     ExtractorParameterized.instances ++
     MatcherParameterized.instances

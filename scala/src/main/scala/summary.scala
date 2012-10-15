@@ -86,7 +86,7 @@ case class TableUnrendered(
 
 object TableUnrendered {
   def recognitionRate: WideBaselineExperiment => Double = experiment =>
-    Summary.recognitionRate(CorrespondenceExperimentResults.fromExperiment(experiment).dmatches)
+    Summary.recognitionRate(WideBaselineExperimentResults.fromExperiment(experiment).dmatches)
 
   def apply(experiments: Seq[Seq[WideBaselineExperiment]]): TableUnrendered = {
     // TODO: Replace with |everywhere| from shapeless when Scala 2.10 comes out.
@@ -138,7 +138,7 @@ case class Histogram(
 
 object Histogram {
   def apply(experiment: WideBaselineExperiment, title: String): Histogram = {
-    val results = CorrespondenceExperimentResults.fromExperiment(experiment)
+    val results = WideBaselineExperimentResults.fromExperiment(experiment)
     val (same, different) = results.dmatches.partition(dmatch => dmatch.queryIdx == dmatch.trainIdx)
     Histogram(title, same.map(_.distance.toDouble), different.map(_.distance.toDouble))
   }
