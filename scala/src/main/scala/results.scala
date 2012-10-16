@@ -63,152 +63,15 @@ trait ExperimentResults {
   def alreadyRun: Boolean = !existingResultsFile.isEmpty
 }
 
-///////////////////////////////////////////////////////////
-
-// TODO
-case class SmallBaselineExperimentResults(
-  val experiment: SmallBaselineExperiment,
-  val dmatches: Seq[DMatch])
-
-object SmallBaselineExperimentResults {
-  def apply(experiment: SmallBaselineExperiment): SmallBaselineExperimentResults = {
-    val noResults = SmallBaselineExperimentResults(experiment, sys.error(""))
-    if (noResults.alreadyRun) {
-      val Some(file) = noResults.existingResultsFile
-      println("Reading %s".format(file))
-      IO.fromJSONFileAbstract[SmallBaselineExperimentResults](ExperimentIO.formats, file)
-    } else run(experiment)
+object ExperimentResults {
+  def apply(experiment: Experiment): ExperimentResults = experiment.original match {
+    case original: WideBaselineExperiment => WideBaselineExperimentResults(original)
+    case original: SmallBaselineExperiment => SmallBaselineExperimentResults(original)
+    case _ => sys.error("")
   }
-
-  private def run(self: SmallBaselineExperiment): SmallBaselineExperimentResults = {
-    val detector = DenseDetector()
-    val keyPoints = detector.detect(self.leftImage)
-
-    val (finalKeyPoints, leftDescriptors, rightDescriptors) = {
-      val leftDescriptors = self.extractor.extract(self.leftImage, keyPoints)
-      val rightDescriptors = self.extractor.extract(self.rightImage, keyPoints)
-
-      val zipped = for (((keyPoint, Some(left)), Some(right)) <- keyPoints.zip(leftDescriptors).zip(rightDescriptors)) yield (keyPoint, left, right)
-      (zipped.map(_._1), zipped.map(_._2), zipped.map(_._3))
-    }
-
-    println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
-
-    def getDescriptorMatrix(descriptors: Seq[Descriptor]): DenseMatrix[Option[Descriptor]] = {
-      val matrix = DenseMatrix.fill[Option[Descriptor]](self.leftImage.getHeight, self.leftImage.getWidth)(None)
-      for ((keyPoint, descriptor) <- finalKeyPoints.zip(descriptors)) {
-        matrix(keyPoint.pt.y.round.toInt, keyPoint.pt.x.round.toInt) = Some(descriptor)
-      }
-      matrix
-    }
-
-    val leftDescriptorsMatrix = getDescriptorMatrix(leftDescriptors)
-    val rightDescriptorsMatrix = getDescriptorMatrix(rightDescriptors)
-
-    // Match each left descriptor to its best right descriptor in the given radius.
-    val flowTuples = for (
-      leftRow <- 0 until leftDescriptorsMatrix.rows;
-      leftColumn <- 0 until leftDescriptorsMatrix.cols;
-      if leftDescriptorsMatrix(leftRow, leftColumn).isDefined
-    ) yield {
-      val leftDescriptor = leftDescriptorsMatrix(leftRow, leftColumn).get
-      val rightPoints = for (
-        rightRow <- math.max(0, leftRow - self.searchRadius) until math.min(rightDescriptorsMatrix.rows, leftRow + self.searchRadius);
-        rightColumn <- math.max(0, leftColumn - self.searchRadius) until math.min(rightDescriptorsMatrix.cols, leftColumn + self.searchRadius);
-        if rightDescriptorsMatrix(rightRow, rightColumn).isDefined
-      ) yield {
-        val rightDescriptor = rightDescriptorsMatrix(rightRow, rightColumn).get
-        (rightRow, rightColumn, rightDescriptor)
-      }
-
-      val distances = self.matcher.doMatch(true, Seq(leftDescriptor), rightPoints.map(_._3)).map(_.distance)
-      val bestIndex = distances.zipWithIndex.minBy(_._1)._2
-      val (bestRightRow, bestRightColumn, _) = rightPoints(bestIndex)
-      (leftRow, leftColumn, bestRightRow, bestRightColumn)
-    }
-
-    val flow = {
-      val flow = DenseMatrix.fill[Option[FlowVector]](self.leftImage.getHeight, self.leftImage.getWidth)(None)
-      for ((leftRow, leftColumn, bestRightRow, bestRightColumn) <- flowTuples) {
-        val dX = bestRightColumn - leftColumn
-        val dY = bestRightRow - leftRow
-        flow(leftRow, leftColumn) = Some(FlowVector(dX, dY))
-      }
-      FlowField(flow)
-    }
-
-    println("l2 distance is: %.4f".format(flow.l2Distance(self.groundTruth)))
-
-    SmallBaselineExperimentResults(self, Seq())
-  }
-
-  implicit def implicitExperimentResults(self: SmallBaselineExperimentResults): ExperimentResults =
-    new ExperimentResults {
-      override def experiment = self.experiment
-      override def save = sys.error("TODO")
-    }
 }
 
-///////////////////////////////////////////////////////////
 
-case class WideBaselineExperimentResults(
-  val experiment: WideBaselineExperiment,
-  val dmatches: Seq[DMatch])
 
-object WideBaselineExperimentResults {
-  def apply(
-    experiment: WideBaselineExperiment): WideBaselineExperimentResults = {
-    val noResults = WideBaselineExperimentResults(experiment, sys.error(""))
-    if (noResults.alreadyRun) {
-      val Some(file) = noResults.existingResultsFile
-      println("Reading %s".format(file))
-      IO.fromJSONFileAbstract[WideBaselineExperimentResults](ExperimentIO.formats, file)
-    } else run(experiment)
-  }
 
-  private def run(self: WideBaselineExperiment): WideBaselineExperimentResults = {
-    println("Running %s".format(self))
-
-    val leftImage = self.leftImage
-    val rightImage = self.rightImage
-
-    val (leftKeyPoints, rightKeyPoints) = {
-      val leftKeyPoints = self.detector.detect(leftImage)
-      Util.pruneKeyPoints(
-        leftImage,
-        rightImage,
-        self.groundTruth,
-        leftKeyPoints).unzip
-    }
-
-    println("Number of KeyPoints: %s".format(leftKeyPoints.size))
-
-    val (leftDescriptors, rightDescriptors) = {
-      val leftDescriptors = self.extractor.extract(leftImage, leftKeyPoints)
-      val rightDescriptors = self.extractor.extract(rightImage, rightKeyPoints)
-
-      for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
-    } unzip
-
-    println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
-
-    val dmatches = self.matcher.doMatch(true, leftDescriptors, rightDescriptors)
-
-    val results = WideBaselineExperimentResults(self, dmatches)
-    results.save
-    results
-  }
-
-  implicit def implicitExperimentResults(self: WideBaselineExperimentResults): ExperimentResults =
-    new ExperimentResults {
-      override def experiment = self.experiment
-      override def save = {
-        println("Writing to %s".format(self.path))
-        IO.toJSONFileAbstract(
-          ExperimentIO.formats,
-          WideBaselineExperimentResults.this,
-          self.path)
-      }
-    }
-}
 

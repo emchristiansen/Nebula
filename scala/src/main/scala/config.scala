@@ -69,8 +69,16 @@ trait HasGroundTruth[A] {
 
 ///////////////////////////////////////////////////////////
 
-trait Experiment {
+trait HasOriginal {
+  def original: Any
+  override def toString = original.toString
+}
+
+///////////////////////////////////////////////////////////
+
+trait Experiment extends HasOriginal {
   def name: String
+
   // Parameter names and values
   def parameters: Seq[Tuple2[String, String]]
   
