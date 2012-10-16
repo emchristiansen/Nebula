@@ -55,7 +55,8 @@ case class WideBaselineExperimentResults(
 object WideBaselineExperimentResults {
   def apply(
     experiment: WideBaselineExperiment): WideBaselineExperimentResults = {
-    val noResults = WideBaselineExperimentResults(experiment, sys.error(""))
+    // TODO: Code is duplicated
+    val noResults = WideBaselineExperimentResults(experiment, null)
     if (noResults.alreadyRun && Global.run[RuntimeConfig].skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))

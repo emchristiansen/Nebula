@@ -4,10 +4,10 @@ import breeze.linalg.DenseMatrix
 import org.opencv.features2d.DMatch
 
 case class SmallBaselineExperiment(
-  val searchRadius: Int,
-  val imageClass: String,
-  val extractor: Extractor,
-  val matcher: Matcher)
+  searchRadius: Int,
+  imageClass: String,
+  extractor: Extractor,
+  matcher: Matcher)
 
 object SmallBaselineExperiment {
   implicit def implicitExperiment(self: SmallBaselineExperiment): Experiment with HasOriginal =
@@ -38,7 +38,7 @@ case class SmallBaselineExperimentResults(
 
 object SmallBaselineExperimentResults {
   def apply(experiment: SmallBaselineExperiment): SmallBaselineExperimentResults = {
-    val noResults = SmallBaselineExperimentResults(experiment, sys.error(""))
+    val noResults = SmallBaselineExperimentResults(experiment, null)
     if (noResults.alreadyRun && Global.run[RuntimeConfig].skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
