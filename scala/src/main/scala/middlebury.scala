@@ -10,10 +10,10 @@ import javax.imageio.ImageIO
 case class FlowVector(val horizontal: Double, val vertical: Double)
 
 object FlowVector {
-  implicit def addL2Distance(`this`: FlowVector) = new {
+  implicit def addL2Distance(self: FlowVector) = new {
     def l2Distance(that: FlowVector): Double = {
-      val dX = `this`.horizontal - that.horizontal
-      val dY = `this`.vertical - that.vertical
+      val dX = self.horizontal - that.horizontal
+      val dY = self.vertical - that.vertical
       math.sqrt(math.pow(dX, 2) + math.pow(dY, 2))
     }
   }
@@ -61,19 +61,22 @@ object FlowField {
 
     FlowField(data)
   }
-  
+
+  implicit def implicitDenseMatrix(self: FlowField): DenseMatrix[Option[FlowVector]] =
+    self.data
+
   implicit def addL2Distance(`this`: FlowField) = new {
     def l2Distance(that: FlowField): Double = {
       require(`this`.data.rows == that.data.rows)
       require(`this`.data.cols == that.data.cols)
-      
+
       val thisIterator = `this`.data.activeValuesIterator
       val thatIterator = that.data.activeValuesIterator
-      
+
       val distances = for ((Some(left), Some(right)) <- thisIterator.zip(thatIterator)) yield {
         left.l2Distance(right)
       }
-      
+
       math.sqrt(distances.map(d => math.pow(d, 2)).sum)
     }
   }
@@ -89,7 +92,7 @@ case class SmallBaselinePair(left: BufferedImage, right: BufferedImage, flow: Fl
 object SmallBaselinePair {
   def fromName(directoryRoot: File, name: String): SmallBaselinePair = {
     require(directoryRoot.isDirectory)
-    
+
     def getFile(format: String): File = {
       val filename = format.format(name)
       val file = new File(directoryRoot, filename)
@@ -108,14 +111,10 @@ object SmallBaselinePair {
       assert(image != null)
       image
     }
-    
+
     val left = getImage("/other-data/%s/frame10.png")
     val right = getImage("/other-data/%s/frame11.png")
 
     SmallBaselinePair(left, right, flow)
   }
-}
-
-object Middlebury {
-
 }
