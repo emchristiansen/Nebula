@@ -18,7 +18,7 @@ sealed trait Descriptor {
   }
 
   def values[E: Manifest]: IndexedSeq[E] = {
-    def helper[E : Manifest] = {
+    def helper[E: Manifest] = {
       val manifest = implicitly[Manifest[E]]
       this match {
         case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest =>
@@ -308,11 +308,13 @@ case class NormalizeExtractor(
         val values = raw.values
         val min = values.min
         val range = values.max - min
-        assert(range != 0)
-        val normalized = values.map(x => ((x - min) * 255.0 / range).round.toInt)
-        assert(normalized.min == 0)
-        assert(normalized.max == 255)
-        RawDescriptor(normalized)
+        if (range == 0) RawDescriptor(raw) // Do nothing.
+        else {
+          val normalized = values.map(x => ((x - min) * 255.0 / range).round.toInt)
+          assert(normalized.min == 0)
+          assert(normalized.max == 255)
+          RawDescriptor(normalized)
+        }
       }
     }
 }
@@ -339,10 +341,13 @@ case class NCCExtractor(
         val values = raw.values
         val mean = stats.mean(values: _*)
         val std = stats.sampleStdDev(values: _*)
-        val normalized = values.map(x => (x - mean) / std)
-        assert(stats.mean(normalized: _*).abs < 0.0001)
-        assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
-        RawDescriptor(normalized)
+        if (std.abs < 0.001) RawDescriptor(raw) // Don't change it.
+        else {
+          val normalized = values.map(x => (x - mean) / std)
+          assert(stats.mean(normalized: _*).abs < 0.0001)
+          assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
+          RawDescriptor(normalized)
+        }
       }
     }
 }

@@ -1,5 +1,7 @@
 package nebula
 
+///////////////////////////////////////////////////////////
+
 // A function memoizer, adapted from
 // http://stackoverflow.com/questions/5875767/scala-memoize-a-function-no-matter-how-many-arguments-the-function-takes
 

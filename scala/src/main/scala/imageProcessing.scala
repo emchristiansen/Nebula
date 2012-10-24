@@ -1,11 +1,11 @@
 package nebula
 
-import java.awt.{ Color, Rectangle }
+import java.awt.{Color, Rectangle}
 import java.awt.color.ColorSpace
 import java.awt.geom.AffineTransform
-import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
+import java.awt.image.{AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel}
 
-import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }
+import scala.Array.{canBuildFrom, fallbackCanBuildFrom}
 
 import org.opencv.features2d.KeyPoint
 

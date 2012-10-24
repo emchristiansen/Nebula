@@ -21,8 +21,8 @@ object WideBaselineExperiment {
       }
     }
 
-  implicit def implicitExperiment(self: WideBaselineExperiment): Experiment with HasOriginal =
-    new Experiment with HasOriginal {
+  implicit def implicitExperiment(self: WideBaselineExperiment): Experiment =
+    new Experiment {
       override def name = "WideBaselineExperiment"
       override def parameters = Seq(
         ("IC", self.imageClass),
@@ -104,7 +104,7 @@ object WideBaselineExperimentResults {
         println("Writing to %s".format(self.path))
         IO.toJSONFileAbstract(
           ExperimentIO.formats,
-          WideBaselineExperimentResults.this,
+          self,
           self.path)
       }
     }

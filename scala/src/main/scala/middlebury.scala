@@ -7,6 +7,8 @@ import java.awt.image.BufferedImage
 
 import javax.imageio.ImageIO
 
+import grizzled.math._
+
 case class FlowVector(val horizontal: Double, val vertical: Double)
 
 object FlowVector {
@@ -65,19 +67,21 @@ object FlowField {
   implicit def implicitDenseMatrix(self: FlowField): DenseMatrix[Option[FlowVector]] =
     self.data
 
-  implicit def addL2Distance(`this`: FlowField) = new {
+  // Actually mean l2 distance.
+  implicit def addL2Distance(self: FlowField) = new {
     def l2Distance(that: FlowField): Double = {
-      require(`this`.data.rows == that.data.rows)
-      require(`this`.data.cols == that.data.cols)
+      require(self.data.rows == that.data.rows)
+      require(self.data.cols == that.data.cols)
 
-      val thisIterator = `this`.data.activeValuesIterator
+      val thisIterator = self.data.activeValuesIterator
       val thatIterator = that.data.activeValuesIterator
 
-      val distances = for ((Some(left), Some(right)) <- thisIterator.zip(thatIterator)) yield {
+      val distances = for ((Some(left), Some(right)) <- thisIterator.zip(thatIterator).toSeq) yield {
         left.l2Distance(right)
       }
 
-      math.sqrt(distances.map(d => math.pow(d, 2)).sum)
+//      math.sqrt(distances.map(d => math.pow(d, 2)).sum)
+      stats.mean(distances: _*)
     }
   }
 }
@@ -96,7 +100,7 @@ object SmallBaselinePair {
     def getFile(format: String): File = {
       val filename = format.format(name)
       val file = new File(directoryRoot, filename)
-      assert(file.isFile)
+      assert(file.isFile, "not a file: %s".format(file.toString))
       file
     }
 
