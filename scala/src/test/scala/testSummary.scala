@@ -1,6 +1,6 @@
 import org.scalatest.FunSuite
 
-import nebula.SummaryUtil
+import nebula.summary.SummaryUtil
 
 class TestSummary extends FunSuite { 
   test("mapUnion") {

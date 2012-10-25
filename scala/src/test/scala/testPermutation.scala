@@ -58,8 +58,8 @@ object CheckSortDescriptor extends Properties("SortDescriptor") {
   property("kendallTauBound") = forAll {
     leftAndRight: Tuple2[SortDescriptor, SortDescriptor] => {
       val (left, right) = leftAndRight
-      val kendallTau = MatcherParameterized.kendallTau(left, right)
-      val l1 = MatcherParameterized.l1(left, right)
+      val kendallTau = Matcher.kendallTau(left, right)
+      val l1 = Matcher.l1(left, right)
       (kendallTau <= l1 && l1 <= 2 * kendallTau)
     }
   }
@@ -67,8 +67,8 @@ object CheckSortDescriptor extends Properties("SortDescriptor") {
   property("cayleySymmetric") = forAll {
     leftAndRight: Tuple2[SortDescriptor, SortDescriptor] => {
       val (left, right) = leftAndRight
-      val cayleyLeft = MatcherParameterized.cayley(left, right)
-      val cayleyRight = MatcherParameterized.cayley(right, left)
+      val cayleyLeft = Matcher.cayley(left, right)
+      val cayleyRight = Matcher.cayley(right, left)
       (cayleyLeft == cayleyRight)
     }
   }
@@ -76,8 +76,8 @@ object CheckSortDescriptor extends Properties("SortDescriptor") {
   property("cayleyBound") = forAll {
     leftAndRight: Tuple2[SortDescriptor, SortDescriptor] => {
       val (left, right) = leftAndRight
-      val cayley = MatcherParameterized.cayley(left, right)
-      val l0 = MatcherParameterized.l0(left, right)
+      val cayley = Matcher.cayley(left, right)
+      val l0 = Matcher.l0(left, right)
       (cayley <= l0 && l0 <= 2 * cayley)
     }
   }

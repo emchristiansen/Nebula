@@ -1,13 +1,13 @@
 import org.scalacheck.Prop.{forAll, propBoolean}
 import org.scalacheck.Properties
 import org.scalatest.FunSuite
-
 import nebula.MatcherParameterized.{generalizedL0, intervalRanking, l0, l1IntervalDistance, robustCayley}
 import nebula.RawDescriptor
 import nebula.RawDescriptor.toIndexedSeq
 import nebula.SortDescriptor
 import nebula.SortDescriptor.toIndexedSeq
 import nebula.Util
+import nebula.util.Util
 
 class TestMatcher extends FunSuite {
   test("robustCayley") {

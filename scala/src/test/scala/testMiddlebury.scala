@@ -9,6 +9,8 @@ import org.scalacheck.Prop._
 import org.scalacheck._
 import math._
 import java.io.File
+import nebula.wideBaseline.SmallBaselinePair
+import nebula.wideBaseline.FlowField
 
 class TestMiddlebury extends FunSuite {
   test("construct FlowField from file") {

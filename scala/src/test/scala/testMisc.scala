@@ -4,7 +4,6 @@ import org.scalatest.FunSuite
 import nebula.{ WideBaselineExperiment, FASTDetector, L0Matcher, SortExtractor, Util }
 import nebula.Util.{ allSorts, prefixes }
 import nebula.Util._
-
 import org.scalacheck.Properties
 import org.scalacheck.Prop._
 import org.scalacheck._
@@ -12,6 +11,7 @@ import nebula._
 import MatcherParameterized._
 import util._
 import scala.util.Random
+import nebula.util.Util
 
 case class Person(firstName: String, lastName: String, int: Int, double: Double)
 

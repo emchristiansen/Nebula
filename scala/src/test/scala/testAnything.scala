@@ -38,7 +38,7 @@ class TestAnything extends FunSuite {
 
     //    keyPoints2.foreach(println)
 
-    val extractor = ExtractorImpl.extractorFromEnum(DescriptorExtractor.BRISKLUCID)
+    val extractor = Extractor.extractorFromEnum(DescriptorExtractor.BRISKLUCID)
     
     val rawPixels = extractor(image, keyPoints2.head)
 //    println(rawPixels)
