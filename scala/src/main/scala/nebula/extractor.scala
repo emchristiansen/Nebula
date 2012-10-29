@@ -123,12 +123,32 @@ object Extractor {
       }
     }
 
-  private trait SingleExtractor extends Extractor {
+  trait SingleExtractor extends Extractor {
     override def extract = applySeveral(extractSingle)
 
     def extractSingle: ExtractorActionSingle
   }
+}
 
+///////////////////////////////////////////////////////////
+
+import Extractor._
+
+///////////////////////////////////////////////////////////
+
+sealed trait OpenCVExtractorType
+
+object OpenCVBRISKExtractor extends OpenCVExtractorType
+
+object OpenCVFREAKExtractor extends OpenCVExtractorType
+
+object OpenCVBRIEFExtractor extends OpenCVExtractorType
+
+object OpenCVORBExtractor extends OpenCVExtractorType
+
+case class OpenCVExtractor(extractorType: OpenCVExtractorType)
+
+object OpenCVExtractor {
   implicit def implicitOpenCVExtractor(self: OpenCVExtractor): Extractor =
     new SingleExtractor {
       // Doing this one by one is super slow.
@@ -143,10 +163,36 @@ object Extractor {
 
         booleanExtractorFromEnum(extractorType)
       }
-      
+
       override def json = JSONUtil.toJSON(self)
     }
+}
 
+///////////////////////////////////////////////////////////
+
+sealed trait PatchExtractorType
+
+object RawExtractor extends PatchExtractorType
+
+object NormalizeRangeExtractor extends PatchExtractorType
+
+object NCCExtractor extends PatchExtractorType
+
+object SortExtractor extends PatchExtractorType
+
+object RankExtractor extends PatchExtractorType
+
+object UniformRankExtractor extends PatchExtractorType
+
+case class PatchExtractor(
+  extractorType: PatchExtractorType,
+  normalizeRotation: Boolean,
+  normalizeScale: Boolean,
+  patchWidth: Int,
+  blurWidth: Int,
+  color: String)
+
+object PatchExtractor {
   implicit def implicitPatchExtractor(self: PatchExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
@@ -196,10 +242,27 @@ object Extractor {
 
         for (raw <- rawOption) yield constructor(raw)
       }
-      
+
       override def json = JSONUtil.toJSON(self)
     }
+}
 
+///////////////////////////////////////////////////////////    
+
+sealed trait BRISKExtractorType
+
+object BRISKRawExtractor extends BRISKExtractorType
+
+object BRISKOrderExtractor extends BRISKExtractorType
+
+object BRISKRankExtractor extends BRISKExtractorType
+
+case class BRISKExtractor(
+  extractorType: BRISKExtractorType,
+  normalizeRotation: Boolean,
+  normalizeScale: Boolean)
+
+object BRISKExtractor {
   implicit def implicitBRISKExtractor(self: BRISKExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
@@ -217,10 +280,23 @@ object Extractor {
 
         for (raw <- rawOption) yield constructor(raw)
       }
-      
+
       override def json = JSONUtil.toJSON(self)
     }
+}
 
+///////////////////////////////////////////////////////////      
+
+case class ELUCIDExtractor(
+  normalizeRotation: Boolean,
+  normalizeScale: Boolean,
+  numSamplesPerRadius: Int,
+  stepSize: Double,
+  numRadii: Int,
+  blurWidth: Int,
+  color: String)
+
+object ELUCIDExtractor {
   implicit def implicitELUCIDExtractor(self: ELUCIDExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
@@ -265,71 +341,7 @@ object Extractor {
           Some(SortDescriptor.fromUnsorted(unsorted))
         }
       }
-      
+
       override def json = JSONUtil.toJSON(self)
     }
 }
-
-///////////////////////////////////////////////////////////
-
-sealed trait OpenCVExtractorType
-
-object OpenCVBRISKExtractor extends OpenCVExtractorType
-
-object OpenCVFREAKExtractor extends OpenCVExtractorType
-
-object OpenCVBRIEFExtractor extends OpenCVExtractorType
-
-object OpenCVORBExtractor extends OpenCVExtractorType
-
-case class OpenCVExtractor(extractorType: OpenCVExtractorType)
-
-///////////////////////////////////////////////////////////
-
-sealed trait PatchExtractorType
-
-object RawExtractor extends PatchExtractorType
-
-object NormalizeRangeExtractor extends PatchExtractorType
-
-object NCCExtractor extends PatchExtractorType
-
-object SortExtractor extends PatchExtractorType
-
-object RankExtractor extends PatchExtractorType
-
-object UniformRankExtractor extends PatchExtractorType
-
-case class PatchExtractor(
-  extractorType: PatchExtractorType,
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean,
-  patchWidth: Int,
-  blurWidth: Int,
-  color: String)
-
-///////////////////////////////////////////////////////////    
-
-sealed trait BRISKExtractorType
-
-object BRISKRawExtractor extends BRISKExtractorType
-
-object BRISKOrderExtractor extends BRISKExtractorType
-
-object BRISKRankExtractor extends BRISKExtractorType
-
-case class BRISKExtractor(
-  extractorType: BRISKExtractorType,
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean)
-
-///////////////////////////////////////////////////////////      
-
-case class ELUCIDExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean,
-  numSamplesPerRadius: Int,
-  stepSize: Double,
-  numRadii: Int,
-  blurWidth: Int,
-  color: String)

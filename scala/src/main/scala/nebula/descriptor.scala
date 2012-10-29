@@ -22,48 +22,42 @@ import wideBaseline._
 
 ///////////////////////////////////////////////////////////
 
-// TODO: This design is weird. Is it right?
 sealed trait Descriptor {
-  val thisType: Manifest[_]
+  type ElementType
 
-  def asType[E: Manifest]: E = {
-    assert(thisType <:< implicitly[Manifest[E]])
-    this.asInstanceOf[E]
-  }
+  def values: IndexedSeq[ElementType]
+}
 
-  def values[E: Manifest]: IndexedSeq[E] = {
-    def helper[E: Manifest] = {
-      val manifest = implicitly[Manifest[E]]
-      this match {
-        case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest =>
-          d.values.asInstanceOf[IndexedSeq[E]]
-        case d: RawDescriptor[_] if d.elementType <:< manifest =>
-          d.values.asInstanceOf[IndexedSeq[E]]
-        case _ => sys.error("failed match")
-      }
+object Descriptor {
+  // Any IndexedSeq can be treated as a Descriptor.
+  implicit def implicitIndexedSeq[A](self: IndexedSeq[A]): Descriptor =
+    new Descriptor {
+      override type ElementType = A
+
+      override def values = self
     }
-
-    val manifest = implicitly[Manifest[E]]
-    // A hack to deal with Doubles.
-    if (manifest == implicitly[Manifest[Double]]) {
-      try {
-        helper[Double].asInstanceOf[IndexedSeq[E]]
-      } catch {
-        case _ => helper[Int].map(_.toDouble).asInstanceOf[IndexedSeq[E]]
-      }
-    } else helper[E]
-  }
 }
 
 ///////////////////////////////////////////////////////////
 
-case class RawDescriptor[E: Manifest](values: IndexedSeq[E]) extends Descriptor {
-  val elementType = implicitly[Manifest[E]]
-  override val thisType = implicitly[Manifest[RawDescriptor[E]]]
+case class SortDescriptor(values: IndexedSeq[Int]) {
+  assert(values.sorted == (0 until values.size))
 }
 
-object RawDescriptor {
-  implicit def toIndexedSeq[E](d: RawDescriptor[E]) = d.values
+object SortDescriptor {
+  def fromUnsorted[A <% Ordered[A]](values: Seq[A]): SortDescriptor = {
+    val permutation = values.zipWithIndex.sortBy(_._1).map(_._2)
+    SortDescriptor(permutation.toIndexedSeq)
+  }
+
+  implicit def implicitIndexedSeq(self: SortDescriptor) = self.values
+
+  implicit def implicitDescriptor(self: SortDescriptor): Descriptor =
+    new Descriptor {
+      override type ElementType = Int
+
+      override def values = self.values
+    }
 }
 
 ///////////////////////////////////////////////////////////
@@ -75,50 +69,119 @@ trait PermutationLike[A] {
 }
 
 object PermutationLike {
-  implicit def sortDescriptor(sort: SortDescriptor) = new PermutationLike[SortDescriptor] {
-    override def invert = SortDescriptor.invert(sort)
-    override def compose(otherPermutation: SortDescriptor) =
-      SortDescriptor.compose(sort, otherPermutation)
-    override def numCycles = SortDescriptor.numCycles(sort)
-  }
+  implicit def sortDescriptor(self: SortDescriptor) =
+    new PermutationLike[SortDescriptor] {
+      override def invert = {
+        val values = self.zipWithIndex.sortBy(_._1).map(_._2)
+        SortDescriptor(values)
+      }
+
+      override def compose(that: SortDescriptor) = {
+        val values = for (t <- that) yield self(t)
+        SortDescriptor(values)
+      }
+
+      override def numCycles = {
+        val seen = collection.mutable.Set[Int]()
+        var numCycles = 0
+        for (start <- self) {
+          numCycles += { if (seen.contains(start)) 0 else 1 }
+          var current = self(start)
+          while (current != start) {
+            seen += current
+            current = self(current)
+          }
+        }
+        numCycles
+      }
+    }
 }
+
+//// TODO: This design is weird. Is it right?
+//sealed trait Descriptor {
+//  val thisType: Manifest[_]
+//
+//  def asType[E: Manifest]: E = {
+//    assert(thisType <:< implicitly[Manifest[E]])
+//    this.asInstanceOf[E]
+//  }
+//
+//  def values[E: Manifest]: IndexedSeq[E] = {
+//    def helper[E: Manifest] = {
+//      val manifest = implicitly[Manifest[E]]
+//      this match {
+//        case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest =>
+//          d.values.asInstanceOf[IndexedSeq[E]]
+//        case d: RawDescriptor[_] if d.elementType <:< manifest =>
+//          d.values.asInstanceOf[IndexedSeq[E]]
+//        case _ => sys.error("failed match")
+//      }
+//    }
+//
+//    val manifest = implicitly[Manifest[E]]
+//    // A hack to deal with Doubles.
+//    if (manifest == implicitly[Manifest[Double]]) {
+//      try {
+//        helper[Double].asInstanceOf[IndexedSeq[E]]
+//      } catch {
+//        case _ => helper[Int].map(_.toDouble).asInstanceOf[IndexedSeq[E]]
+//      }
+//    } else helper[E]
+//  }
+//}
 
 ///////////////////////////////////////////////////////////
 
-case class SortDescriptor(values: IndexedSeq[Int]) extends Descriptor {
-  assert(values.sorted == (0 until values.size))
-  override val thisType = implicitly[Manifest[SortDescriptor]]
-}
+//case class RawDescriptor[E: Manifest](values: IndexedSeq[E]) extends Descriptor {
+//  val elementType = implicitly[Manifest[E]]
+//  override val thisType = implicitly[Manifest[RawDescriptor[E]]]
+//}
+//
+//object RawDescriptor {
+//  implicit def toIndexedSeq[E](d: RawDescriptor[E]) = d.values
+//}
+//
+//
+/////////////////////////////////////////////////////////////
+//
+//case class SortDescriptor(values: IndexedSeq[Int]) extends Descriptor {
+//  assert(values.sorted == (0 until values.size))
+//  override val thisType = implicitly[Manifest[SortDescriptor]]
+//}
+//
+//object SortDescriptor {
+//  implicit def toIndexedSeq(sort: SortDescriptor) = sort.values
+//
+//  def fromUnsorted[A <% Ordered[A]](values: Seq[A]): SortDescriptor = {
+//    val permutation = values.zipWithIndex.sortBy(_._1).map(_._2)
+//    SortDescriptor(permutation.toIndexedSeq)
+//  }
+//
+//  def invert(permutation: SortDescriptor): SortDescriptor = {
+//    val values = permutation.zipWithIndex.sortBy(_._1).map(_._2)
+//    SortDescriptor(values)
+//  }
+//
+//  def compose(left: SortDescriptor, right: SortDescriptor): SortDescriptor = {
+//    val values = for (r <- right) yield left(r)
+//    SortDescriptor(values)
+//  }
+//
+//  def numCycles(permutation: SortDescriptor): Int = {
+//    val seen = collection.mutable.Set[Int]()
+//    var numCycles = 0
+//    for (start <- permutation) {
+//      numCycles += { if (seen.contains(start)) 0 else 1 }
+//      var current = permutation(start)
+//      while (current != start) {
+//        seen += current
+//        current = permutation(current)
+//      }
+//    }
+//    numCycles
+//  }
+//}
 
-object SortDescriptor {
-  implicit def toIndexedSeq(sort: SortDescriptor) = sort.values
 
-  def fromUnsorted[A <% Ordered[A]](values: Seq[A]): SortDescriptor = {
-    val permutation = values.zipWithIndex.sortBy(_._1).map(_._2)
-    SortDescriptor(permutation.toIndexedSeq)
-  }
 
-  def invert(permutation: SortDescriptor): SortDescriptor = {
-    val values = permutation.zipWithIndex.sortBy(_._1).map(_._2)
-    SortDescriptor(values)
-  }
 
-  def compose(left: SortDescriptor, right: SortDescriptor): SortDescriptor = {
-    val values = for (r <- right) yield left(r)
-    SortDescriptor(values)
-  }
-
-  def numCycles(permutation: SortDescriptor): Int = {
-    val seen = collection.mutable.Set[Int]()
-    var numCycles = 0
-    for (start <- permutation) {
-      numCycles += { if (seen.contains(start)) 0 else 1 }
-      var current = permutation(start)
-      while (current != start) {
-        seen += current
-        current = permutation(current)
-      }
-    }
-    numCycles
-  }
-}
