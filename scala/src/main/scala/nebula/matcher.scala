@@ -14,7 +14,7 @@ import wideBaseline._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Matcher {
+sealed trait Matcher extends JSONSerializable {
   def doMatch: Matcher.MatcherAction
 }
 
@@ -148,12 +148,12 @@ object Matcher {
     values.foreach(t => assert(t._1 <= t._2))
   }
 
-  def intervalRanking(descriptor: RawDescriptor[Int]): IntervalRanking = {
-    val distinctPixelValues = descriptor.values.toSet.toList
-    val rank = SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor.values))
+  def intervalRanking(descriptor: IndexedSeq[Int]): IntervalRanking = {
+    val distinctPixelValues = descriptor.toSet.toList
+    val rank = SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor))
     val intervals = Array.fill(rank.size)((-1, -1))
     for (value <- distinctPixelValues) {
-      val indices = descriptor.values.zipWithIndex.filter(_._1 == value).map(_._2)
+      val indices = descriptor.zipWithIndex.filter(_._1 == value).map(_._2)
       val minRank = indices.map(rank.apply).min
       val maxRank = indices.map(rank.apply).max
       indices.foreach(i => intervals(i) = (minRank, maxRank))
@@ -162,8 +162,8 @@ object Matcher {
   }
 
   def l1IntervalDistance(left: IndexedSeq[Int], right: IndexedSeq[Int]): Int = {
-    val leftIntervals = intervalRanking(RawDescriptor(left))
-    val rightIntervals = intervalRanking(RawDescriptor(right))
+    val leftIntervals = intervalRanking(left)
+    val rightIntervals = intervalRanking(right)
 
     def l1Distance(leftInterval: Tuple2[Int, Int], rightInterval: Tuple2[Int, Int]): Int = {
       // Dumb but def correct.
@@ -193,169 +193,48 @@ sealed trait MatcherType
 
 object L0Matcher extends MatcherType
 
+object L1Matcher extends MatcherType
+
+object L1IntervalMatcher extends MatcherType
+
+object L2Matcher extends MatcherType
+
+object KendallTauMatcher extends MatcherType
+
+object CayleyMatcher extends MatcherType
+
+object CayleyRotate4Matcher extends MatcherType
+
+object RobustCayleyMatcher extends MatcherType
+
+object GeneralizedL0Matcher extends MatcherType
+
 object MatcherType {
   implicit def implicitMatcher(self: MatcherType): Matcher = new SingleMatcher {
     override def matchSingle = {
+      def cast[A: Manifest](distance: (IndexedSeq[A], IndexedSeq[A]) => Double) =
+        (left: Descriptor, right: Descriptor) =>
+          distance(left.values[A], right.values[A])
 
-      
+      def sort(distance: (SortDescriptor, SortDescriptor) => Double) =
+        (left: Descriptor, right: Descriptor) => (left, right) match {
+          case (left: SortDescriptor, right: SortDescriptor) => distance(left, right)
+          case _ => sys.error("Expected SortDescriptor")
+        }
+          
       self match {
-        case L0Matcher => sys.error("TODO")
+        case L0Matcher => cast[Any](l0)
+        case L1Matcher => cast[Double](l1)
+        case L1IntervalMatcher => cast[Int](l1IntervalDistance)
+        case L2Matcher => cast[Double](l2)
+        case KendallTauMatcher => sort(kendallTau)
+        case CayleyMatcher => sort(cayley)
+        case CayleyRotate4Matcher => sort(cayleyRotate4)
+        case RobustCayleyMatcher => cast[Int](robustCayley)
+        case GeneralizedL0Matcher => cast[Int](generalizedL0)
       }
     }
+    
+    override def json = JSONUtil.toJSON(self)
   }
 }
-
-///////////////////////////////////////////////////////////
-
-//// TODO: Lots of duplication.
-//case class L0Matcher() extends Matcher {
-//  import Matcher._
-//  
-//  override def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) =>
-//        Matcher.l0(
-//          x.values[Any],
-//          y.values[Any]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-
-//case class L1Matcher() extends Matcher {
-//  import Matcher._
-//  
-//  def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) =>
-//        Matcher.l1(
-//          x.values[Double],
-//          y.values[Double]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-//
-//case class L1IntervalMatcher() extends Matcher {
-//  import Matcher._
-//  
-//  def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) =>
-//        Matcher.l1IntervalDistance(
-//          x.values[Int],
-//          y.values[Int]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-//
-//case class L2Matcher() extends Matcher {
-//  import Matcher._
-//  
-//  def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) =>
-//        Matcher.l2(
-//          x.values[Double],
-//          y.values[Double]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-//
-//case class KendallTauMatcher() extends Matcher {
-//  import Matcher._
-//  
-//  def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) => Matcher.kendallTau(
-//        x.asType[SortDescriptor], y.asType[SortDescriptor]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-//
-//case class CayleyMatcher() extends Matcher {
-//  import Matcher._
-//  
-//  def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) => Matcher.cayley(
-//        x.asType[SortDescriptor], y.asType[SortDescriptor]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-//
-//case class CayleyRotate4Matcher() extends Matcher {
-//  import Matcher._
-//  
-//  def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) => Matcher.cayleyRotate4(
-//        x.asType[SortDescriptor], y.asType[SortDescriptor]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-//
-//case class RobustCayleyMatcher() extends Matcher {
-//  import Matcher._
-//  
-//  def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) => Matcher.robustCayley(
-//        x.values[Int], y.values[Int]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}
-//
-//case class GeneralizedL0Matcher() extends Matcher {
-//  import Matcher._
-//  
-//  def doMatch = (
-//    allPairs: Boolean,
-//    leftDescriptors: Seq[Descriptor],
-//    rightDescriptors: Seq[Descriptor]) => {
-//    applyIndividual(
-//      (x: Descriptor, y: Descriptor) => Matcher.generalizedL0(
-//        x.values[Int], y.values[Int]),
-//      allPairs,
-//      leftDescriptors,
-//      rightDescriptors)
-//  }
-//}

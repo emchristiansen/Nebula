@@ -53,6 +53,12 @@ object WideBaselineExperiment {
         ("E", JSONUtil.abbreviate(self.extractor)),
         ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
+      
+      override def json = {
+        val json = JSONUtil.toJSON(self)
+        println(json)
+        sys.error("TODO")
+      }
     }
 
   implicit def implicitImagePairLike(self: WideBaselineExperiment): HasImagePair =

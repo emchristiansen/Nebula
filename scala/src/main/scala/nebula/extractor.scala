@@ -37,15 +37,15 @@ object Extractor {
   // Computes something like the rank, but pixels with the same value receive
   // the same rank, so there is no noise from sort ambiguity.
   // This particular algorithm is quite inefficient.
-  def uniformRank(descriptor: RawDescriptor[Int]): RawDescriptor[Int] = {
-    val distinctPixelValues = descriptor.values.toSet.toList
-    val rank = SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor.values)).toArray
+  def uniformRank(descriptor: IndexedSeq[Int]): IndexedSeq[Int] = {
+    val distinctPixelValues = descriptor.toSet.toList
+    val rank = SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor)).toArray
     for (value <- distinctPixelValues) {
-      val indices = descriptor.values.zipWithIndex.filter(_._1 == value).map(_._2)
+      val indices = descriptor.zipWithIndex.filter(_._1 == value).map(_._2)
       val meanRank = (indices.map(rank.apply).sum.toDouble / indices.size).round.toInt
       indices.foreach(i => rank(i) = meanRank)
     }
-    RawDescriptor(rank.toIndexedSeq)
+    rank.toIndexedSeq
   }
 
   def applySeveral(extractSingle: ExtractorActionSingle): ExtractorAction =
@@ -69,7 +69,7 @@ object Extractor {
     blurWidth: Int,
     color: String)(
       image: BufferedImage,
-      keyPoint: KeyPoint): Option[RawDescriptor[Int]] = {
+      keyPoint: KeyPoint): Option[IndexedSeq[Int]] = {
     // TODO
     assert(!normalizeRotation)
     assert(!normalizeScale)
@@ -80,7 +80,7 @@ object Extractor {
       patch <- patchOption
     ) yield {
       val values = Pixel.getPixelsOriginal(patch).flatMap(interpretColor(color))
-      RawDescriptor(values)
+      values
     }
   }
 
@@ -103,23 +103,21 @@ object Extractor {
           doubles.head
         }
 
-        Some(RawDescriptor(doubles))
+        Some(doubles)
       }
     }
 
   def booleanExtractorFromEnum(enum: Int): ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
       for (descriptor <- extractorFromEnum(enum)(image, keyPoint)) yield {
-        val doubles = descriptor.values[Double]
-        RawDescriptor(doubles.map(_.toInt).flatMap(Util.numToBits(8)))
+        descriptor.values[Int].flatMap(Util.numToBits(8))
       }
     }
 
   def intExtractorFromEnum(enum: Int): ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
       for (descriptor <- extractorFromEnum(enum)(image, keyPoint)) yield {
-        val doubles = descriptor.values[Double]
-        RawDescriptor(doubles.map(_.toInt))
+        descriptor.values[Int]
       }
     }
 
@@ -196,39 +194,37 @@ object PatchExtractor {
   implicit def implicitPatchExtractor(self: PatchExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
-        val constructor: RawDescriptor[Int] => Descriptor = self.extractorType match {
-          case RawExtractor => identity
-          case NormalizeRangeExtractor => (raw: RawDescriptor[Int]) => {
-            val values = raw.values
-            val min = values.min
-            val range = values.max - min
-            if (range == 0) RawDescriptor(raw) // Do nothing.
+        val constructor: IndexedSeq[Int] => Descriptor = self.extractorType match {
+          case RawExtractor => (raw: IndexedSeq[Int]) => raw
+          case NormalizeRangeExtractor => (raw: IndexedSeq[Int]) => {
+            val min = raw.min
+            val range = raw.max - min
+            if (range == 0) raw // Do nothing.
             else {
-              val normalized = values.map(x => ((x - min) * 255.0 / range).round.toInt)
+              val normalized = raw.map(x => ((x - min) * 255.0 / range).round.toInt)
               assert(normalized.min == 0)
               assert(normalized.max == 255)
-              RawDescriptor(normalized)
+              normalized
             }
           }
-          case NCCExtractor => (raw: RawDescriptor[Int]) => {
-            val values = raw.values
-            val mean = stats.mean(values: _*)
-            val std = stats.sampleStdDev(values: _*)
-            if (std.abs < 0.001) RawDescriptor(raw) // Don't change it.
+          case NCCExtractor => (raw: IndexedSeq[Int]) => {
+            val mean = stats.mean(raw: _*)
+            val std = stats.sampleStdDev(raw: _*)
+            if (std.abs < 0.001) raw // Don't change it.
             else {
-              val normalized = values.map(x => (x - mean) / std)
+              val normalized = raw.map(x => (x - mean) / std)
               assert(stats.mean(normalized: _*).abs < 0.0001)
               assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
-              RawDescriptor(normalized)
+              normalized
             }
           }
-          case SortExtractor => (raw: RawDescriptor[Int]) => {
-            SortDescriptor.fromUnsorted(raw.values)
+          case SortExtractor => (raw: IndexedSeq[Int]) => {
+            SortDescriptor.fromUnsorted(raw)
           }
-          case RankExtractor => (raw: RawDescriptor[Int]) => {
-            SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw.values))
+          case RankExtractor => (raw: IndexedSeq[Int]) => {
+            SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw))
           }
-          case UniformRankExtractor => (raw: RawDescriptor[Int]) => {
+          case UniformRankExtractor => (raw: IndexedSeq[Int]) => {
             Extractor.uniformRank(raw)
           }
         }

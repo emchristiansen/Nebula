@@ -10,6 +10,8 @@ import org.opencv.core.Mat
 import java.awt.Color
 import java.awt.image.BufferedImage
 
+
+
 class TestELUCID extends FunSuite {
   test("elucid") {
     val extractor = ELUCIDExtractor(true, true, 4, 2, 2, 5, "Gray")

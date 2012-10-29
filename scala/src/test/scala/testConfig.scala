@@ -10,21 +10,24 @@ import org.opencv.core.Mat
 
 import org.opencv.core.MatOfKeyPoint
 
+import wideBaseline._
+
 class TestConfig extends FunSuite {
   test("toString on WideBaselineExperiment should stay the same when it's upcast") {
     val wide = WideBaselineExperiment(
       "wall",
       2,
-      FASTDetector(100),
-      SortExtractor(
+      OpenCVDetector(OpenCVFASTDetector, Some(100)),
+      PatchExtractor(
+        SortExtractor,
         false,
         false,
         8,
         5,
         "Gray"),
-      L1Matcher())
+      L1Matcher)
     val wideString = wide.toString
-    
+
     val experiment: Experiment = wide
     val experimentString = experiment.toString
     assert(wideString === experimentString)
