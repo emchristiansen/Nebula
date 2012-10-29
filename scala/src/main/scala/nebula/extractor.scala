@@ -22,10 +22,8 @@ import wideBaseline._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Extractor {
-  import Extractor._
-
-  def extract: ExtractorAction
+sealed trait Extractor extends JSONSerializable {
+  def extract: Extractor.ExtractorAction
 }
 
 ///////////////////////////////////////////////////////////
@@ -34,21 +32,7 @@ object Extractor {
   type ExtractorAction = (BufferedImage, Seq[KeyPoint]) => Seq[Option[Descriptor]]
   type ExtractorActionSingle = (BufferedImage, KeyPoint) => Option[Descriptor]
 
-  val instances: Seq[Class[_]] = Seq(
-    classOf[RawExtractor],
-    classOf[NormalizeExtractor],
-    classOf[NCCExtractor],
-    classOf[SortExtractor],
-    classOf[RankExtractor],
-    classOf[UniformRankExtractor],
-    classOf[BRISKExtractor],
-    classOf[BRISKRawExtractor],
-    classOf[BRISKRankExtractor],
-    classOf[BRISKOrderExtractor],
-    classOf[FREAKExtractor],
-    classOf[BRIEFExtractor],
-    classOf[ORBExtractor],
-    classOf[ELUCIDExtractor])
+  val instances: Seq[Class[_]] = nebula.TODO
 
   // Computes something like the rank, but pixels with the same value receive
   // the same rank, so there is no noise from sort ambiguity.
@@ -138,263 +122,208 @@ object Extractor {
         RawDescriptor(doubles.map(_.toInt))
       }
     }
+
+  private trait SingleExtractor extends Extractor {
+    override def extract = applySeveral(extractSingle)
+
+    def extractSingle: ExtractorActionSingle
+  }
+
+  implicit def implicitOpenCVExtractor(self: OpenCVExtractor): Extractor =
+    new SingleExtractor {
+      // Doing this one by one is super slow.
+      // TODO: Make the native OpenCV api less awful.      
+      override def extractSingle = {
+        val extractorType = self.extractorType match {
+          case OpenCVBRISKExtractor => DescriptorExtractor.BRISK
+          case OpenCVFREAKExtractor => DescriptorExtractor.FREAK
+          case OpenCVBRIEFExtractor => DescriptorExtractor.BRIEF
+          case OpenCVORBExtractor => DescriptorExtractor.ORB
+        }
+
+        booleanExtractorFromEnum(extractorType)
+      }
+      
+      override def json = JSONUtil.toJSON(self)
+    }
+
+  implicit def implicitPatchExtractor(self: PatchExtractor): Extractor =
+    new SingleExtractor {
+      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
+        val constructor: RawDescriptor[Int] => Descriptor = self.extractorType match {
+          case RawExtractor => identity
+          case NormalizeRangeExtractor => (raw: RawDescriptor[Int]) => {
+            val values = raw.values
+            val min = values.min
+            val range = values.max - min
+            if (range == 0) RawDescriptor(raw) // Do nothing.
+            else {
+              val normalized = values.map(x => ((x - min) * 255.0 / range).round.toInt)
+              assert(normalized.min == 0)
+              assert(normalized.max == 255)
+              RawDescriptor(normalized)
+            }
+          }
+          case NCCExtractor => (raw: RawDescriptor[Int]) => {
+            val values = raw.values
+            val mean = stats.mean(values: _*)
+            val std = stats.sampleStdDev(values: _*)
+            if (std.abs < 0.001) RawDescriptor(raw) // Don't change it.
+            else {
+              val normalized = values.map(x => (x - mean) / std)
+              assert(stats.mean(normalized: _*).abs < 0.0001)
+              assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
+              RawDescriptor(normalized)
+            }
+          }
+          case SortExtractor => (raw: RawDescriptor[Int]) => {
+            SortDescriptor.fromUnsorted(raw.values)
+          }
+          case RankExtractor => (raw: RawDescriptor[Int]) => {
+            SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw.values))
+          }
+          case UniformRankExtractor => (raw: RawDescriptor[Int]) => {
+            Extractor.uniformRank(raw)
+          }
+        }
+
+        val rawOption = rawPixels(
+          self.normalizeRotation,
+          self.normalizeScale,
+          self.patchWidth,
+          self.blurWidth,
+          self.color)(image, keyPoint)
+
+        for (raw <- rawOption) yield constructor(raw)
+      }
+      
+      override def json = JSONUtil.toJSON(self)
+    }
+
+  implicit def implicitBRISKExtractor(self: BRISKExtractor): Extractor =
+    new SingleExtractor {
+      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
+        val constructor: Descriptor => Descriptor = self.extractorType match {
+          case BRISKRawExtractor => identity
+          case BRISKOrderExtractor => (raw: Descriptor) => {
+            SortDescriptor.fromUnsorted(raw.values[Int])
+          }
+          case BRISKRankExtractor => (raw: Descriptor) => {
+            SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw.values[Int]))
+          }
+        }
+
+        val rawOption = intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)
+
+        for (raw <- rawOption) yield constructor(raw)
+      }
+      
+      override def json = JSONUtil.toJSON(self)
+    }
+
+  implicit def implicitELUCIDExtractor(self: ELUCIDExtractor): Extractor =
+    new SingleExtractor {
+      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
+        val numSamples = self.numRadii * self.numSamplesPerRadius + 1
+        val radii = (1 to self.numRadii).map(_ * self.stepSize)
+        val angles = (0 until self.numSamplesPerRadius).map(_ * 2 * math.Pi / self.numSamplesPerRadius)
+
+        def samplePattern(scaleFactor: Double, rotationOffset: Double): Seq[DenseVector[Double]] = {
+          require(scaleFactor > 0)
+          Seq(DenseVector(0.0, 0.0)) ++ (for (
+            angle <- angles;
+            radius <- radii
+          ) yield {
+            val scaledRadius = scaleFactor * radius
+            val offsetAngle = rotationOffset + angle
+            DenseVector(scaledRadius * math.cos(offsetAngle), scaledRadius * math.sin(offsetAngle))
+          })
+        }
+
+        def samplePoints(keyPoint: KeyPoint): Seq[DenseVector[Double]] = {
+          val scaleFactor = if (self.normalizeScale) {
+            assert(keyPoint.size > 0)
+            keyPoint.size / 10.0
+          } else 1
+
+          val rotationOffset = if (self.normalizeRotation) {
+            assert(keyPoint.angle != -1)
+            keyPoint.angle * 2 * math.Pi / 360
+          } else 0
+
+          //    println(rotationOffset)
+
+          samplePattern(scaleFactor, rotationOffset).map(_ + DenseVector(keyPoint.pt.x, keyPoint.pt.y))
+        }
+
+        val blurred = ImageUtil.boxBlur(self.blurWidth, image)
+
+        val pointOptions = samplePoints(keyPoint).map(point => blurred.getSubPixel(point(0), point(1)))
+        if (pointOptions.contains(None)) None
+        else {
+          val unsorted = pointOptions.flatten.flatMap(interpretColor(self.color))
+          Some(SortDescriptor.fromUnsorted(unsorted))
+        }
+      }
+      
+      override def json = JSONUtil.toJSON(self)
+    }
 }
 
 ///////////////////////////////////////////////////////////
 
-// TODO: A lot of duplicated code in here.
+sealed trait OpenCVExtractorType
 
-case class RawExtractor(
+object OpenCVBRISKExtractor extends OpenCVExtractorType
+
+object OpenCVFREAKExtractor extends OpenCVExtractorType
+
+object OpenCVBRIEFExtractor extends OpenCVExtractorType
+
+object OpenCVORBExtractor extends OpenCVExtractorType
+
+case class OpenCVExtractor(extractorType: OpenCVExtractorType)
+
+///////////////////////////////////////////////////////////
+
+sealed trait PatchExtractorType
+
+object RawExtractor extends PatchExtractorType
+
+object NormalizeRangeExtractor extends PatchExtractorType
+
+object NCCExtractor extends PatchExtractorType
+
+object SortExtractor extends PatchExtractorType
+
+object RankExtractor extends PatchExtractorType
+
+object UniformRankExtractor extends PatchExtractorType
+
+case class PatchExtractor(
+  extractorType: PatchExtractorType,
   normalizeRotation: Boolean,
   normalizeScale: Boolean,
   patchWidth: Int,
   blurWidth: Int,
-  color: String) extends Extractor {
-  import Extractor._
+  color: String)
 
-  def extract = applySeveral(extractSingle)
+///////////////////////////////////////////////////////////    
 
-  // TODO: It's dumb I have to pass these parameters explicitly.
-  def extractSingle: ExtractorActionSingle = rawPixels(
-    normalizeRotation,
-    normalizeScale,
-    patchWidth,
-    blurWidth,
-    color)
-}
+sealed trait BRISKExtractorType
 
-case class NormalizeExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean,
-  patchWidth: Int,
-  blurWidth: Int,
-  color: String) extends Extractor {
-  import Extractor._
+object BRISKRawExtractor extends BRISKExtractorType
 
-  def extract = applySeveral(extractSingle)
+object BRISKOrderExtractor extends BRISKExtractorType
 
-  def extractSingle: ExtractorActionSingle =
-    (image: BufferedImage, keyPoint: KeyPoint) => {
-      val rawOption = rawPixels(
-        normalizeRotation,
-        normalizeScale,
-        patchWidth,
-        blurWidth,
-        color)(image, keyPoint)
-      for (raw <- rawOption) yield {
-        val values = raw.values
-        val min = values.min
-        val range = values.max - min
-        if (range == 0) RawDescriptor(raw) // Do nothing.
-        else {
-          val normalized = values.map(x => ((x - min) * 255.0 / range).round.toInt)
-          assert(normalized.min == 0)
-          assert(normalized.max == 255)
-          RawDescriptor(normalized)
-        }
-      }
-    }
-}
-
-case class NCCExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean,
-  patchWidth: Int,
-  blurWidth: Int,
-  color: String) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  def extractSingle: ExtractorActionSingle =
-    (image: BufferedImage, keyPoint: KeyPoint) => {
-      val rawOption = rawPixels(
-        normalizeRotation,
-        normalizeScale,
-        patchWidth,
-        blurWidth,
-        color)(image, keyPoint)
-      for (raw <- rawOption) yield {
-        val values = raw.values
-        val mean = stats.mean(values: _*)
-        val std = stats.sampleStdDev(values: _*)
-        if (std.abs < 0.001) RawDescriptor(raw) // Don't change it.
-        else {
-          val normalized = values.map(x => (x - mean) / std)
-          assert(stats.mean(normalized: _*).abs < 0.0001)
-          assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
-          RawDescriptor(normalized)
-        }
-      }
-    }
-}
-
-case class SortExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean,
-  patchWidth: Int,
-  blurWidth: Int,
-  color: String) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  def extractSingle: ExtractorActionSingle =
-    (image: BufferedImage, keyPoint: KeyPoint) => {
-      val unsortedOption = rawPixels(
-        normalizeRotation,
-        normalizeScale,
-        patchWidth,
-        blurWidth,
-        color)(image, keyPoint)
-      for (unsorted <- unsortedOption) yield {
-        SortDescriptor.fromUnsorted(unsorted.values)
-      }
-    }
-}
-
-case class RankExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean,
-  patchWidth: Int,
-  blurWidth: Int,
-  color: String) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  def extractSingle: ExtractorActionSingle =
-    (image: BufferedImage, keyPoint: KeyPoint) => {
-      val unsortedOption = rawPixels(
-        normalizeRotation,
-        normalizeScale,
-        patchWidth,
-        blurWidth,
-        color)(image, keyPoint)
-      for (unsorted <- unsortedOption) yield {
-        SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(unsorted.values))
-      }
-    }
-}
-
-case class UniformRankExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean,
-  patchWidth: Int,
-  blurWidth: Int,
-  color: String) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  def extractSingle: ExtractorActionSingle =
-    (image: BufferedImage, keyPoint: KeyPoint) => {
-      val unsortedOption = rawPixels(
-        normalizeRotation,
-        normalizeScale,
-        patchWidth,
-        blurWidth,
-        color)(image, keyPoint)
-      for (unsorted <- unsortedOption) yield {
-        Extractor.uniformRank(unsorted)
-      }
-    }
-}
+object BRISKRankExtractor extends BRISKExtractorType
 
 case class BRISKExtractor(
+  extractorType: BRISKExtractorType,
   normalizeRotation: Boolean,
-  normalizeScale: Boolean) extends Extractor {
-  import Extractor._
+  normalizeScale: Boolean)
 
-  def extract = applySeveral(extractSingle)
-
-  // Doing this one by one is super slow.
-  // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle =
-    booleanExtractorFromEnum(DescriptorExtractor.BRISK)
-}
-
-case class BRISKRawExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  // Doing this one by one is super slow.
-  // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle = //sys.error("TODO")
-    intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)
-}
-
-case class BRISKOrderExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  // Doing this one by one is super slow.
-  // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle = (image, keyPoint) => {
-    //    sys.error("TODO")
-    for (descriptor <- intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)) yield SortDescriptor.fromUnsorted(descriptor.values[Int])
-  }
-}
-
-case class BRISKRankExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  // Doing this one by one is super slow.
-  // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle = (image, keyPoint) => {
-    //    sys.error("TODO")
-    for (descriptor <- intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)) yield SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor.values[Int]))
-  }
-}
-
-case class FREAKExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  // Doing this one by one is super slow.
-  // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle =
-    booleanExtractorFromEnum(DescriptorExtractor.FREAK)
-}
-
-case class BRIEFExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  // Doing this one by one is super slow.
-  // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle =
-    booleanExtractorFromEnum(DescriptorExtractor.BRIEF)
-}
-
-case class ORBExtractor(
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  // Doing this one by one is super slow.
-  // TODO: Make the native OpenCV api less awful.
-  def extractSingle: ExtractorActionSingle =
-    booleanExtractorFromEnum(DescriptorExtractor.ORB)
-}
+///////////////////////////////////////////////////////////      
 
 case class ELUCIDExtractor(
   normalizeRotation: Boolean,
@@ -403,51 +332,4 @@ case class ELUCIDExtractor(
   stepSize: Double,
   numRadii: Int,
   blurWidth: Int,
-  color: String) extends Extractor {
-  import Extractor._
-
-  def extract = applySeveral(extractSingle)
-
-  val numSamples = numRadii * numSamplesPerRadius + 1
-  val radii = (1 to numRadii).map(_ * stepSize)
-  val angles = (0 until numSamplesPerRadius).map(_ * 2 * math.Pi / numSamplesPerRadius)
-
-  def samplePattern(scaleFactor: Double, rotationOffset: Double): Seq[DenseVector[Double]] = {
-    require(scaleFactor > 0)
-    Seq(DenseVector(0.0, 0.0)) ++ (for (
-      angle <- angles;
-      radius <- radii
-    ) yield {
-      val scaledRadius = scaleFactor * radius
-      val offsetAngle = rotationOffset + angle
-      DenseVector(scaledRadius * math.cos(offsetAngle), scaledRadius * math.sin(offsetAngle))
-    })
-  }
-
-  def samplePoints(keyPoint: KeyPoint): Seq[DenseVector[Double]] = {
-    val scaleFactor = if (normalizeScale) {
-      assert(keyPoint.size > 0)
-      keyPoint.size / 10.0
-    } else 1
-
-    val rotationOffset = if (normalizeRotation) {
-      assert(keyPoint.angle != -1)
-      keyPoint.angle * 2 * math.Pi / 360
-    } else 0
-
-    //    println(rotationOffset)
-
-    samplePattern(scaleFactor, rotationOffset).map(_ + DenseVector(keyPoint.pt.x, keyPoint.pt.y))
-  }
-
-  def extractSingle: ExtractorActionSingle = (image, keyPoint) => {
-    val blurred = ImageUtil.boxBlur(blurWidth, image)
-
-    val pointOptions = samplePoints(keyPoint).map(point => blurred.getSubPixel(point(0), point(1)))
-    if (pointOptions.contains(None)) None
-    else {
-      val unsorted = pointOptions.flatten.flatMap(interpretColor(color))
-      Some(SortDescriptor.fromUnsorted(unsorted))
-    }
-  }
-}
+  color: String)

@@ -15,12 +15,12 @@ import wideBaseline._
 ///////////////////////////////////////////////////////////
 
 sealed trait Matcher {
-  type MatcherAction = (Boolean, Seq[Descriptor], Seq[Descriptor]) => Seq[DMatch]
-  
-  def doMatch: MatcherAction
+  def doMatch: Matcher.MatcherAction
 }
 
 object Matcher {
+  type MatcherAction = (Boolean, Seq[Descriptor], Seq[Descriptor]) => Seq[DMatch]
+  
   def applyIndividual(
     distanceMethod: (Descriptor, Descriptor) => Double,
     allPairs: Boolean,
@@ -42,16 +42,18 @@ object Matcher {
     }
   }  
   
-  val instances: List[java.lang.Class[_]] = List(
-    classOf[L0Matcher],
-    classOf[L1Matcher],
-    classOf[L1IntervalMatcher],
-    classOf[L2Matcher],
-    classOf[KendallTauMatcher],
-    classOf[CayleyMatcher],
-    classOf[CayleyRotate4Matcher],
-    classOf[RobustCayleyMatcher],
-    classOf[GeneralizedL0Matcher])
+  val instances: List[java.lang.Class[_]] = nebula.TODO 
+    
+//    List(
+//    classOf[L0Matcher],
+//    classOf[L1Matcher],
+//    classOf[L1IntervalMatcher],
+//    classOf[L2Matcher],
+//    classOf[KendallTauMatcher],
+//    classOf[CayleyMatcher],
+//    classOf[CayleyRotate4Matcher],
+//    classOf[RobustCayleyMatcher],
+//    classOf[GeneralizedL0Matcher])
 
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
     (left, right).zipped.count({ case (l, r) => l != r })

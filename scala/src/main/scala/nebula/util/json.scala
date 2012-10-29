@@ -12,10 +12,22 @@ import net.liftweb.json.pretty
 import net.liftweb.json.render
 import net.liftweb.json.JsonAST.JField
 import net.liftweb.json.JsonAST.JString
+import scala.text.{ Document, DocText }
+import net.liftweb.json.JsonAST.JValue
 
 ///////////////////////////////////////////////////////////
 
+trait JSONSerializable {
+  def json: JValue
+}
+
 object JSONUtil {
+  def toJSON[A <: AnyRef](caseClass: A): JValue = {
+    // This should work for non-nested case classes.
+    implicit val formats = Serialization.formats(ShortTypeHints(List(caseClass.getClass)))
+    parse(write(caseClass))
+  }
+
   def caseClassToStringMap[A <: AnyRef](caseClass: A): Map[String, String] = {
     // Implementation uses lift-json for introspection, which is
     // admittedly roundabout. It is also likely brittle; I'm guessing it will
@@ -26,7 +38,6 @@ object JSONUtil {
     val string = write(caseClass)
     val json = parse(string)
 
-    import scala.text.{ Document, DocText }
     def documentToString(document: Document): String = document match {
       case DocText(string) => string.replace("\"", "")
       case _ => throw new Exception
@@ -62,5 +73,5 @@ object JSONUtil {
     val parameterParts = List(parameterNames, parameterValues).transpose.flatten
     val parts = map("jsonClass") :: parameterParts
     parts.mkString("-")
-  }  
+  }
 }
