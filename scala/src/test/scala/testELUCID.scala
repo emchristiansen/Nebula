@@ -9,8 +9,9 @@ import org.apache.xmlgraphics.image.loader.ImageManager
 import org.opencv.core.Mat
 import java.awt.Color
 import java.awt.image.BufferedImage
+import nebula.util.imageProcessing.ImageUtil
 
-
+import OpenCVDetectorType._
 
 class TestELUCID extends FunSuite {
   test("elucid") {
@@ -25,7 +26,7 @@ class TestELUCID extends FunSuite {
 
   test("bikes") {
     def drawPointsOnBikes(image: BufferedImage, file: File) {
-      val detector = BRISKDetector(maxKeyPoints = 60)
+      val detector = OpenCVDetector(BRISK, Some(60))
       val keyPoints = detector.detect(image)
 
       val extractor = ELUCIDExtractor(
@@ -37,19 +38,19 @@ class TestELUCID extends FunSuite {
         5,
         "Gray")
 
-      val blurred = ImageProcessing.boxBlur(5, image)
-      val graphics = blurred.getGraphics
-      for (keyPoint <- keyPoints) {
-        val samplePoints = extractor.samplePoints(keyPoint)
-        for ((point, index) <- samplePoints.zipWithIndex) {
-          val percentDone = index.toFloat / (samplePoints.size - 1)
-          val color = Color.getHSBColor(percentDone, 1, 1)
-          graphics.setColor(color)
-          graphics.fillOval(point(0).round.toInt - 1, point(1).round.toInt - 1.toInt, 2, 2)
-        }
-      }
-
-      ImageIO.write(blurred, "bmp", file)
+//      val blurred = ImageUtil.boxBlur(5, image)
+//      val graphics = blurred.getGraphics
+//      for (keyPoint <- keyPoints) {
+//        val samplePoints = extractor.samplePoints(keyPoint)
+//        for ((point, index) <- samplePoints.zipWithIndex) {
+//          val percentDone = index.toFloat / (samplePoints.size - 1)
+//          val color = Color.getHSBColor(percentDone, 1, 1)
+//          graphics.setColor(color)
+//          graphics.fillOval(point(0).round.toInt - 1, point(1).round.toInt - 1.toInt, 2, 2)
+//        }
+//      }
+//
+//      ImageIO.write(blurred, "bmp", file)
     }
 
     val image1 = {

@@ -1,6 +1,7 @@
 package nebula
 
 import java.awt.image.BufferedImage
+
 import util.JSONSerializable
 
 ///////////////////////////////////////////////////////////
@@ -16,8 +17,6 @@ trait HasGroundTruth[A] {
   def groundTruth: A
 }
 
-
-
 ///////////////////////////////////////////////////////////
 
 trait HasEstimate[A] {
@@ -26,7 +25,7 @@ trait HasEstimate[A] {
 
 ///////////////////////////////////////////////////////////
 
-trait Experiment extends HasOriginal with JSONSerializable {
+trait Experiment extends HasOriginal {
   def name: String
 
   // Parameter names and values

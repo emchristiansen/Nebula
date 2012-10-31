@@ -2,10 +2,10 @@ package nebula
 
 import java.io.File
 
+import nebula.smallBaseline.SmallBaselineExperimentResults.implicitExperimentResults
+import nebula.wideBaseline.WideBaselineExperimentResults.implicitExperimentResults
 import smallBaseline.{SmallBaselineExperiment, SmallBaselineExperimentResults}
-import smallBaseline.SmallBaselineExperimentResults.implicitExperimentResults
 import wideBaseline.{WideBaselineExperiment, WideBaselineExperimentResults}
-import wideBaseline.WideBaselineExperimentResults.implicitExperimentResults
 
 ///////////////////////////////////////////////////////////
 

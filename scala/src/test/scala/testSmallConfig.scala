@@ -1,8 +1,5 @@
 import org.apache.commons.math3.linear.{ Array2DRowRealMatrix, ArrayRealVector }
 import org.scalatest.FunSuite
-import nebula.KeyPointUtil._
-import nebula.{ Homography, KeyPointUtil }
-import nebula.MatcherParameterized._
 import nebula._
 import org.scalacheck.Properties
 import org.scalacheck.Prop._
@@ -13,9 +10,10 @@ import breeze.linalg._
 import scala.util._
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
+import nebula.smallBaseline.SmallBaselineExperiment
 
 class TestSmallConfig extends FunSuite {
-  ignore("for a very simple image pair the small baseline matchers should be perfect") {
+  test("for a very simple image pair the small baseline matchers should be perfect") {
     // The easy image is all black with random pixels in the center.
     // It is simply translated a few pixels to get the other image.    
     val yTranslation = -2
@@ -45,7 +43,8 @@ class TestSmallConfig extends FunSuite {
 
     val estimatedFlow = SmallBaselineExperiment.estimateFlow(
       2,
-      RawExtractor(
+      PatchExtractor(
+        RawExtractor(),
         false,
         false,
         16,
@@ -54,10 +53,10 @@ class TestSmallConfig extends FunSuite {
       L2Matcher(),
       leftImage,
       rightImage)
-    
-//    for (((i, j), Some(flowVector)) <- estimatedFlow.iterator)
-//      if (flowVector != FlowVector(-2, -2) && flowVector != FlowVector(1, -2)) {
-//        println("Bad flow vector", (i, j), flowVector)
-//      }
+
+    //    for (((i, j), Some(flowVector)) <- estimatedFlow.iterator)
+    //      if (flowVector != FlowVector(-2, -2) && flowVector != FlowVector(1, -2)) {
+    //        println("Bad flow vector", (i, j), flowVector)
+    //      }
   }
 }

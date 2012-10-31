@@ -21,7 +21,7 @@ import com.twitter.util.Eval
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Descriptor {
+sealed trait Descriptor extends HasOriginal {
   type ElementType
 
   def elementManifest: Manifest[ElementType]
@@ -29,14 +29,40 @@ sealed trait Descriptor {
   def valuesUncast: IndexedSeq[ElementType]
 
   def values[A: Manifest]: IndexedSeq[A] = {
-    val converter: ElementType => A = {
-      // Run time implicits through JIT compilation.
-      val source = "import nebula._; implicitly[%s => %s]".format(
-        elementManifest,
-        implicitly[Manifest[A]])
-      (new Eval).apply[ElementType => A](source)
-    }
-    valuesUncast.map(converter)
+    // TODO: This explicit enumeration sucks.
+    val aManifest = implicitly[Manifest[A]]
+    val boolean = implicitly[Manifest[Boolean]]
+    val int = implicitly[Manifest[Int]]
+    val double = implicitly[Manifest[Double]]
+
+    val cast = if (elementManifest == boolean) {
+      if (aManifest == boolean)
+        valuesUncast.asInstanceOf[IndexedSeq[Boolean]]
+      else sys.error("Bad match")
+    } else if (elementManifest == int) {
+      if (aManifest == int)
+        valuesUncast.asInstanceOf[IndexedSeq[Int]]
+      if (aManifest == double)
+        valuesUncast.asInstanceOf[IndexedSeq[Int]].map(_.toDouble)
+      else sys.error("Bad match")
+    } else if (elementManifest == double) {
+      if (aManifest == int)
+        valuesUncast.asInstanceOf[IndexedSeq[Double]].map(_.toInt)
+      if (aManifest == double)
+        valuesUncast.asInstanceOf[IndexedSeq[Double]]
+      else sys.error("Bad match")
+    } else sys.error("Bad match")
+    
+    cast.asInstanceOf[IndexedSeq[A]]
+
+    //      // TODO
+    ////      // Run time implicits through JIT compilation.
+    ////      val source = "import nebula._; implicitly[%s => %s]".format(
+    ////        elementManifest,
+    ////        implicitly[Manifest[A]])
+    ////      (new Eval).apply[ElementType => A](source)
+    //    }
+    //    valuesUncast.map(converter)
   }
 }
 
@@ -49,6 +75,8 @@ object Descriptor {
       override def elementManifest = implicitly[Manifest[A]]
 
       override def valuesUncast = self
+
+      override def original = self
     }
 }
 
@@ -62,6 +90,8 @@ case class SortDescriptor(values: IndexedSeq[Int]) extends Descriptor {
   override def elementManifest = implicitly[Manifest[Int]]
 
   override def valuesUncast = values
+
+  override def original = this
 }
 
 object SortDescriptor {
@@ -71,17 +101,7 @@ object SortDescriptor {
   }
 
   implicit def implicitIndexedSeq(self: SortDescriptor) = self.values
-}
 
-///////////////////////////////////////////////////////////
-
-trait PermutationLike[A] {
-  def invert: A
-  def compose(otherPermutation: A): A
-  def numCycles: Int
-}
-
-object PermutationLike {
   implicit def sortDescriptor(self: SortDescriptor) =
     new PermutationLike[SortDescriptor] {
       override def invert = {
@@ -109,6 +129,15 @@ object PermutationLike {
       }
     }
 }
+
+///////////////////////////////////////////////////////////
+
+trait PermutationLike[A] {
+  def invert: A
+  def compose(otherPermutation: A): A
+  def numCycles: Int
+}
+
 //
 //  def values[E: Manifest]: IndexedSeq[E] = {
 //    def helper[E: Manifest] = {

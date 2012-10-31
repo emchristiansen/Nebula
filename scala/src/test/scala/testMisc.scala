@@ -1,17 +1,18 @@
 import org.scalacheck.Prop.{ forAll, propBoolean }
 import org.scalacheck.Properties
 import org.scalatest.FunSuite
-import nebula.{ WideBaselineExperiment, FASTDetector, L0Matcher, SortExtractor, Util }
-import nebula.Util.{ allSorts, prefixes }
-import nebula.Util._
 import org.scalacheck.Properties
 import org.scalacheck.Prop._
 import org.scalacheck._
 import nebula._
-import MatcherParameterized._
-import util._
 import scala.util.Random
 import nebula.util.Util
+import nebula.util.Util._
+import nebula.Matcher._
+import nebula.wideBaseline.WideBaselineExperiment
+import nebula.util.JSONUtil
+
+import OpenCVDetectorType._
 
 case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
@@ -19,7 +20,7 @@ class TestMisc extends FunSuite {
   test("caseClassToStringMap") {
     val person = Person("Arthur", "Dent", 42, 3.14)
 
-    val map = Util.caseClassToStringMap(person)
+    val map = JSONUtil.caseClassToStringMap(person)
     val goldenMap = Map(
       "jsonClass" -> "Person",
       "firstName" -> "Arthur",
@@ -32,8 +33,8 @@ class TestMisc extends FunSuite {
     val experiment1 = WideBaselineExperiment(
       "bikes",
       2,
-      FASTDetector(100),
-      SortExtractor(false, false, 8, 5, "Gray"),
+      OpenCVDetector(FAST, Some(100)),
+      PatchExtractor(SortExtractor(), false, false, 8, 5, "Gray"),
       L0Matcher())
 
     val experiment2 = experiment1.copy(otherImage = 4)
@@ -103,16 +104,8 @@ object CheckMisc extends Properties("Util") {
       val (left, right) = leftLong.zip(rightLong).toIndexedSeq.unzip
       val leftPermuted = new Random(seed).shuffle(left)
       val rightPermuted = new Random(seed).shuffle(right)
-//      if (generalizedCayley(RawDescriptor(left), RawDescriptor(right)) !=
-//        generalizedCayley(RawDescriptor(leftPermuted), RawDescriptor(rightPermuted))) {
-////        println(left.size)
-////        println(right)
-////        println(leftPermuted)
-////        println(rightPermuted)
-//        sys.error("asdf")
-//      }
-      generalizedCayley(RawDescriptor(left), RawDescriptor(right)) ==
-        generalizedCayley(RawDescriptor(leftPermuted), RawDescriptor(rightPermuted))
+      generalizedCayley(left, right) ==
+        generalizedCayley(leftPermuted, rightPermuted)
     }
   }
 }

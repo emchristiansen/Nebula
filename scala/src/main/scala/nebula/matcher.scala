@@ -3,7 +3,7 @@ package nebula
 import org.opencv.features2d.DMatch
 
 import collection._
-import PermutationLike.sortDescriptor
+
 import graveyard._
 import mpie._
 import summary._
@@ -14,7 +14,7 @@ import wideBaseline._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Matcher extends JSONSerializable {
+sealed trait Matcher extends HasOriginal with JSONSerializable {
   def doMatch: Matcher.MatcherAction
 }
 
@@ -39,8 +39,6 @@ object Matcher {
         }
       }
     }
-
-  val instances: List[java.lang.Class[_]] = nebula.TODO
 
   //    List(
   //    classOf[L0Matcher],
@@ -191,25 +189,36 @@ import Matcher._
 
 sealed trait MatcherType
 
-object L0Matcher extends MatcherType
+case class L0Matcher() extends MatcherType
 
-object L1Matcher extends MatcherType
+case class L1Matcher() extends MatcherType
 
-object L1IntervalMatcher extends MatcherType
+case class L1IntervalMatcher() extends MatcherType
 
-object L2Matcher extends MatcherType
+case class L2Matcher() extends MatcherType
 
-object KendallTauMatcher extends MatcherType
+case class KendallTauMatcher() extends MatcherType
 
-object CayleyMatcher extends MatcherType
+case class CayleyMatcher() extends MatcherType
 
-object CayleyRotate4Matcher extends MatcherType
+case class CayleyRotate4Matcher() extends MatcherType
 
-object RobustCayleyMatcher extends MatcherType
+case class RobustCayleyMatcher() extends MatcherType
 
-object GeneralizedL0Matcher extends MatcherType
+case class GeneralizedL0Matcher() extends MatcherType
 
 object MatcherType {
+  val instances = List(
+    classOf[L0Matcher],
+    classOf[L1Matcher],
+    classOf[L1IntervalMatcher],
+    classOf[L2Matcher],
+    classOf[KendallTauMatcher],
+    classOf[CayleyMatcher],
+    classOf[CayleyRotate4Matcher],
+    classOf[RobustCayleyMatcher],
+    classOf[GeneralizedL0Matcher])
+
   implicit def implicitMatcher(self: MatcherType): Matcher = new SingleMatcher {
     override def matchSingle = {
       def cast[A: Manifest](distance: (IndexedSeq[A], IndexedSeq[A]) => Double) =
@@ -221,20 +230,22 @@ object MatcherType {
           case (left: SortDescriptor, right: SortDescriptor) => distance(left, right)
           case _ => sys.error("Expected SortDescriptor")
         }
-          
+
       self match {
-        case L0Matcher => cast[Any](l0)
-        case L1Matcher => cast[Double](l1)
-        case L1IntervalMatcher => cast[Int](l1IntervalDistance)
-        case L2Matcher => cast[Double](l2)
-        case KendallTauMatcher => sort(kendallTau)
-        case CayleyMatcher => sort(cayley)
-        case CayleyRotate4Matcher => sort(cayleyRotate4)
-        case RobustCayleyMatcher => cast[Int](robustCayley)
-        case GeneralizedL0Matcher => cast[Int](generalizedL0)
+        case _: L0Matcher => cast[Any](l0)
+        case _: L1Matcher => cast[Double](l1)
+        case _: L1IntervalMatcher => cast[Int](l1IntervalDistance)
+        case _: L2Matcher => cast[Double](l2)
+        case _: KendallTauMatcher => sort(kendallTau)
+        case _: CayleyMatcher => sort(cayley)
+        case _: CayleyRotate4Matcher => sort(cayleyRotate4)
+        case _: RobustCayleyMatcher => cast[Int](robustCayley)
+        case _: GeneralizedL0Matcher => cast[Int](generalizedL0)
       }
     }
-    
-    override def json = JSONUtil.toJSON(self)
+
+    override def original = self
+
+    override def json = JSONUtil.toJSON(self, Nil)
   }
 }

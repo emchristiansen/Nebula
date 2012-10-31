@@ -40,20 +40,9 @@ import nebula._
 ///////////////////////////////////////////////////////////
 
 object ExperimentIO {
-  val instances = Seq(
-    classOf[Detector],
-    classOf[Extractor],
-    classOf[Matcher],
-    classOf[WideBaselineExperiment],
-//    classOf[CorrespondenceExperimentParameterized[SortDescriptor, SortDescriptor]],
-//    classOf[CorrespondenceExperimentParameterized[SortDescriptor]],
-    classOf[WideBaselineExperimentResults]) ++
-    Detector.instances ++
-    Extractor.instances ++
-    Matcher.instances
-  val extraSerializers = List(new DMatchSerializer)
-
-  val formats = Serialization.formats(ShortTypeHints(instances.toList)) ++ extraSerializers
+//  val extraSerializers = List(new DMatchSerializer)
+//
+//  val formats = Serialization.formats(ShortTypeHints(instances.toList)) ++ extraSerializers
 }
 
 ///////////////////////////////////////////////////////////
@@ -97,11 +86,15 @@ object AtomicIO {
 ///////////////////////////////////////////////////////////
 
 object IO {
-  def interpretFile[A](file: File): A = {
+  def interpretFile[A : Manifest](file: File): A = {
     val source = org.apache.commons.io.FileUtils.readFileToString(file)
-    (new Eval).apply[A](source)
+    eval[A](source)
   }
 
+  def dumpSourceToFile[A](obj: A, file: File) {
+    org.apache.commons.io.FileUtils.writeStringToFile(file, obj.toString)
+  }
+  
   def objectToByteArray[A](obj: A): Array[Byte] = {
     val byte_stream = new ByteArrayOutputStream
     (new ObjectOutputStream(byte_stream)).writeObject(obj)

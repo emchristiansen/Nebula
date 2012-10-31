@@ -38,8 +38,8 @@ class TestSortDescriptor extends FunSuite {
   }
 
   test("numCycles") {
-    assert(SortDescriptor.numCycles(sort0) == 4)
-    assert(SortDescriptor.numCycles(sort1) == 2)
-    assert(SortDescriptor.numCycles(sort2) == 2)
+    assert(sort0.numCycles == 4)
+    assert(sort1.numCycles == 2)
+    assert(sort2.numCycles == 2)
   }
 }

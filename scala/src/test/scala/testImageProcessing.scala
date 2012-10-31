@@ -5,7 +5,11 @@ import org.scalacheck.Prop.{ forAll, propBoolean }
 import org.scalacheck.Properties
 
 import javax.imageio.ImageIO
-import nebula.RichImage.bufferedImage
+
+import nebula.util.imageProcessing.ImageUtil._
+
+import nebula.util.imageProcessing._
+import nebula.util.imageProcessing.RichImage._
 
 object CheckRichImage extends Properties("RichImage") {
   val url = getClass.getResource("/goldfish_girl.jpg")

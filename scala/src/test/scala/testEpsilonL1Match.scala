@@ -1,19 +1,17 @@
 import nebula._
-import nebula.experimental._
 
 import org.scalatest.FunSuite
  
 class TestEpsilonL1Match extends FunSuite {
-   import EpsilonL1Match._
    
-   test("calculateL1") {
-     val left = mkHistogram(List(1, 2, 1, 3, 3))
-     val right = mkHistogram(List(2, 2, 1, 3, 1))
-     val third = mkHistogram(List(1, 1, 1, 1, 1))
-     assert(l1HistogramDistance(left, left) === 0)
-     assert(l1HistogramDistance(left, right) === 2)
-     assert(l1HistogramDistance(left, third) === 3 + 1 + 2)
-   }
+//   test("calculateL1") {
+//     val left = mkHistogram(List(1, 2, 1, 3, 3))
+//     val right = mkHistogram(List(2, 2, 1, 3, 1))
+//     val third = mkHistogram(List(1, 1, 1, 1, 1))
+//     assert(l1HistogramDistance(left, left) === 0)
+//     assert(l1HistogramDistance(left, right) === 2)
+//     assert(l1HistogramDistance(left, third) === 3 + 1 + 2)
+//   }
   
   // test("estimateL1") {
   //   val dimension = 10

@@ -1,26 +1,15 @@
 package nebula.smallBaseline
 
-import breeze.linalg.DenseMatrix
-
 import java.awt.image.BufferedImage
-import org.opencv.features2d.DMatch
-import org.opencv.features2d._
 
-import nebula.util.Util
+import scala.Option.option2Iterable
 
-import nebula.HasEstimate
-import nebula.HasGroundTruth
-import nebula.RuntimeConfig
-import nebula.HasImagePair
+import org.opencv.features2d.{DMatch, KeyPoint}
 
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.util.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
+import breeze.linalg.DenseMatrix
+import nebula.{Experiment, ExperimentResults, Extractor, Global, HasEstimate, HasGroundTruth, HasImagePair, Matcher, RuntimeConfig}
+import nebula.smallBaseline.FlowField.{addL2Distance, implicitDenseMatrix}
+import nebula.util.{ExperimentIO, IO, JSONUtil}
 
 ///////////////////////////////////////////////////////////
 
@@ -41,11 +30,11 @@ object SmallBaselineExperiment {
         ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
       
-      override def json = {
-        val json = JSONUtil.toJSON(self)
-        println(json)
-        sys.error("TODO")
-      }      
+//      override def json = {
+//        val json = JSONUtil.toJSON(self, Nil)
+//        println(json)
+//        sys.error("TODO")
+//      }      
     }
 
   implicit def implicitImagePairLike(self: SmallBaselineExperiment): HasImagePair with HasGroundTruth[FlowField] =
@@ -155,7 +144,7 @@ object SmallBaselineExperimentResults {
     if (noResults.alreadyRun && Global.run[RuntimeConfig].skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
-      IO.fromJSONFileAbstract[SmallBaselineExperimentResults](ExperimentIO.formats, file)
+      IO.interpretFile[SmallBaselineExperimentResults](file)
     } else run(experiment)
   }
 

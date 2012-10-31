@@ -13,7 +13,8 @@ object SFSPipelineBuild extends Build {
       "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
       "repo.codahale.com" at "http://repo.codahale.com",
       "maven.twttr.com" at "http://maven.twttr.com",
-      "typesafe-releases" at "http://repo.typesafe.com/typesafe/repo"
+      "typesafe-releases" at "http://repo.typesafe.com/typesafe/repo",
+      "spray-io" at "http://repo.spray.io/"
     )
   )
 
@@ -38,7 +39,9 @@ object SFSPipelineBuild extends Build {
       "org.scalanlp" %% "breeze-math" % "0.1",
       "org.scalanlp" %% "breeze-learn" % "0.1",
       "org.scalanlp" %% "breeze-process" % "0.1",
-      "org.scalanlp" %% "breeze-viz" % "0.1"
+      "org.scalanlp" %% "breeze-viz" % "0.1",
+      "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
+      "io.spray" %%  "spray-json" % "1.2.2" cross CrossVersion.full
     )
   )
 

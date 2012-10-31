@@ -21,7 +21,7 @@ object CheckSortDescriptor extends Properties("SortDescriptor") {
 
   property("invert") = forAll {
     sort: SortDescriptor => {
-      val inverse = SortDescriptor.invert(sort)
+      val inverse = sort.invert
       forAll {
       	n: Int => sort.values.size > 0 ==> {
 	  val i = (n % sort.values.size).abs
@@ -45,7 +45,7 @@ object CheckSortDescriptor extends Properties("SortDescriptor") {
   property("compose") = forAll {
     leftAndRight: Tuple2[SortDescriptor, SortDescriptor] => {
       val (left, right) = leftAndRight
-      val composition = SortDescriptor.compose(left, right)
+      val composition = left.compose(right)
       forAll {
       	n: Int => left.values.size > 0 ==> {
 	  val i = (n % left.values.size).abs

@@ -14,17 +14,38 @@ import net.liftweb.json.JsonAST.JField
 import net.liftweb.json.JsonAST.JString
 import scala.text.{ Document, DocText }
 import net.liftweb.json.JsonAST.JValue
+import spray.json.RootJsonFormat
+import spray.json.JsString
+import spray.json.JsValue
+
+import spray.json._
 
 ///////////////////////////////////////////////////////////
+
+trait EnumerationJsonFormat[A] extends RootJsonFormat[A] {
+  override def write(e: A) = JsString(e.toString)
+
+  val expectedType: String
+  val deserializeMapping: Map[String, A]
+
+  // TODO: Duplication
+  override def read(value: JsValue) = value match {
+    case JsString(string) => deserializeMapping.getOrElse(
+      string,
+      throw new DeserializationException("%s expected".format(expectedType)))
+    case _ => throw new DeserializationException("%s expected".format(expectedType))
+  }
+}
 
 trait JSONSerializable {
   def json: JValue
 }
 
 object JSONUtil {
-  def toJSON[A <: AnyRef](caseClass: A): JValue = {
+  def toJSON[A <: AnyRef](caseClass: A, extraInstances: List[Class[_]]): JValue = {
     // This should work for non-nested case classes.
-    implicit val formats = Serialization.formats(ShortTypeHints(List(caseClass.getClass)))
+    implicit val formats = Serialization.formats(
+      ShortTypeHints(caseClass.getClass :: extraInstances))
     parse(write(caseClass))
   }
 

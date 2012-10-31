@@ -1,52 +1,68 @@
 package nebula
 
-import graveyard._
-import mpie._
-import summary._
-import smallBaseline._
-import util._
-import util.imageProcessing._
-import wideBaseline._
 import java.awt.image.BufferedImage
 import org.opencv.core.MatOfKeyPoint
-import org.opencv.features2d.{ DescriptorExtractor, FeatureDetector, KeyPoint }
-import org.opencv.core.Mat
-import net.liftweb.json.Serialization
-import net.liftweb.json.ShortTypeHints
-
-import net.liftweb.json.JsonAST.JObject
-import net.liftweb.json.Serialization
+import org.opencv.features2d.{ FeatureDetector, KeyPoint }
+import util.{ JSONSerializable, JSONUtil, OpenCVUtil }
+import net.liftweb.json.Serializer
 import net.liftweb.json.Formats
-import net.liftweb.json.Serialization
-import net.liftweb.json.Serialization.read
-import net.liftweb.json.Serialization.write
-import net.liftweb.json.ShortTypeHints
-import net.liftweb.json.parse
-import net.liftweb.json.pretty
-import net.liftweb.json.render
-import net.liftweb.json.JsonAST.JField
-import net.liftweb.json.JsonAST.JString
-import scala.text.{ Document, DocText }
+import net.liftweb.json.MappingException
+import org.opencv.features2d.DMatch
+import net.liftweb.json.JsonAST.JObject
 import net.liftweb.json.JsonAST.JValue
+import net.liftweb.json.TypeInfo
+import net.liftweb.json.JsonAST.JField
+import net.liftweb.json.JsonAST.JDouble
+import net.liftweb.json.JsonAST.JString
+import net.liftweb.json.JsonAST.JInt
+import net.liftweb.json.Serialization
+import net.liftweb.json.ShortTypeHints
+import spray.json.DefaultJsonProtocol
+
+import spray.json.JsObject
+import spray.json.RootJsonFormat
+import spray.json.JsValue
+
+import util._
+
+import spray.json._
 
 ///////////////////////////////////////////////////////////
 
-trait Detector extends JSONSerializable {
+trait Detector extends HasOriginal with JSONSerializable {
   def detect: Detector.DetectorAction
 }
 
 object Detector {
-  val instances: Seq[Class[_]] = nebula.TODO //List(classOf[FASTDetector], classOf[BRISKDetector])
-
   type DetectorAction = BufferedImage => Seq[KeyPoint]
+}
+
+///////////////////////////////////////////////////////////
+
+object OpenCVDetectorType extends Enumeration {
+  type OpenCVDetectorType = Value
+  val Dense, FAST, BRISK = Value
+}
+
+import OpenCVDetectorType._
+
+case class OpenCVDetector(
+  detectorType: OpenCVDetectorType,
+  maxKeyPointsOption: Option[Int])
+
+object OpenCVDetector {
+  //  val instances = List(
+  //    classOf[OpenCVDenseDetector],
+  //    classOf[OpenCVFASTDetector],
+  //    classOf[OpenCVBRISKDetector])
 
   implicit def implicitOpenCVDetector(self: OpenCVDetector): Detector =
     new Detector {
-      def detect = (image: BufferedImage) => {
+      override def detect = (image: BufferedImage) => {
         val detectorType = self.detectorType match {
-          case OpenCVDenseDetector => FeatureDetector.DENSE
-          case OpenCVFASTDetector => FeatureDetector.FAST
-          case OpenCVBRISKDetector => FeatureDetector.BRISK
+          case Dense => FeatureDetector.DENSE
+          case FAST => FeatureDetector.FAST
+          case BRISK => FeatureDetector.BRISK
         }
 
         val matImage = OpenCVUtil.bufferedImageToMat(image)
@@ -58,20 +74,45 @@ object Detector {
         else sorted
       }
 
-      def json = JSONUtil.toJSON(self)
+      override def original = self
+
+      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
 ///////////////////////////////////////////////////////////
 
-sealed trait OpenCVDetectorType
+object DetectorJsonProtocol extends DefaultJsonProtocol {
+  implicit object OpenCVDetectorTypeJsonFormat extends EnumerationJsonFormat[OpenCVDetectorType] {
+    override val expectedType = "OpenCVDetectorType"
 
-object OpenCVDenseDetector extends OpenCVDetectorType
+    override val deserializeMapping = Map(
+      "Dense" -> Dense,
+      "FAST" -> FAST,
+      "BRISK" -> BRISK)
+  }
 
-object OpenCVFASTDetector extends OpenCVDetectorType
+  implicit def implicitAddClassName[A](self: RootJsonFormat[A]) = new {
+    def addClassInfo(scalaClass: String): RootJsonFormat[A] = new RootJsonFormat[A] {
+      override def write(e: A) = {
+        val fields = self.write(e).asJsObject.fields
+        assert(!fields.contains("scalaClass"))
+        JsObject(fields + ("scalaClass" -> JsString(scalaClass)))
+      }
+      override def read(value: JsValue) = self.read(value)
+    }
+  }
 
-object OpenCVBRISKDetector extends OpenCVDetectorType
+  implicit val openCVDetectorFormat = 
+    jsonFormat2(OpenCVDetector.apply).addClassInfo("OpenCVDetector")
 
-case class OpenCVDetector(
-  detectorType: OpenCVDetectorType,
-  maxKeyPointsOption: Option[Int])
+    implicit object DetectorJsonFormat extends RootJsonFormat[Detector] {
+      override def write(self: Detector) = self.original match {
+        case original: OpenCVDetector =>  original.toJson
+      }
+      override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+        case JsString("OpenCVDetector") => value.convertTo[OpenCVDetector]
+        case _ => throw new DeserializationException("Detector expected")
+      } 
+    }
+}
