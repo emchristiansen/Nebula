@@ -25,6 +25,14 @@ import nebula._
 import net.liftweb.json.JsonAST.JField
 import net.liftweb.json.JsonAST.JObject
 
+import DetectorJsonProtocol._
+import ExtractorJsonProtocol._
+import MatcherJsonProtocol._
+import ExperimentJsonProtocol._
+import ExperimentResultsJsonProtocol._
+
+import spray.json._
+
 ///////////////////////////////////////////////////////////
 
 case class WideBaselineExperiment(
@@ -35,11 +43,6 @@ case class WideBaselineExperiment(
   matcher: Matcher)
 
 object WideBaselineExperiment {
-  //  private val original = implicitly[Symbol => { def toString: String }]
-  //  private implicit def implicitSymbolToString(self: Symbol) = new {
-  //    override def toString = original(self).toString.tail
-  //  }
-
   implicit def implicitHasGroundTruth(self: WideBaselineExperiment): HasGroundTruth[Homography] =
     new HasGroundTruth[Homography] {
       override def groundTruth = {
@@ -61,35 +64,21 @@ object WideBaselineExperiment {
         ("E", JSONUtil.abbreviate(self.extractor)),
         ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
-
-      //      override def json = {
-      //        val initial = JSONUtil.toJSON(self, Nil)
-      //        
-      //        def update(jField: JField): JField = jField match {
-      //          case JField("detector", _) => JField("detector", self.detector.json)
-      //          case JField("extractor", _) => JField("extractor", self.extractor.json)
-      //          case JField("matcher", _) => JField("matcher", self.matcher.json)
-      //          case x => x
-      //        }
-      //        
-      //        val JObject(list) = initial
-      //        JObject(list.map(update))
-      //      }
     }
 
   implicit def implicitImagePairLike(self: WideBaselineExperiment): HasImagePair =
     new HasImagePair {
       override def leftImage = {
         val file = Global.run[RuntimeConfig].projectChildPath(
-            "data/oxfordImages/%s/images/img1.bmp".format(
-                self.imageClass))
+          "data/oxfordImages/%s/images/img1.bmp".format(
+            self.imageClass))
         ImageIO.read(file)
       }
       override def rightImage = {
         val file = Global.run[RuntimeConfig].projectChildPath(
-            "data/oxfordImages/%s/images/img%s.bmp".format(
-                self.imageClass, 
-                self.otherImage))
+          "data/oxfordImages/%s/images/img%s.bmp".format(
+            self.imageClass,
+            self.otherImage))
         ImageIO.read(file)
       }
     }
@@ -109,7 +98,8 @@ object WideBaselineExperimentResults {
     if (noResults.alreadyRun && Global.run[RuntimeConfig].skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
-      IO.interpretFile[WideBaselineExperimentResults](file)
+      val jsonString = org.apache.commons.io.FileUtils.readFileToString(file)
+      jsonString.asJson.convertTo[WideBaselineExperimentResults]
     } else run(experiment)
   }
 
@@ -151,7 +141,29 @@ object WideBaselineExperimentResults {
       override def experiment = self.experiment
       override def save = {
         println("Writing to %s".format(self.path))
-        IO.dumpSourceToFile(self, self.path)
+        // TODO
+        val json = wideBaselineExperimentResults.write(self)
+        org.apache.commons.io.FileUtils.writeStringToFile(self.path, json.prettyPrint)
       }
+      override def original = self
     }
 }
+
+///////////////////////////////////////////////////////////
+
+object WideBaselineExperimentSummary {
+  implicit def implicitWideBaselineExperimentResults(self: WideBaselineExperimentResults) =
+    new ExperimentSummary {
+      def original = self
+      def results = self
+      def summaryNumbers = Map(
+        "recognitionRate" -> SummaryUtil.recognitionRate(self.dmatches))
+    }
+}
+
+
+
+
+
+
+

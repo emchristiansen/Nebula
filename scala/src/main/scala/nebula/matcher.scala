@@ -260,4 +260,13 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
     }
     override def read(value: JsValue) = value.convertTo[MatcherType.MatcherType]
   }
+  
+//      override def read(value: JsValue) =
+//      value.asJsObject.getFields("matcherType", "scalaClass") match {
+//        case Seq(JsString(matcherType), JsString("MatcherType")) => {
+//          val asdf = JsString(matcherType)
+//          asdf.convertTo[MatcherType.MatcherType]
+//        }
+//        case _ => throw new DeserializationException("Matcher expected")
+//      }
 }

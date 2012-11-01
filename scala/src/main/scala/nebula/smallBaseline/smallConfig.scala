@@ -4,12 +4,17 @@ import java.awt.image.BufferedImage
 
 import scala.Option.option2Iterable
 
-import org.opencv.features2d.{DMatch, KeyPoint}
+import org.opencv.features2d.{ DMatch, KeyPoint }
 
 import breeze.linalg.DenseMatrix
-import nebula.{Experiment, ExperimentResults, Extractor, Global, HasEstimate, HasGroundTruth, HasImagePair, Matcher, RuntimeConfig}
-import nebula.smallBaseline.FlowField.{addL2Distance, implicitDenseMatrix}
-import nebula.util.{ExperimentIO, IO, JSONUtil}
+import nebula.{ Experiment, ExperimentResults, Extractor, Global, HasEstimate, HasGroundTruth, HasImagePair, Matcher, RuntimeConfig }
+import nebula.smallBaseline.FlowField.{ addL2Distance, implicitDenseMatrix }
+import nebula.util.{ ExperimentIO, IO, JSONUtil }
+
+import nebula._
+
+import ExtractorJsonProtocol._
+import MatcherJsonProtocol._
 
 ///////////////////////////////////////////////////////////
 
@@ -29,12 +34,12 @@ object SmallBaselineExperiment {
         ("E", JSONUtil.abbreviate(self.extractor)),
         ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
-      
-//      override def json = {
-//        val json = JSONUtil.toJSON(self, Nil)
-//        println(json)
-//        sys.error("TODO")
-//      }      
+
+      //      override def json = {
+      //        val json = JSONUtil.toJSON(self, Nil)
+      //        println(json)
+      //        sys.error("TODO")
+      //      }      
     }
 
   implicit def implicitImagePairLike(self: SmallBaselineExperiment): HasImagePair with HasGroundTruth[FlowField] =
@@ -52,7 +57,7 @@ object SmallBaselineExperiment {
     rightImage: BufferedImage): FlowField = {
     // TODO: Make parameter
     val numSamples = 100
-    
+
     val leftKeyPoints = {
       val all = for (
         y <- 0 until leftImage.getHeight;
@@ -158,9 +163,9 @@ object SmallBaselineExperimentResults {
         y <- 0 until zeros.rows;
         x <- 0 until zeros.cols
       ) yield (x, y)
-      
+
       for ((x, y) <- (new scala.util.Random).shuffle(xys).take(100)) zeros(y, x) = Some(FlowVector(0, 0))
-      
+
       println("l2 distance from zeros is: %.4f".format(
         FlowField(zeros).l2Distance(self.groundTruth)))
     }
@@ -174,5 +179,6 @@ object SmallBaselineExperimentResults {
     new ExperimentResults {
       override def experiment = self.experiment
       override def save = sys.error("TODO")
+      override def original = self
     }
 }

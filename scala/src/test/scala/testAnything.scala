@@ -16,6 +16,9 @@ import spray.json.JsValue
 import spray.json.JsNumber
 import spray.json.JsString
 
+import wideBaseline._
+import smallBaseline._
+
 import spray.json._
 
 class TestAnything extends FunSuite {
@@ -51,8 +54,8 @@ class TestAnything extends FunSuite {
     object WeekDay extends Enumeration {
       type WeekDay = Value
       val Mon, Tue, Wed, Thu, Fri, Sat, Sun = Value
-    }    
-    
+    }
+
     object MyJsonProtocol extends DefaultJsonProtocol {
       implicit object ColorJsonFormat extends RootJsonFormat[Color] {
         def write(c: Color) =
@@ -64,15 +67,15 @@ class TestAnything extends FunSuite {
           case _ => TODO
         }
       }
-      
+
       implicit object WeekDayJsonFormat extends RootJsonFormat[WeekDay.WeekDay] {
         import WeekDay._
-        
+
         def write(w: WeekDay) = w match {
           case Mon => JsString("Mon")
           case _ => TODO
         }
-        
+
         def read(value: JsValue) = value match {
           case JsString("Mon") => WeekDay.Mon
           case _ => TODO
@@ -91,28 +94,50 @@ class TestAnything extends FunSuite {
     println(WeekDay.Mon.toJson.convertTo[WeekDay.WeekDay])
 
     val color = json.convertTo[Color]
-    
+
     import OpenCVDetectorType._
     import DetectorJsonProtocol._
-    
+
     println(OpenCVDetector(Dense, Some(100)).toJson.prettyPrint)
-    
+
     val json2 = OpenCVDetector(Dense, Some(100)).toJson
     println(json2)
     println(json2.convertTo[OpenCVDetector])
-    
+
     import PatchExtractorType._
     import ExtractorJsonProtocol._
     import MatcherJsonProtocol._
-    
+    import ExperimentJsonProtocol._
+
     val json3 = PatchExtractor(Raw, true, false, 8, 4, "sRGB").toJson
     println(json3)
     println(json3.convertTo[Extractor])
-    
+
     val json4 = MatcherType.L1.toJson
     println(json4)
     println(json4.convertTo[MatcherType.MatcherType])
+
+    val wide = WideBaselineExperiment(
+      "bikes",
+      4,
+      OpenCVDetector(BRISK, Some(100)),
+      BRISKExtractor(BRISKExtractorType.Rank, false, true),
+      MatcherType.L0)
     
-//    val asdf = json2.convertTo[Detector]
+    val json5 = wide.toJson
+
+    println(json5.prettyPrint)
+    println(json5.convertTo[Experiment])
+    
+    val detector = OpenCVDetector(Dense, Some(100))
+    val extractor = PatchExtractor(Raw, true, false, 8, 4, "sRGB")
+    val matcher = MatcherType.L1
+    
+    println(JSONUtil.abbreviate(detector))
+    println(JSONUtil.abbreviate(extractor))
+    println(JSONUtil.abbreviate(matcher))
+    println(wide.parameters)
+      
+    //    val asdf = json2.convertTo[Detector]
   }
 }

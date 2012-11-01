@@ -18,15 +18,15 @@ import org.opencv.features2d.DMatch
 
 // TODO: These enumerated types probably aren't necessary since these won't
 // be serialized with JSON.
-sealed trait ExperimentSummary
-
-case class ExperimentSummaryDouble(
-  name: String,
-  value: Double) extends ExperimentSummary
-
-case class ExperimentSummaryBufferedImage(
-  name: String,
-  value: BufferedImage) extends ExperimentSummary
+//sealed trait ExperimentSummary
+//
+//case class ExperimentSummaryDouble(
+//  name: String,
+//  value: Double) extends ExperimentSummary
+//
+//case class ExperimentSummaryBufferedImage(
+//  name: String,
+//  value: BufferedImage) extends ExperimentSummary
 
 ///////////////////////////////////////////////////////////////////////////////  
   

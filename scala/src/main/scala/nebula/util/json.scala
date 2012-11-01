@@ -44,6 +44,26 @@ object JSONUtil {
       }
     }
 
+  //      new RootJsonFormat[A] {
+  //      override def write(e: A) = JsObject(
+  //        "matcherType" -> JsString(e.toString),
+  //        "scalaClass" -> JsString(scalaClass))
+  //
+  //      // TODO: Duplication
+  //      override def read(value: JsValue) = {
+  //        if (value.asJsObject.fields("scalaClass") != scalaClass)
+  //          throw new DeserializationException("%s expected".format(scalaClass))
+  //        else {
+  //          value.asJsObject.fields("matcherType") match {
+  //            case JsString(string) => deserializeMapping.getOrElse(
+  //              string,
+  //              throw new DeserializationException("%s expected".format(scalaClass)))
+  //            case _ => throw new DeserializationException("%s expected".format(scalaClass))
+  //          }
+  //        }
+  //      }
+  //    }
+
   implicit def implicitAddClassName[A](self: RootJsonFormat[A]) = new {
     def addClassInfo(scalaClass: String): RootJsonFormat[A] = new RootJsonFormat[A] {
       override def write(e: A) = {
@@ -66,50 +86,83 @@ object JSONUtil {
     parse(write(caseClass))
   }
 
-  def caseClassToStringMap[A <: AnyRef](caseClass: A): Map[String, String] = {
-    // Implementation uses lift-json for introspection, which is
-    // admittedly roundabout. It is also likely brittle; I'm guessing it will
-    // fail for nested structures.
-    // TODO: Use introspection directly instead of lift-json.
-    implicit val formats = Serialization.formats(ShortTypeHints(List(caseClass.getClass)))
-
-    val string = write(caseClass)
-    val json = parse(string)
-
-    def documentToString(document: Document): String = document match {
-      case DocText(string) => string.replace("\"", "")
-      case _ => throw new Exception
+  def caseClassToStringMap[A: RootJsonFormat](caseClass: A): Map[String, String] = {
+    val json = caseClass.toJson
+    val fields = json.asJsObject.fields
+    fields.mapValues {
+      case JsString(string) => string
+      case other => other.toString
     }
-
-    val JObject(jObject) = json
-    val jStrings = jObject.map({ case JField(key, value) => JField(key, JString(documentToString(render(value)))) })
-    val jsonString = JObject(jStrings)
-
-    jsonString.extract[Map[String, String]]
   }
 
-  def abbreviate[A <: AnyRef](caseClass: A): String = {
-    // For a case class like
-    // > case class AwesomeDetector(theFirstParameter: String, second: Int)
-    // and 
-    // > val ad = AwesomeDetector("helloWorld", 42)
-    // produces an abbreviation like
-    // "AwesomeDetector-TFP-helloWorld-S-42".
-    val map = JSONUtil.caseClassToStringMap(caseClass)
+  def abbreviate[A: RootJsonFormat](caseClass: A): String = {
+    caseClass.toJson match {
+      case JsString(string) => string
+      case _ => {
+        val map = JSONUtil.caseClassToStringMap(caseClass)
 
-    def camelCaseToAbbreviation(camelCase: String): String = {
-      // Assume camelCase for parameter names. Otherwise
-      // the abbreviations will be weird.
-      // Example: "myCoolValue" becomes "MCV".
-      camelCase.head.toUpper + camelCase.filter(_.isUpper)
+        def camelCaseToAbbreviation(camelCase: String): String = {
+          // Assume camelCase for parameter names. Otherwise
+          // the abbreviations will be weird.
+          // Example: "myCoolValue" becomes "MCV".
+          camelCase.head.toUpper + camelCase.filter(_.isUpper)
+        }
+
+        val parameters = map.filterKeys(_ != "scalaClass").toList.sortBy(_._1)
+        val parameterNames = parameters.map(p => camelCaseToAbbreviation(p._1))
+        val parameterValues = parameters.map(p => p._2)
+
+        val parameterParts = List(parameterNames, parameterValues).transpose.flatten
+        val parts = map("scalaClass") :: parameterParts
+        parts.mkString("-")
+      }
     }
-
-    val parameters = map.filterKeys(_ != "jsonClass").toList.sortBy(_._1)
-    val parameterNames = parameters.map(p => camelCaseToAbbreviation(p._1))
-    val parameterValues = parameters.map(p => p._2)
-
-    val parameterParts = List(parameterNames, parameterValues).transpose.flatten
-    val parts = map("jsonClass") :: parameterParts
-    parts.mkString("-")
   }
+
+  //  def caseClassToStringMap[A <: AnyRef](caseClass: A): Map[String, String] = {
+  //    // Implementation uses lift-json for introspection, which is
+  //    // admittedly roundabout. It is also likely brittle; I'm guessing it will
+  //    // fail for nested structures.
+  //    // TODO: Use introspection directly instead of lift-json.
+  //    implicit val formats = Serialization.formats(ShortTypeHints(List(caseClass.getClass)))
+  //
+  //    val string = write(caseClass)
+  //    val json = parse(string)
+  //
+  //    def documentToString(document: Document): String = document match {
+  //      case DocText(string) => string.replace("\"", "")
+  //      case _ => throw new Exception
+  //    }
+  //
+  //    val JObject(jObject) = json
+  //    val jStrings = jObject.map({ case JField(key, value) => JField(key, JString(documentToString(render(value)))) })
+  //    val jsonString = JObject(jStrings)
+  //
+  //    jsonString.extract[Map[String, String]]
+  //  }
+  //
+  //  def abbreviate[A <: AnyRef](caseClass: A): String = {
+  //    // For a case class like
+  //    // > case class AwesomeDetector(theFirstParameter: String, second: Int)
+  //    // and 
+  //    // > val ad = AwesomeDetector("helloWorld", 42)
+  //    // produces an abbreviation like
+  //    // "AwesomeDetector-TFP-helloWorld-S-42".
+  //    val map = JSONUtil.caseClassToStringMap(caseClass)
+  //
+  //    def camelCaseToAbbreviation(camelCase: String): String = {
+  //      // Assume camelCase for parameter names. Otherwise
+  //      // the abbreviations will be weird.
+  //      // Example: "myCoolValue" becomes "MCV".
+  //      camelCase.head.toUpper + camelCase.filter(_.isUpper)
+  //    }
+  //
+  //    val parameters = map.filterKeys(_ != "jsonClass").toList.sortBy(_._1)
+  //    val parameterNames = parameters.map(p => camelCaseToAbbreviation(p._1))
+  //    val parameterValues = parameters.map(p => p._2)
+  //
+  //    val parameterParts = List(parameterNames, parameterValues).transpose.flatten
+  //    val parts = map("jsonClass") :: parameterParts
+  //    parts.mkString("-")
+  //  }
 }

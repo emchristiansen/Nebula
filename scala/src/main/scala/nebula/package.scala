@@ -27,8 +27,6 @@ package object nebula {
       val value: %s = { %s };
       value""".format(implicitly[Manifest[A]], expression)
 
-    println(source)
-
     (new Eval).apply[A](source)
   }
 }

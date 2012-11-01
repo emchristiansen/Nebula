@@ -16,6 +16,16 @@ import org.opencv.features2d.DMatch
 
 ///////////////////////////////////////////////////////////////////////////////
 
+trait ExperimentSummary extends HasOriginal {
+  def results: ExperimentResults
+  
+  def summaryNumbers: Map[String, Double]
+}
+
+object ExperimentSummary {
+  
+}
+
 object SummaryUtil {
   def recognitionRate(dmatches: Seq[DMatch]): Double = {
     // The base image feature index is |queryIdx|, and the other 

@@ -22,6 +22,9 @@ import org.opencv.highgui.Highgui.imread
 import javax.imageio.ImageIO
 import net.liftweb.json.{Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo}
 
+import spray.json._
+import JSONUtil._
+
 ///////////////////////////////////////////////////////////
 
 object KeyPointUtil {
@@ -152,5 +155,22 @@ class DMatchSerializer extends Serializer[DMatch] {
           JField("queryIdx", JInt(x.queryIdx)) ::
           JField("trainIdx", JInt(x.trainIdx)) ::
           JField("distance", JDouble(x.distance)) :: Nil)
+  }
+}
+
+///////////////////////////////////////////////////////////
+
+object DMatchJsonProtocol extends DefaultJsonProtocol {
+  implicit object DMatchJsonProtocol extends RootJsonFormat[DMatch] {
+    override def write(self: DMatch) = JsObject(
+      "queryIdx" -> JsNumber(self.queryIdx),
+      "trainIdx" -> JsNumber(self.trainIdx),
+      "distance" -> JsNumber(self.distance),
+      "scalaClass" -> JsString("DMatch"))
+    override def read(value: JsValue) = 
+      value.asJsObject.getFields("queryIdx", "trainIdx", "distance", "scalaClass") match {
+      case Seq(JsNumber(queryIdx), JsNumber(trainIdx), JsNumber(distance), JsString(scalaClass)) =>
+        new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
+    }
   }
 }
