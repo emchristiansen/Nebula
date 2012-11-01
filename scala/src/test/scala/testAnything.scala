@@ -98,6 +98,21 @@ class TestAnything extends FunSuite {
     println(OpenCVDetector(Dense, Some(100)).toJson.prettyPrint)
     
     val json2 = OpenCVDetector(Dense, Some(100)).toJson
-    println(json2.convertTo[Detector])
+    println(json2)
+    println(json2.convertTo[OpenCVDetector])
+    
+    import PatchExtractorType._
+    import ExtractorJsonProtocol._
+    import MatcherJsonProtocol._
+    
+    val json3 = PatchExtractor(Raw, true, false, 8, 4, "sRGB").toJson
+    println(json3)
+    println(json3.convertTo[Extractor])
+    
+    val json4 = MatcherType.L1.toJson
+    println(json4)
+    println(json4.convertTo[MatcherType.MatcherType])
+    
+//    val asdf = json2.convertTo[Detector]
   }
 }

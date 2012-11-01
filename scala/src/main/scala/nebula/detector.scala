@@ -26,6 +26,7 @@ import spray.json.JsValue
 import util._
 
 import spray.json._
+import JSONUtil._
 
 ///////////////////////////////////////////////////////////
 
@@ -44,10 +45,8 @@ object OpenCVDetectorType extends Enumeration {
   val Dense, FAST, BRISK = Value
 }
 
-import OpenCVDetectorType._
-
 case class OpenCVDetector(
-  detectorType: OpenCVDetectorType,
+  detectorType: OpenCVDetectorType.OpenCVDetectorType,
   maxKeyPointsOption: Option[Int])
 
 object OpenCVDetector {
@@ -56,6 +55,8 @@ object OpenCVDetector {
   //    classOf[OpenCVFASTDetector],
   //    classOf[OpenCVBRISKDetector])
 
+  import OpenCVDetectorType._
+  
   implicit def implicitOpenCVDetector(self: OpenCVDetector): Detector =
     new Detector {
       override def detect = (image: BufferedImage) => {
@@ -83,36 +84,25 @@ object OpenCVDetector {
 ///////////////////////////////////////////////////////////
 
 object DetectorJsonProtocol extends DefaultJsonProtocol {
-  implicit object OpenCVDetectorTypeJsonFormat extends EnumerationJsonFormat[OpenCVDetectorType] {
-    override val expectedType = "OpenCVDetectorType"
+  implicit val openCVDetectorType = enumeration(
+    "OpenCVDetectorType",
+    Map(
+      "Dense" -> OpenCVDetectorType.Dense,
+      "FAST" -> OpenCVDetectorType.FAST,
+      "BRISK" -> OpenCVDetectorType.BRISK))
 
-    override val deserializeMapping = Map(
-      "Dense" -> Dense,
-      "FAST" -> FAST,
-      "BRISK" -> BRISK)
-  }
-
-  implicit def implicitAddClassName[A](self: RootJsonFormat[A]) = new {
-    def addClassInfo(scalaClass: String): RootJsonFormat[A] = new RootJsonFormat[A] {
-      override def write(e: A) = {
-        val fields = self.write(e).asJsObject.fields
-        assert(!fields.contains("scalaClass"))
-        JsObject(fields + ("scalaClass" -> JsString(scalaClass)))
-      }
-      override def read(value: JsValue) = self.read(value)
-    }
-  }
-
-  implicit val openCVDetectorFormat = 
+  implicit val openCVDetector =
     jsonFormat2(OpenCVDetector.apply).addClassInfo("OpenCVDetector")
 
-    implicit object DetectorJsonFormat extends RootJsonFormat[Detector] {
-      override def write(self: Detector) = self.original match {
-        case original: OpenCVDetector =>  original.toJson
-      }
-      override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-        case JsString("OpenCVDetector") => value.convertTo[OpenCVDetector]
-        case _ => throw new DeserializationException("Detector expected")
-      } 
+  /////////////////////////////////////////////////////////
+
+  implicit object DetectorJsonFormat extends RootJsonFormat[Detector] {
+    override def write(self: Detector) = self.original match {
+      case original: OpenCVDetector => original.toJson
     }
+    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+      case JsString("OpenCVDetector") => value.convertTo[OpenCVDetector]
+      case _ => throw new DeserializationException("Detector expected")
+    }
+  }
 }

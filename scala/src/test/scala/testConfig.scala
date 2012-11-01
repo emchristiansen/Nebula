@@ -12,6 +12,8 @@ import wideBaseline._
 import com.twitter.util.Eval
 
 import OpenCVDetectorType._
+import OpenCVExtractorType._
+import PatchExtractorType._
 
 class TestConfig extends FunSuite {
   test("toString on WideBaselineExperiment should stay the same when it's upcast") {
@@ -20,13 +22,13 @@ class TestConfig extends FunSuite {
       2,
       OpenCVDetector(FAST, Some(100)),
       PatchExtractor(
-        SortExtractor(),
+        Sort,
         false,
         false,
         8,
         5,
         "Gray"),
-      L1Matcher())
+      MatcherType.L1)
     val wideString = wide.toString
 
     val experiment: Experiment = wide

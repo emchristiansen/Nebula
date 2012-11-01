@@ -13,6 +13,7 @@ import nebula.wideBaseline.WideBaselineExperiment
 import nebula.util.JSONUtil
 
 import OpenCVDetectorType._
+import PatchExtractorType._
 
 case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
@@ -34,8 +35,8 @@ class TestMisc extends FunSuite {
       "bikes",
       2,
       OpenCVDetector(FAST, Some(100)),
-      PatchExtractor(SortExtractor(), false, false, 8, 5, "Gray"),
-      L0Matcher())
+      PatchExtractor(Sort, false, false, 8, 5, "Gray"),
+      MatcherType.L0)
 
     val experiment2 = experiment1.copy(otherImage = 4)
     // val title = SummaryUtil.tableTitle(Seq(experiment1, experiment2))

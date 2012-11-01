@@ -1,5 +1,7 @@
 package nebula.util
 
+import nebula._
+
 import net.liftweb.json.JsonAST.JObject
 import net.liftweb.json.Serialization
 import net.liftweb.json.Formats
@@ -22,26 +24,41 @@ import spray.json._
 
 ///////////////////////////////////////////////////////////
 
-trait EnumerationJsonFormat[A] extends RootJsonFormat[A] {
-  override def write(e: A) = JsString(e.toString)
-
-  val expectedType: String
-  val deserializeMapping: Map[String, A]
-
-  // TODO: Duplication
-  override def read(value: JsValue) = value match {
-    case JsString(string) => deserializeMapping.getOrElse(
-      string,
-      throw new DeserializationException("%s expected".format(expectedType)))
-    case _ => throw new DeserializationException("%s expected".format(expectedType))
-  }
-}
-
 trait JSONSerializable {
   def json: JValue
 }
 
 object JSONUtil {
+  def enumeration[A](scalaClass: String, deserializeMapping: Map[String, A]): RootJsonFormat[A] =
+    new RootJsonFormat[A] {
+      override def write(e: A) = JsString(e.toString)
+
+      // TODO: Duplication
+      override def read(value: JsValue) = {
+        value match {
+          case JsString(string) => deserializeMapping.getOrElse(
+            string,
+            throw new DeserializationException("%s expected".format(scalaClass)))
+          case _ => throw new DeserializationException("%s expected".format(scalaClass))
+        }
+      }
+    }
+
+  implicit def implicitAddClassName[A](self: RootJsonFormat[A]) = new {
+    def addClassInfo(scalaClass: String): RootJsonFormat[A] = new RootJsonFormat[A] {
+      override def write(e: A) = {
+        val fields = self.write(e).asJsObject.fields
+        assert(!fields.contains("scalaClass"))
+        JsObject(fields + ("scalaClass" -> JsString(scalaClass)))
+      }
+      override def read(value: JsValue) = {
+        val fields = value.asJsObject.fields
+        assert(fields.contains("scalaClass"))
+        self.read(JsObject(fields - "scalaClass"))
+      }
+    }
+  }
+
   def toJSON[A <: AnyRef](caseClass: A, extraInstances: List[Class[_]]): JValue = {
     // This should work for non-nested case classes.
     implicit val formats = Serialization.formats(

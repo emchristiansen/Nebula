@@ -12,6 +12,9 @@ import util._
 import util.imageProcessing._
 import wideBaseline._
 
+import spray.json._
+import JSONUtil._
+
 ///////////////////////////////////////////////////////////
 
 sealed trait Matcher extends HasOriginal with JSONSerializable {
@@ -187,37 +190,20 @@ import Matcher._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait MatcherType
+object MatcherType extends Enumeration {
+  type MatcherType = Value
+  val L0, L1, L1Interval, L2, KendallTau, Cayley, CayleyRotate4, RobustCayley, GeneralizedL0 = Value
 
-case class L0Matcher() extends MatcherType
-
-case class L1Matcher() extends MatcherType
-
-case class L1IntervalMatcher() extends MatcherType
-
-case class L2Matcher() extends MatcherType
-
-case class KendallTauMatcher() extends MatcherType
-
-case class CayleyMatcher() extends MatcherType
-
-case class CayleyRotate4Matcher() extends MatcherType
-
-case class RobustCayleyMatcher() extends MatcherType
-
-case class GeneralizedL0Matcher() extends MatcherType
-
-object MatcherType {
-  val instances = List(
-    classOf[L0Matcher],
-    classOf[L1Matcher],
-    classOf[L1IntervalMatcher],
-    classOf[L2Matcher],
-    classOf[KendallTauMatcher],
-    classOf[CayleyMatcher],
-    classOf[CayleyRotate4Matcher],
-    classOf[RobustCayleyMatcher],
-    classOf[GeneralizedL0Matcher])
+  //  val instances = List(
+  //    classOf[L0Matcher],
+  //    classOf[L1Matcher],
+  //    classOf[L1IntervalMatcher],
+  //    classOf[L2Matcher],
+  //    classOf[KendallTauMatcher],
+  //    classOf[CayleyMatcher],
+  //    classOf[CayleyRotate4Matcher],
+  //    classOf[RobustCayleyMatcher],
+  //    classOf[GeneralizedL0Matcher])
 
   implicit def implicitMatcher(self: MatcherType): Matcher = new SingleMatcher {
     override def matchSingle = {
@@ -232,20 +218,46 @@ object MatcherType {
         }
 
       self match {
-        case _: L0Matcher => cast[Any](l0)
-        case _: L1Matcher => cast[Double](l1)
-        case _: L1IntervalMatcher => cast[Int](l1IntervalDistance)
-        case _: L2Matcher => cast[Double](l2)
-        case _: KendallTauMatcher => sort(kendallTau)
-        case _: CayleyMatcher => sort(cayley)
-        case _: CayleyRotate4Matcher => sort(cayleyRotate4)
-        case _: RobustCayleyMatcher => cast[Int](robustCayley)
-        case _: GeneralizedL0Matcher => cast[Int](generalizedL0)
+        case L0 => cast[Any](l0)
+        case L1 => cast[Double](l1)
+        case L1Interval => cast[Int](l1IntervalDistance)
+        case L2 => cast[Double](l2)
+        case KendallTau => sort(kendallTau)
+        case Cayley => sort(cayley)
+        case CayleyRotate4 => sort(cayleyRotate4)
+        case RobustCayley => cast[Int](robustCayley)
+        case GeneralizedL0 => cast[Int](generalizedL0)
       }
     }
 
     override def original = self
 
     override def json = JSONUtil.toJSON(self, Nil)
+  }
+}
+
+///////////////////////////////////////////////////////////
+
+object MatcherJsonProtocol extends DefaultJsonProtocol {
+  implicit val matcherType = enumeration(
+    "MatcherType",
+    Map(
+      "L0" -> MatcherType.L0,
+      "L1" -> MatcherType.L1,
+      "L1Interval" -> MatcherType.L1Interval,
+      "L2" -> MatcherType.L2,
+      "KendallTau" -> MatcherType.KendallTau,
+      "Cayley" -> MatcherType.Cayley,
+      "CayleyRotate4" -> MatcherType.CayleyRotate4,
+      "RobustCayley" -> MatcherType.RobustCayley,
+      "GeneralizedL0" -> MatcherType.GeneralizedL0).toMap)
+
+  /////////////////////////////////////////////////////////
+
+  implicit object MatcherJsonFormat extends RootJsonFormat[Matcher] {
+    override def write(self: Matcher) = self.original match {
+      case original: MatcherType.MatcherType => original.toJson
+    }
+    override def read(value: JsValue) = value.convertTo[MatcherType.MatcherType]
   }
 }

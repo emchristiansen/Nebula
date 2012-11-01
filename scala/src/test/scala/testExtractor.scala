@@ -42,7 +42,7 @@ class TestExtractor extends FunSuite {
 
     val rightKeyPoint = KeyPointUtil.transform(homography)(keyPoint)
 
-    val extractor = BRISKExtractor(BRISKRawExtractor(), true, true)
+    val extractor = BRISKExtractor(BRISKExtractorType.Raw, true, true)
     val leftDescriptor = extractor.extractSingle(image, keyPoint)
     val rightDescriptor = extractor.extractSingle(image, rightKeyPoint)
 

@@ -12,6 +12,8 @@ import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import nebula.smallBaseline.SmallBaselineExperiment
 
+import PatchExtractorType._
+
 class TestSmallConfig extends FunSuite {
   test("for a very simple image pair the small baseline matchers should be perfect") {
     // The easy image is all black with random pixels in the center.
@@ -44,13 +46,13 @@ class TestSmallConfig extends FunSuite {
     val estimatedFlow = SmallBaselineExperiment.estimateFlow(
       2,
       PatchExtractor(
-        RawExtractor(),
+        Raw,
         false,
         false,
         16,
         1,
         "Gray"),
-      L2Matcher(),
+      MatcherType.L2,
       leftImage,
       rightImage)
 

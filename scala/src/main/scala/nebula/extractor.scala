@@ -20,6 +20,9 @@ import util._
 import util.imageProcessing._
 import wideBaseline._
 
+import spray.json._
+import JSONUtil._
+
 ///////////////////////////////////////////////////////////
 
 sealed trait Extractor extends HasOriginal with JSONSerializable {
@@ -132,24 +135,23 @@ import Extractor._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait OpenCVExtractorType
+object OpenCVExtractorType extends Enumeration {
+  type OpenCVExtractorType = Value
+  val BRISK, FREAK, BRIEF, ORB = Value
+}
 
-case class OpenCVBRISKExtractor() extends OpenCVExtractorType
-
-case class OpenCVFREAKExtractor() extends OpenCVExtractorType
-
-case class OpenCVBRIEFExtractor() extends OpenCVExtractorType
-
-case class OpenCVORBExtractor() extends OpenCVExtractorType
+import OpenCVExtractorType.OpenCVExtractorType
 
 case class OpenCVExtractor(extractorType: OpenCVExtractorType)
 
 object OpenCVExtractor {
-  val instances = List(
-    classOf[OpenCVBRISKExtractor],
-    classOf[OpenCVFREAKExtractor],
-    classOf[OpenCVBRIEFExtractor],
-    classOf[OpenCVORBExtractor])
+  //  val instances = List(
+  //    classOf[OpenCVBRISKExtractor],
+  //    classOf[OpenCVFREAKExtractor],
+  //    classOf[OpenCVBRIEFExtractor],
+  //    classOf[OpenCVORBExtractor])
+
+  import OpenCVExtractorType._
 
   implicit def implicitOpenCVExtractor(self: OpenCVExtractor): Extractor =
     new SingleExtractor {
@@ -157,10 +159,10 @@ object OpenCVExtractor {
       // TODO: Make the native OpenCV api less awful.      
       override def extractSingle = {
         val extractorType = self.extractorType match {
-          case _: OpenCVBRISKExtractor => DescriptorExtractor.BRISK
-          case _: OpenCVFREAKExtractor => DescriptorExtractor.FREAK
-          case _: OpenCVBRIEFExtractor => DescriptorExtractor.BRIEF
-          case _: OpenCVORBExtractor => DescriptorExtractor.ORB
+          case BRISK => DescriptorExtractor.BRISK
+          case FREAK => DescriptorExtractor.FREAK
+          case BRIEF => DescriptorExtractor.BRIEF
+          case ORB => DescriptorExtractor.ORB
         }
 
         booleanExtractorFromEnum(extractorType)
@@ -168,25 +170,18 @@ object OpenCVExtractor {
 
       override def original = self
 
-      override def json = JSONUtil.toJSON(self, instances)
+      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
 ///////////////////////////////////////////////////////////
 
-sealed trait PatchExtractorType
+object PatchExtractorType extends Enumeration {
+  type PatchExtractorType = Value
+  val Raw, NormalizeRange, NCC, Sort, Rank, UniformRank = Value
+}
 
-case class RawExtractor() extends PatchExtractorType
-
-case class NormalizeRangeExtractor() extends PatchExtractorType
-
-case class NCCExtractor() extends PatchExtractorType
-
-case class SortExtractor() extends PatchExtractorType
-
-case class RankExtractor() extends PatchExtractorType
-
-case class UniformRankExtractor() extends PatchExtractorType
+import PatchExtractorType.PatchExtractorType
 
 case class PatchExtractor(
   extractorType: PatchExtractorType,
@@ -197,20 +192,22 @@ case class PatchExtractor(
   color: String)
 
 object PatchExtractor {
-  val instances = List(
-    classOf[RawExtractor],
-    classOf[NormalizeRangeExtractor],
-    classOf[NCCExtractor],
-    classOf[SortExtractor],
-    classOf[RankExtractor],
-    classOf[UniformRankExtractor])
+  //  val instances = List(
+  //    classOf[RawExtractor],
+  //    classOf[NormalizeRangeExtractor],
+  //    classOf[NCCExtractor],
+  //    classOf[SortExtractor],
+  //    classOf[RankExtractor],
+  //    classOf[UniformRankExtractor])
+
+  import PatchExtractorType._
 
   implicit def implicitPatchExtractor(self: PatchExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
         val constructor: IndexedSeq[Int] => Descriptor = self.extractorType match {
-          case _: RawExtractor => (raw: IndexedSeq[Int]) => raw
-          case _: NormalizeRangeExtractor => (raw: IndexedSeq[Int]) => {
+          case Raw => (raw: IndexedSeq[Int]) => raw
+          case NormalizeRange => (raw: IndexedSeq[Int]) => {
             val min = raw.min
             val range = raw.max - min
             if (range == 0) raw // Do nothing.
@@ -221,7 +218,7 @@ object PatchExtractor {
               normalized
             }
           }
-          case _: NCCExtractor => (raw: IndexedSeq[Int]) => {
+          case NCC => (raw: IndexedSeq[Int]) => {
             val mean = stats.mean(raw: _*)
             val std = stats.sampleStdDev(raw: _*)
             if (std.abs < 0.001) raw // Don't change it.
@@ -232,13 +229,13 @@ object PatchExtractor {
               normalized
             }
           }
-          case _: SortExtractor => (raw: IndexedSeq[Int]) => {
+          case Sort => (raw: IndexedSeq[Int]) => {
             SortDescriptor.fromUnsorted(raw)
           }
-          case _: RankExtractor => (raw: IndexedSeq[Int]) => {
+          case Rank => (raw: IndexedSeq[Int]) => {
             SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw))
           }
-          case _: UniformRankExtractor => (raw: IndexedSeq[Int]) => {
+          case UniformRank => (raw: IndexedSeq[Int]) => {
             Extractor.uniformRank(raw)
           }
         }
@@ -255,19 +252,18 @@ object PatchExtractor {
 
       override def original = self
 
-      override def json = JSONUtil.toJSON(self, instances)
+      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
 ///////////////////////////////////////////////////////////    
 
-sealed trait BRISKExtractorType
+object BRISKExtractorType extends Enumeration {
+  type BRISKExtractorType = Value
+  val Raw, Order, Rank = Value
+}
 
-case class BRISKRawExtractor() extends BRISKExtractorType
-
-case class BRISKOrderExtractor() extends BRISKExtractorType
-
-case class BRISKRankExtractor() extends BRISKExtractorType
+import BRISKExtractorType.BRISKExtractorType
 
 case class BRISKExtractor(
   extractorType: BRISKExtractorType,
@@ -275,20 +271,22 @@ case class BRISKExtractor(
   normalizeScale: Boolean)
 
 object BRISKExtractor {
-  val instances = List(
-    classOf[BRISKRawExtractor],
-    classOf[BRISKOrderExtractor],
-    classOf[BRISKRankExtractor])  
-  
+  //  val instances = List(
+  //    classOf[BRISKRawExtractor],
+  //    classOf[BRISKOrderExtractor],
+  //    classOf[BRISKRankExtractor])
+
+  import BRISKExtractorType._
+
   implicit def implicitBRISKExtractor(self: BRISKExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
         val constructor: Descriptor => Descriptor = self.extractorType match {
-          case _: BRISKRawExtractor => identity
-          case _: BRISKOrderExtractor => (raw: Descriptor) => {
+          case Raw => identity
+          case Order => (raw: Descriptor) => {
             SortDescriptor.fromUnsorted(raw.values[Int])
           }
-          case _: BRISKRankExtractor => (raw: Descriptor) => {
+          case Rank => (raw: Descriptor) => {
             SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw.values[Int]))
           }
         }
@@ -300,7 +298,7 @@ object BRISKExtractor {
 
       override def original = self
 
-      override def json = JSONUtil.toJSON(self, instances)
+      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -365,4 +363,69 @@ object ELUCIDExtractor {
 
       override def json = JSONUtil.toJSON(self, Nil)
     }
+}
+
+///////////////////////////////////////////////////////////
+
+object ExtractorJsonProtocol extends DefaultJsonProtocol {
+  implicit val openCVExtractorType = enumeration(
+    "OpenCVExtractorType",
+    Map(
+      "BRISK" -> OpenCVExtractorType.BRISK,
+      "FREAK" -> OpenCVExtractorType.FREAK,
+      "BRIEF" -> OpenCVExtractorType.BRIEF,
+      "ORB" -> OpenCVExtractorType.ORB))
+
+  implicit val openCVExtractor =
+    jsonFormat1(OpenCVExtractor.apply).addClassInfo("OpenCVExtractor")
+
+  /////////////////////////////////////////////////////////
+
+  implicit val patchExtractorType = enumeration(
+    "PatchExtractorType",
+    Map(
+      "Raw" -> PatchExtractorType.Raw,
+      "NormalizeRange" -> PatchExtractorType.NormalizeRange,
+      "NCC" -> PatchExtractorType.NCC,
+      "Sort" -> PatchExtractorType.Sort,
+      "Rank" -> PatchExtractorType.Rank,
+      "UniformRank" -> PatchExtractorType.UniformRank))
+
+  implicit val patchExtractor =
+    jsonFormat6(PatchExtractor.apply).addClassInfo("PatchExtractor")
+
+  /////////////////////////////////////////////////////////
+
+  implicit val briskExtractorType = enumeration(
+    "BRISKExtractorType",
+    Map(
+      "Raw" -> BRISKExtractorType.Raw,
+      "Order" -> BRISKExtractorType.Order,
+      "Rank" -> BRISKExtractorType.Rank))
+
+  implicit val briskExtractor =
+    jsonFormat3(BRISKExtractor.apply).addClassInfo("BRISKExtractor")
+
+  /////////////////////////////////////////////////////////
+
+  implicit val elucidExtractor =
+    jsonFormat7(ELUCIDExtractor.apply).addClassInfo("ELUCIDExtractor")
+
+  /////////////////////////////////////////////////////////    
+
+  implicit object ExtractorJsonFormat extends RootJsonFormat[Extractor] {
+    override def write(self: Extractor) = self.original match {
+      case original: OpenCVExtractor => original.toJson
+      case original: PatchExtractor => original.toJson
+      case original: BRISKExtractor => original.toJson
+      case original: ELUCIDExtractor => original.toJson
+    }
+    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+      case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
+      case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
+      case JsString("BRISKExtractor") => value.convertTo[BRISKExtractor]
+      case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
+      case _ => throw new DeserializationException("Extractor expected")
+    }
+  }
 }
