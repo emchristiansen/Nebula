@@ -135,7 +135,7 @@ object WideBaselineExperimentResults {
     results.save
     results
   }
-
+  
   implicit def implicitExperimentResults(self: WideBaselineExperimentResults): ExperimentResults =
     new ExperimentResults {
       override def experiment = self.experiment
@@ -152,13 +152,15 @@ object WideBaselineExperimentResults {
 ///////////////////////////////////////////////////////////
 
 object WideBaselineExperimentSummary {
-  implicit def implicitWideBaselineExperimentResults(self: WideBaselineExperimentResults) =
-    new ExperimentSummary {
+  implicit def implicitWideBaselineExperimentResults(self: WideBaselineExperimentResults) = new {
+    def toSummary = new ExperimentSummary {
       def original = self
       def results = self
       def summaryNumbers = Map(
-        "recognitionRate" -> SummaryUtil.recognitionRate(self.dmatches))
+        "recognitionRate" -> Memoize(() => SummaryUtil.recognitionRate(self.dmatches)))
+      def summaryImages = Map()
     }
+  }
 }
 
 

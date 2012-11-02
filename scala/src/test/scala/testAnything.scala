@@ -141,9 +141,14 @@ class TestAnything extends FunSuite {
     println(JSONUtil.abbreviate(matcher))
     println(wide.parameters)
       
-    val x = () => 4
+    val x = () => {
+      println("Should only be printed once")
+      4
+    }
     
     val asdf = Memoize(x)
+    println(asdf())
+    println(asdf())
     
     //    val asdf = json2.convertTo[Detector]
   }

@@ -19,6 +19,8 @@ import spray.json._
 import util.JSONUtil._
 import util._
 
+import MathUtil._
+
 ///////////////////////////////////////////////////////////
 
 // TODO: Implement with breeze vector and implicits, name Vector2. 
@@ -119,18 +121,9 @@ object FlowFieldJsonProtocol extends DefaultJsonProtocol {
       FlowSeqSeq.apply).addClassInfo(
         "FlowField")
 
-    override def write(self: FlowField) = FlowSeqSeq(
-      for (i <- 0 until self.data.rows) yield {
-        for (j <- 0 until self.data.cols) yield self.data(i, j)
-      }).toJson
+    override def write(self: FlowField) = FlowSeqSeq(self.data.toSeqSeq).toJson
 
-    override def read(value: JsValue) = {
-      val seqSeq = value.convertTo[FlowSeqSeq].data
-      val data = DenseMatrix.fill[Option[FlowVector]](seqSeq.size, seqSeq.head.size)(None)
-      for (i <- 0 until seqSeq.size; j <- 0 until seqSeq.head.size) {
-        data(i, j) = seqSeq(i)(j)
-      }
-      FlowField(data)
-    }
+    override def read(value: JsValue) =
+      FlowField(value.convertTo[FlowSeqSeq].data.toMatrix)
   }
 }

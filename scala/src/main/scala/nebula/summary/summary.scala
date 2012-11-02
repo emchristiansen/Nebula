@@ -25,17 +25,18 @@ import smallBaseline.SmallBaselineExperimentSummary._
 
 trait ExperimentSummary extends HasOriginal {
   def results: ExperimentResults
-  
+
   def summaryNumbers: Map[String, () => Double]
-  def summaryImages: Map[String, () => BufferedImage] 
+  def summaryImages: Map[String, () => BufferedImage]
 }
 
 object ExperimentSummary {
-  implicit def implicitExperimentResults(self: ExperimentResults): ExperimentSummary =
-    self.original match {
-      case original: WideBaselineExperimentResults => original
-      case original: SmallBaselineExperimentResults => original
+  implicit def implicitExperimentResults(self: ExperimentResults) = new {
+    def toSummary = self.original match {
+      case original: WideBaselineExperimentResults => original.toSummary
+      case original: SmallBaselineExperimentResults => original.toSummary
     }
+  }
 }
 
 object SummaryUtil {
@@ -92,23 +93,6 @@ object SummaryUtil {
     val summaryMap = constantPairs ++ variablePairs
     val components = summaryMap.toSeq.sortBy(_._1).map({ case (k, v) => "%s-%s".format(k, v) })
     components.mkString("_")
-  }
-
-  def tableTitle(experiments: Seq[WideBaselineExperiment]): String = {
-    val maps = experiments.map(_.stringMap).toSet
-    summarizeStructure(maps)
-  }
-
-  def tableEntryTitles(experiments: Seq[WideBaselineExperiment]): Seq[String] = {
-    val experimentMaps = experiments.map(_.stringMap)
-    val union = mapUnion(experimentMaps.toSet)
-    val variableKeys = union.filter(_._2.size > 1).keys.toSet
-
-    def entryTitle(experimentMap: Map[String, String]): String = {
-      experimentMap.filterKeys(variableKeys).toSeq.map({ case (k, v) => "%s-%s".format(k, v) }).mkString("_")
-    }
-
-    experimentMaps.map(entryTitle)
   }
 }
 

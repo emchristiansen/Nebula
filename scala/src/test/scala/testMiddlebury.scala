@@ -29,6 +29,6 @@ class TestMiddlebury extends FunSuite {
       FlowField(file)
     }
     
-    assert(flow.l2Distance(flow).abs === 0)
+    assert(flow.mse(flow).abs === 0)
   }
 }

@@ -191,19 +191,20 @@ object SmallBaselineExperimentResults {
         val json = smallBaselineExperimentResults.write(self)
         org.apache.commons.io.FileUtils.writeStringToFile(self.path, json.prettyPrint)
       }
-      override def original = self  
+      override def original = self
     }
 }
 
 ///////////////////////////////////////////////////////////
 
 object SmallBaselineExperimentSummary {
-  implicit def implicitSmallBaselineExperimentResults(self: SmallBaselineExperimentResults) =
-    new ExperimentSummary {
+  implicit def implicitSmallBaselineExperimentResults(self: SmallBaselineExperimentResults) = new {
+    def toSummary = new ExperimentSummary {
       def original = self
       def results = self
       def summaryNumbers = Map(
         "mse" -> Memoize(() => self.groundTruth.mse(self.estimate)))
-      def summaryImages = Map()        
+      def summaryImages = Map()
     }
+  }
 }

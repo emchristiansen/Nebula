@@ -43,17 +43,6 @@ object Matcher {
       }
     }
 
-  //    List(
-  //    classOf[L0Matcher],
-  //    classOf[L1Matcher],
-  //    classOf[L1IntervalMatcher],
-  //    classOf[L2Matcher],
-  //    classOf[KendallTauMatcher],
-  //    classOf[CayleyMatcher],
-  //    classOf[CayleyRotate4Matcher],
-  //    classOf[RobustCayleyMatcher],
-  //    classOf[GeneralizedL0Matcher])
-
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
     (left, right).zipped.count({ case (l, r) => l != r })
 
