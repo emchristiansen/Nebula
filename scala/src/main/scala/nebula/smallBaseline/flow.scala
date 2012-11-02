@@ -15,6 +15,10 @@ import nebula.util.imageProcessing._
 import nebula.wideBaseline._
 import nebula._
 
+import spray.json._
+import util.JSONUtil._
+import util._
+
 ///////////////////////////////////////////////////////////
 
 // TODO: Implement with breeze vector and implicits, name Vector2. 
@@ -30,9 +34,17 @@ object FlowVector {
   }
 }
 
-case class FlowField(data: DenseMatrix[Option[FlowVector]])
+///////////////////////////////////////////////////////////
+
+object FlowVectorJsonProtocol extends DefaultJsonProtocol {
+  implicit val flowVector =
+    jsonFormat2(FlowVector.apply).addClassInfo(
+      "FlowVector")
+}
 
 ///////////////////////////////////////////////////////////
+
+case class FlowField(data: DenseMatrix[Option[FlowVector]])
 
 object FlowField {
   def apply(file: File): FlowField = {
@@ -78,10 +90,8 @@ object FlowField {
   implicit def implicitDenseMatrix(self: FlowField): DenseMatrix[Option[FlowVector]] =
     self.data
 
-  // Actually mean l2 distance.
-  // TODO: Make name accurate.
-  implicit def addL2Distance(self: FlowField) = new {
-    def l2Distance(that: FlowField): Double = {
+  implicit def addMSE(self: FlowField) = new {
+    def mse(that: FlowField): Double = {
       require(self.data.rows == that.data.rows)
       require(self.data.cols == that.data.cols)
 
@@ -92,8 +102,35 @@ object FlowField {
         left.l2Distance(right)
       }
 
-//      math.sqrt(distances.map(d => math.pow(d, 2)).sum)
-      stats.mean(distances: _*)
+      //      math.sqrt(distances.map(d => math.pow(d, 2)).sum)
+      stats.mean(distances.map(d => math.pow(d, 2)): _*)
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+
+object FlowFieldJsonProtocol extends DefaultJsonProtocol {
+  import FlowVectorJsonProtocol._
+
+  implicit val flowField = new RootJsonFormat[FlowField] {
+    case class FlowSeqSeq(data: IndexedSeq[IndexedSeq[Option[FlowVector]]])
+    implicit val flowSeqSeq = jsonFormat1(
+      FlowSeqSeq.apply).addClassInfo(
+        "FlowField")
+
+    override def write(self: FlowField) = FlowSeqSeq(
+      for (i <- 0 until self.data.rows) yield {
+        for (j <- 0 until self.data.cols) yield self.data(i, j)
+      }).toJson
+
+    override def read(value: JsValue) = {
+      val seqSeq = value.convertTo[FlowSeqSeq].data
+      val data = DenseMatrix.fill[Option[FlowVector]](seqSeq.size, seqSeq.head.size)(None)
+      for (i <- 0 until seqSeq.size; j <- 0 until seqSeq.head.size) {
+        data(i, j) = seqSeq(i)(j)
+      }
+      FlowField(data)
     }
   }
 }

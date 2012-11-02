@@ -1,20 +1,24 @@
 package nebula.smallBaseline
 
 import java.awt.image.BufferedImage
-
 import scala.Option.option2Iterable
-
 import org.opencv.features2d.{ DMatch, KeyPoint }
-
 import breeze.linalg.DenseMatrix
 import nebula.{ Experiment, ExperimentResults, Extractor, Global, HasEstimate, HasGroundTruth, HasImagePair, Matcher, RuntimeConfig }
-import nebula.smallBaseline.FlowField.{ addL2Distance, implicitDenseMatrix }
+
 import nebula.util.{ ExperimentIO, IO, JSONUtil }
-
 import nebula._
-
 import ExtractorJsonProtocol._
 import MatcherJsonProtocol._
+import nebula.summary.ExperimentSummary
+
+import DetectorJsonProtocol._
+import ExtractorJsonProtocol._
+import MatcherJsonProtocol._
+import ExperimentJsonProtocol._
+import ExperimentResultsJsonProtocol._
+
+import nebula.util._
 
 ///////////////////////////////////////////////////////////
 
@@ -34,17 +38,14 @@ object SmallBaselineExperiment {
         ("E", JSONUtil.abbreviate(self.extractor)),
         ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
-
-      //      override def json = {
-      //        val json = JSONUtil.toJSON(self, Nil)
-      //        println(json)
-      //        sys.error("TODO")
-      //      }      
     }
 
   implicit def implicitImagePairLike(self: SmallBaselineExperiment): HasImagePair with HasGroundTruth[FlowField] =
     new HasImagePair with HasGroundTruth[FlowField] {
-      override val SmallBaselinePair(leftImage, rightImage, groundTruth) = SmallBaselinePair.apply(
+      override val SmallBaselinePair(
+        leftImage,
+        rightImage,
+        groundTruth) = SmallBaselinePair.apply(
         Global.run[RuntimeConfig].projectChildPath("data/middleburyImages"),
         self.imageClass)
     }
@@ -73,7 +74,9 @@ object SmallBaselineExperiment {
       Global.random.shuffle(all).take(numSamples)
     }
 
-    val flow = DenseMatrix.fill[Option[FlowVector]](leftImage.getHeight, leftImage.getWidth)(None)
+    val flow = DenseMatrix.fill[Option[FlowVector]](
+      leftImage.getHeight,
+      leftImage.getWidth)(None)
     for (
       leftKeyPoint <- leftKeyPoints;
       leftDescriptor <- extractor.extract(leftImage, Seq(leftKeyPoint)).head
@@ -141,11 +144,12 @@ object SmallBaselineExperiment {
 // TODO
 case class SmallBaselineExperimentResults(
   experiment: SmallBaselineExperiment,
-  dmatches: Seq[DMatch])
+  groundTruth: FlowField,
+  estimate: FlowField)
 
 object SmallBaselineExperimentResults {
   def apply(experiment: SmallBaselineExperiment): SmallBaselineExperimentResults = {
-    val noResults = SmallBaselineExperimentResults(experiment, null)
+    val noResults = SmallBaselineExperimentResults(experiment, null, null)
     if (noResults.alreadyRun && Global.run[RuntimeConfig].skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
@@ -154,31 +158,52 @@ object SmallBaselineExperimentResults {
   }
 
   private def run(self: SmallBaselineExperiment): SmallBaselineExperimentResults = {
-    {
-      // TODO: Remove this block
-      val zeros = DenseMatrix.fill[Option[FlowVector]](
-        self.groundTruth.rows,
-        self.groundTruth.cols)(None)
-      val xys = for (
-        y <- 0 until zeros.rows;
-        x <- 0 until zeros.cols
-      ) yield (x, y)
+    //    {
+    //      // TODO: Remove this block
+    //      val zeros = DenseMatrix.fill[Option[FlowVector]](
+    //        self.groundTruth.rows,
+    //        self.groundTruth.cols)(None)
+    //      val xys = for (
+    //        y <- 0 until zeros.rows;
+    //        x <- 0 until zeros.cols
+    //      ) yield (x, y)
+    //
+    //      for ((x, y) <- (new scala.util.Random).shuffle(xys).take(100)) zeros(y, x) = 
+    //        Some(FlowVector(0, 0))
+    //
+    ////      println("l2 distance from zeros is: %.4f".format(
+    ////        FlowField(zeros).l2Distance(self.groundTruth)))
+    //    }
 
-      for ((x, y) <- (new scala.util.Random).shuffle(xys).take(100)) zeros(y, x) = Some(FlowVector(0, 0))
+    //    println("l2 distance is: %.4f".format(self.estimate.l2Distance(self.groundTruth)))
 
-      println("l2 distance from zeros is: %.4f".format(
-        FlowField(zeros).l2Distance(self.groundTruth)))
-    }
-
-    println("l2 distance is: %.4f".format(self.estimate.l2Distance(self.groundTruth)))
-
-    SmallBaselineExperimentResults(self, Seq())
+    val results = SmallBaselineExperimentResults(self, self.groundTruth, self.estimate)
+    results.save
+    results
   }
 
   implicit def implicitExperimentResults(self: SmallBaselineExperimentResults): ExperimentResults =
     new ExperimentResults {
       override def experiment = self.experiment
-      override def save = sys.error("TODO")
-      override def original = self
+      override def save = {
+        println("Writing to %s".format(self.path))
+        // TODO
+        val json = smallBaselineExperimentResults.write(self)
+        org.apache.commons.io.FileUtils.writeStringToFile(self.path, json.prettyPrint)
+      }
+      override def original = self  
+    }
+}
+
+///////////////////////////////////////////////////////////
+
+object SmallBaselineExperimentSummary {
+  implicit def implicitSmallBaselineExperimentResults(self: SmallBaselineExperimentResults) =
+    new ExperimentSummary {
+      def original = self
+      def results = self
+      def summaryNumbers = Map(
+        "mse" -> Memoize(() => self.groundTruth.mse(self.estimate)))
+      def summaryImages = Map()        
     }
 }

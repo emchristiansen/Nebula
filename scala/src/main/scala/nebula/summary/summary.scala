@@ -14,16 +14,28 @@ import java.io.File
 import javax.imageio.ImageIO
 import org.opencv.features2d.DMatch
 
+import wideBaseline.WideBaselineExperimentSummary._
+import smallBaseline.SmallBaselineExperimentSummary._
+
 ///////////////////////////////////////////////////////////////////////////////
+
+//class LazyValue[A](value: => A) extends Function0[A] {
+//  override def apply = value
+//} 
 
 trait ExperimentSummary extends HasOriginal {
   def results: ExperimentResults
   
-  def summaryNumbers: Map[String, Double]
+  def summaryNumbers: Map[String, () => Double]
+  def summaryImages: Map[String, () => BufferedImage] 
 }
 
 object ExperimentSummary {
-  
+  implicit def implicitExperimentResults(self: ExperimentResults): ExperimentSummary =
+    self.original match {
+      case original: WideBaselineExperimentResults => original
+      case original: SmallBaselineExperimentResults => original
+    }
 }
 
 object SummaryUtil {
@@ -47,8 +59,8 @@ object SummaryUtil {
         column(row(baseExperiment))
       }
     }
-  }  
-  
+  }
+
   // Turns Set(
   // Map(1 -> 12, 2 -> 13),
   // Map(1 -> 10, 3 -> 10, 2 -> 13))

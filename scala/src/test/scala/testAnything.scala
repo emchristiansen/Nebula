@@ -21,6 +21,9 @@ import smallBaseline._
 
 import spray.json._
 
+import nebula.util.Memoize._
+import nebula.util._
+
 class TestAnything extends FunSuite {
   test("blah") {
     import tools.nsc.interpreter.ProductCompletion
@@ -138,6 +141,10 @@ class TestAnything extends FunSuite {
     println(JSONUtil.abbreviate(matcher))
     println(wide.parameters)
       
+    val x = () => 4
+    
+    val asdf = Memoize(x)
+    
     //    val asdf = json2.convertTo[Detector]
   }
 }
