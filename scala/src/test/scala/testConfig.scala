@@ -22,7 +22,7 @@ class TestConfig extends FunSuite {
       2,
       OpenCVDetector(FAST, Some(100)),
       PatchExtractor(
-        Sort,
+        Order,
         false,
         false,
         8,
