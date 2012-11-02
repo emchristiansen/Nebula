@@ -178,7 +178,7 @@ object OpenCVExtractor {
 
 object PatchExtractorType extends Enumeration {
   type PatchExtractorType = Value
-  val Raw, NormalizeRange, NCC, Sort, Rank, UniformRank = Value
+  val Raw, NormalizeRange, NCC, Order, Rank, UniformRank = Value
 }
 
 import PatchExtractorType.PatchExtractorType
@@ -229,7 +229,7 @@ object PatchExtractor {
               normalized
             }
           }
-          case Sort => (raw: IndexedSeq[Int]) => {
+          case Order => (raw: IndexedSeq[Int]) => {
             SortDescriptor.fromUnsorted(raw)
           }
           case Rank => (raw: IndexedSeq[Int]) => {
@@ -387,7 +387,7 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
       "Raw" -> PatchExtractorType.Raw,
       "NormalizeRange" -> PatchExtractorType.NormalizeRange,
       "NCC" -> PatchExtractorType.NCC,
-      "Sort" -> PatchExtractorType.Sort,
+      "Order" -> PatchExtractorType.Order,
       "Rank" -> PatchExtractorType.Rank,
       "UniformRank" -> PatchExtractorType.UniformRank))
 
