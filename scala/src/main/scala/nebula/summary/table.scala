@@ -17,6 +17,7 @@ import breeze.linalg.DenseMatrix
 import MathUtil._
 
 import SummaryUtil._
+import grizzled.math._
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -29,6 +30,15 @@ case class Table[A](
 }
 
 object Table {
+  implicit def implicitAddNormalize(self: Table[Double]) = new {
+    def normalizeColumns: Table[Double] = {
+      val transpose = self.entries.toSeqSeq.transpose
+      val transposeNormalized = transpose.map(
+          row => row.map(_ / stats.mean(row: _*)))
+      self.copy(entries = transposeNormalized.transpose.toMatrix)
+    }
+  }
+  
   implicit def implicitFunctions[A](self: Table[A]) = new {
     def toTSV(toString: A => String): String = {
       val topRow = self.title +: self.columnLabels

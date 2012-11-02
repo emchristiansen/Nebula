@@ -20,6 +20,13 @@ import ExperimentResultsJsonProtocol._
 
 import nebula.util._
 
+import DetectorJsonProtocol._
+import ExtractorJsonProtocol._
+import MatcherJsonProtocol._
+import ExperimentJsonProtocol._
+
+import spray.json._
+
 ///////////////////////////////////////////////////////////
 
 case class SmallBaselineExperiment(
@@ -153,7 +160,8 @@ object SmallBaselineExperimentResults {
     if (noResults.alreadyRun && Global.run[RuntimeConfig].skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
-      IO.interpretFile[SmallBaselineExperimentResults](file)
+      val jsonString = org.apache.commons.io.FileUtils.readFileToString(file)
+      jsonString.asJson.convertTo[SmallBaselineExperimentResults]
     } else run(experiment)
   }
 
