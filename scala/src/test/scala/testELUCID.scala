@@ -25,6 +25,8 @@ class TestELUCID extends FunSuite {
   }
 
   test("bikes") {
+    System.loadLibrary("opencv_java")    
+    
     def drawPointsOnBikes(image: BufferedImage, file: File) {
       val detector = OpenCVDetector(BRISK, Some(60))
       val keyPoints = detector.detect(image)

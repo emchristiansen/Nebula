@@ -61,22 +61,22 @@ class TestMatcher extends FunSuite {
 }
 
 object CheckMatcher extends Properties("Matcher") {
-  property("generalized l0 returns minimum legal distance") = forAll {
-    (leftLong: List[Int], rightLong: List[Int]) =>
-      {
-        val (left, right) = leftLong.take(6).zip(rightLong).toIndexedSeq.unzip
-        val minimumL0Distance = generalizedL0(left, right)
-
-        val bruteMinimum =
-          (for (
-            (leftPermutation, rightPermutation) <- Util.nonDistinctPermutations(left).zip(Util.nonDistinctPermutations(right))
-          ) yield {
-            l0(
-              SortDescriptor.fromUnsorted(leftPermutation),
-              SortDescriptor.fromUnsorted(rightPermutation))
-          }).min
-
-        minimumL0Distance == bruteMinimum
-      }
-  }
+//  property("generalized l0 returns minimum legal distance") = forAll {
+//    (leftLong: List[Int], rightLong: List[Int]) =>
+//      {
+//        val (left, right) = leftLong.take(6).zip(rightLong).toIndexedSeq.unzip
+//        val minimumL0Distance = generalizedL0(left, right)
+//
+//        val bruteMinimum =
+//          (for (
+//            (leftPermutation, rightPermutation) <- Util.nonDistinctPermutations(left).zip(Util.nonDistinctPermutations(right))
+//          ) yield {
+//            l0(
+//              SortDescriptor.fromUnsorted(leftPermutation),
+//              SortDescriptor.fromUnsorted(rightPermutation))
+//          }).min
+//
+//        minimumL0Distance == bruteMinimum
+//      }
+//  }
 }

@@ -34,8 +34,5 @@ class TestConfig extends FunSuite {
     val experiment: Experiment = wide
     val experimentString = experiment.toString
     assert(wideString === experimentString)
-
-    assert(experiment === eval[Experiment](experiment.toString))
-    assert(experiment.toString === eval[Experiment](experiment.toString).toString)
   }
 }

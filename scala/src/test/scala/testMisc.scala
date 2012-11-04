@@ -134,14 +134,14 @@ object CheckMisc extends Properties("Util") {
         s)
   }
 
-  property("generalized Cayley is 'covariant' with permutations") = forAll {
-    (seed: Int, leftLong: List[Int], rightLong: List[Int]) =>
-      {
-        val (left, right) = leftLong.zip(rightLong).toIndexedSeq.unzip
-        val leftPermuted = new Random(seed).shuffle(left)
-        val rightPermuted = new Random(seed).shuffle(right)
-        generalizedCayley(left, right) ==
-          generalizedCayley(leftPermuted, rightPermuted)
-      }
-  }
+//  property("generalized Cayley is 'covariant' with permutations") = forAll {
+//    (seed: Int, leftLong: List[Int], rightLong: List[Int]) =>
+//      {
+//        val (left, right) = leftLong.zip(rightLong).toIndexedSeq.unzip
+//        val leftPermuted = new Random(seed).shuffle(left)
+//        val rightPermuted = new Random(seed).shuffle(right)
+//        generalizedCayley(left, right) ==
+//          generalizedCayley(leftPermuted, rightPermuted)
+//      }
+//  }
 }
