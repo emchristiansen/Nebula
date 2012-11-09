@@ -19,15 +19,14 @@ import smallBaseline.SmallBaselineExperimentSummary._
 
 ///////////////////////////////////////////////////////////////////////////////
 
-//class LazyValue[A](value: => A) extends Function0[A] {
-//  override def apply = value
-//} 
-
 trait ExperimentSummary extends HasOriginal {
   def results: ExperimentResults
 
   def summaryNumbers: Map[String, () => Double]
   def summaryImages: Map[String, () => BufferedImage]
+
+  def outDirectory = Global.run[RuntimeConfig].projectChildPath(
+    "summary")
 }
 
 object ExperimentSummary {
@@ -95,5 +94,4 @@ object SummaryUtil {
     components.mkString("_")
   }
 }
-
 

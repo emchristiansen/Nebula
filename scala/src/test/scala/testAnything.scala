@@ -137,52 +137,52 @@ class TestAnything extends FunSuite {
     println(rightKeyPoint)
     println(extractor)
 
-    val leftDescriptor =
-      extractor.extractSingle(leftPatch, leftKeyPoint).get.original.asInstanceOf[DenseMatrix[Double]]
-    val rightDescriptor =
-      extractor.extractSingle(rightPatch, rightKeyPoint).get.original.asInstanceOf[DenseMatrix[Double]]
-    
-    dumpImage("leftDescriptor", leftDescriptor.toScaledImage)
-    dumpImage("rightDescriptor", rightDescriptor.toScaledImage)
-
-    val leftPadded = LogPolarMatcher.prepareMatrixForConvolution(leftDescriptor)
-
-    dumpImage("leftPadded", leftPadded.toScaledImage)
-
-    val matcherType = MatcherType.L1
-
-    import MatcherType._
-    import Matcher._
-    val correlationDistance = matcherType match {
-      case L1 => l1[Double] _
-      case L2 => l2[Double] _
-      case _ => sys.error("Not using supported distance")
-    }
-
-    val unnormalizedResponse = LogPolarMatcher.getResponseMap(
-          false, 
-          correlationDistance,
-          leftDescriptor, 
-          rightDescriptor)
-    //    val normalizedResponse = 
-    //      LogPolarMatcher.getResponseMap(true, leftDescriptor, rightDescriptor)
-
-    def highlight(x: Double) = -1 * x
-
-    dumpImage(
-      "unnormalizedResponse",
-      unnormalizedResponse.map(highlight).toScaledImage)
-    //    dumpImage(
-    //        "normalizedResponse", 
-    //        normalizedResponse.map(highlight).toScaledImage)        
-
-    println("unnormalizedResponse max and argmax: %s, %s".format(
-      unnormalizedResponse.max,
-      unnormalizedResponse.argmax))
-
-    //    println("normalizedResponse max and argmax: %s, %s".format(
-    //        normalizedResponse.max, 
-    //        normalizedResponse.argmax))
+//    val leftDescriptor =
+//      extractor.extractSingle(leftPatch, leftKeyPoint).get.original.asInstanceOf[DenseMatrix[Double]]
+//    val rightDescriptor =
+//      extractor.extractSingle(rightPatch, rightKeyPoint).get.original.asInstanceOf[DenseMatrix[Double]]
+//    
+//    dumpImage("leftDescriptor", leftDescriptor.toScaledImage)
+//    dumpImage("rightDescriptor", rightDescriptor.toScaledImage)
+//
+//    val leftPadded = LogPolarMatcher.prepareMatrixForConvolution(leftDescriptor)
+//
+//    dumpImage("leftPadded", leftPadded.toScaledImage)
+//
+//    val matcherType = MatcherType.L1
+//
+//    import MatcherType._
+//    import Matcher._
+//    val correlationDistance = matcherType match {
+//      case L1 => l1[Double] _
+//      case L2 => l2[Double] _
+//      case _ => sys.error("Not using supported distance")
+//    }
+//
+//    val unnormalizedResponse = LogPolarMatcher.getResponseMap(
+//          false, 
+//          correlationDistance,
+//          leftDescriptor, 
+//          rightDescriptor)
+//    //    val normalizedResponse = 
+//    //      LogPolarMatcher.getResponseMap(true, leftDescriptor, rightDescriptor)
+//
+//    def highlight(x: Double) = -1 * x
+//
+//    dumpImage(
+//      "unnormalizedResponse",
+//      unnormalizedResponse.map(highlight).toScaledImage)
+//    //    dumpImage(
+//    //        "normalizedResponse", 
+//    //        normalizedResponse.map(highlight).toScaledImage)        
+//
+//    println("unnormalizedResponse max and argmax: %s, %s".format(
+//      unnormalizedResponse.max,
+//      unnormalizedResponse.argmax))
+//
+//    //    println("normalizedResponse max and argmax: %s, %s".format(
+//    //        normalizedResponse.max, 
+//    //        normalizedResponse.argmax))
   }
 }
 

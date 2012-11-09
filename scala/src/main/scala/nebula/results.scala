@@ -17,10 +17,12 @@ trait ExperimentResults extends HasOriginal {
   def experiment: Experiment
   def save: Unit
   
-  def filenameNoTime: String =
-    experiment.name + "_" +
-      experiment.parameters.map(p => p._1 + "-" + p._2).mkString("_") +
-      ".json"
+  def experimentStringNoTime = experiment.name + "_" + experiment.parameters.map(
+      p => p._1 + "-" + p._2).mkString("_") 
+  
+  def experimentString = experiment.unixEpoch + "_" + experimentStringNoTime
+      
+  def filenameNoTime: String = experimentStringNoTime + ".json"
 
   def filename: String = experiment.unixEpoch + "_" + filenameNoTime
 

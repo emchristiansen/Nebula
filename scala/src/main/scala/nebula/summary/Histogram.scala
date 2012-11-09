@@ -52,8 +52,7 @@ case class Histogram(
 }
 
 object Histogram {
-  def apply(experiment: WideBaselineExperiment, title: String): Histogram = {
-    val results = WideBaselineExperimentResults(experiment)
+  def apply(results: WideBaselineExperimentResults, title: String): Histogram = {
     val (same, different) = results.dmatches.partition(dmatch => dmatch.queryIdx == dmatch.trainIdx)
     Histogram(title, same.map(_.distance.toDouble), different.map(_.distance.toDouble))
   }

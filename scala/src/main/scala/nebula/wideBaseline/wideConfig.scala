@@ -32,6 +32,7 @@ import ExperimentJsonProtocol._
 import ExperimentResultsJsonProtocol._
 
 import spray.json._
+import nebula.summary._
 
 ///////////////////////////////////////////////////////////
 
@@ -135,7 +136,7 @@ object WideBaselineExperimentResults {
     results.save
     results
   }
-  
+
   implicit def implicitExperimentResults(self: WideBaselineExperimentResults): ExperimentResults =
     new ExperimentResults {
       override def experiment = self.experiment
@@ -158,14 +159,11 @@ object WideBaselineExperimentSummary {
       def results = self
       def summaryNumbers = Map(
         "recognitionRate" -> Memoize(() => SummaryUtil.recognitionRate(self.dmatches)))
-      def summaryImages = Map()
+      def summaryImages = Map(
+        "histogram" -> Memoize(() => Histogram(self, "").render))
     }
   }
 }
-
-
-
-
 
 
 

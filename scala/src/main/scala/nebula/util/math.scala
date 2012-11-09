@@ -43,10 +43,8 @@ object MathUtil {
   }
 
   implicit def addToVector(self: DenseMatrix[Double]) = new {
-    def toVector: DenseVector[Double] = {
-      // The copy is necessary when |left| or |right| is just a view
-      // of a larger matrix. 
-      DenseVector(copy(self).data)
+    def toVector: DenseVector[Double] = { 
+      DenseVector(self.data)
     }
   }
 
@@ -87,7 +85,7 @@ object MathUtil {
 
     val filter = new DenseMatrix[Double](filterRows, filterColumns)
     for (y <- 0 until filterRows; x <- 0 until filterColumns) {
-      val baseRegion = base(y until y + kernel.rows, x until x + kernel.cols)
+      val baseRegion = copy(base(y until y + kernel.rows, x until x + kernel.cols))
       filter(y, x) = filterFunction(baseRegion, kernel)
     }
     filter

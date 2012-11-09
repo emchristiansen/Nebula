@@ -37,9 +37,12 @@ package object nebula {
     }
   }
 
-  def assertNear(threshold: Double, left: Double, right: Double) {
+  def assertNear(threshold: Double, left: Double, right: Double): Unit = {
     Predef.assert(
       (left - right).abs <= threshold,
       "left, right: %s, %s".format(left, right))
   }
+  
+  def assertNear2(left: Double, right: Double): Unit = 
+    assertNear(0.00001, left, right)
 }

@@ -248,7 +248,7 @@ object PatchExtractor {
 
 case class LogPolarExtractor(
   extractorType: PatchExtractorType.PatchExtractorType,
-  normalizeScale: Boolean,
+  steerScale: Boolean,
   partitionIntoRings: Boolean,
   minRadius: Double,
   maxRadius: Double,
@@ -264,9 +264,10 @@ object LogPolarExtractor {
   implicit def implicitLogPolarExtractor(self: LogPolarExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
-
+        assert(self.color == "Gray")
+        
         val rawOption = LogPolar.rawLogPolar(
-          self.normalizeScale,
+          self.steerScale,
           self.minRadius,
           self.maxRadius,
           self.numScales,

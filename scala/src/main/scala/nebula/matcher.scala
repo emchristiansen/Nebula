@@ -229,66 +229,75 @@ case class LogPolarMatcher(
 object LogPolarMatcher {
   import MatcherType._
 
-  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
-    val seqSeq = matrix.toSeqSeq
-    // Zero pad the right side of the array.
-    val padded = seqSeq.map(_ ++ IndexedSeq.fill(matrix.cols)(0.0))
-    // Replicate it on a 2x2 grid.
-    val replicatedHorizontal = padded.map(row => row ++ row)
-    val grid = replicatedHorizontal ++ replicatedHorizontal
-
-    grid.toMatrix
-  }
-
-  def getResponseMap(
-    normalizeByOverlap: Boolean,
-    correlationDistance: (IndexedSeq[Double], IndexedSeq[Double]) => Double,
-    left: DenseMatrix[Double],
-    right: DenseMatrix[Double]): DenseMatrix[Double] = {
-    val leftPadded = prepareMatrixForConvolution(left)
-    assert(leftPadded.rows == 2 * left.rows)
-    assert(leftPadded.cols == 4 * left.cols)
-
-    val unnormalized =
-      MathUtil.crossDistance(correlationDistance, leftPadded, right)
-
-    // Proportional to how much support (non zero region in the
-    // left image) exists at various x locations.
-    val quarterWidth = left.rows
-    def support(x: Int): Double = {
-      if (x <= quarterWidth) {
-        quarterWidth - x
-      } else if (x <= 2 * quarterWidth) {
-        x - quarterWidth
-      } else {
-        assert(x <= 3 * quarterWidth)
-        quarterWidth - (x - 2 * quarterWidth)
-      }
-    }
-
-    if (normalizeByOverlap)
-      TODO
-    //      unnormalized.mapPairs((yx, response) => response / (support(yx._2) + .0001))
-    else
-      unnormalized
-  }
+  //  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
+  //    val seqSeq = matrix.toSeqSeq
+  //    // Zero pad the right side of the array.
+  //    val padded = seqSeq.map(_ ++ IndexedSeq.fill(matrix.cols)(0.0))
+  //    // Replicate it on a 2x2 grid.
+  //    val replicatedHorizontal = padded.map(row => row ++ row)
+  //    val grid = replicatedHorizontal ++ replicatedHorizontal
+  //
+  //    grid.toMatrix
+  //  }
+  //
+  //  def getResponseMap(
+  //    normalizeByOverlap: Boolean,
+  //    correlationDistance: (IndexedSeq[Double], IndexedSeq[Double]) => Double,
+  //    left: DenseMatrix[Double],
+  //    right: DenseMatrix[Double]): DenseMatrix[Double] = {
+  //    val leftPadded = prepareMatrixForConvolution(left)
+  //    assert(leftPadded.rows == 2 * left.rows)
+  //    assert(leftPadded.cols == 4 * left.cols)
+  //
+  //    val unnormalized =
+  //      MathUtil.crossDistance(correlationDistance, leftPadded, right)
+  //
+  //    // Proportional to how much support (non zero region in the
+  //    // left image) exists at various x locations.
+  //    val quarterWidth = left.rows
+  //    def support(x: Int): Double = {
+  //      if (x <= quarterWidth) {
+  //        quarterWidth - x
+  //      } else if (x <= 2 * quarterWidth) {
+  //        x - quarterWidth
+  //      } else {
+  //        assert(x <= 3 * quarterWidth)
+  //        quarterWidth - (x - 2 * quarterWidth)
+  //      }
+  //    }
+  //
+  //    if (normalizeByOverlap)
+  //      TODO
+  //    //      unnormalized.mapPairs((yx, response) => response / (support(yx._2) + .0001))
+  //    else
+  //      unnormalized
+  //  }
 
   implicit def implicitMatcher(self: LogPolarMatcher): Matcher = new SingleMatcher {
     override def matchSingle = (left: Descriptor, right: Descriptor) => {
       val leftMatrix = left.original.asInstanceOf[DenseMatrix[Double]]
       val rightMatrix = right.original.asInstanceOf[DenseMatrix[Double]]
 
-      val correlationDistance = self.matcherType match {
-        case L1 => l1[Double] _
-        case L2 => l2[Double] _
-        case _ => sys.error("Not using supported distance")
-      }
+      require(leftMatrix.rows == rightMatrix.rows)
+      require(leftMatrix.cols == rightMatrix.cols)
+      
+      val distance = LogPolar.getDistance(self.matcherType)
 
-      getResponseMap(
+       // TODO
+      val response = LogPolar.getResponseMap(
         self.normalizeByOverlap,
-        correlationDistance,
-        leftMatrix,
-        rightMatrix).min
+        distance,
+        LogPolar.prepareMatrixForConvolution(leftMatrix),
+        rightMatrix,
+        0 until leftMatrix.rows,
+        0 until 1)
+        
+      val best = response.argmin
+      assert(best._2 == 0)
+      
+//      println("theta offset is %s".format(best._1 / leftMatrix.rows.toDouble * 2 * math.Pi))
+      
+      response.min
     }
 
     override def original = self
