@@ -29,4 +29,17 @@ package object nebula {
 
     (new Eval).apply[A](source)
   }
+
+  implicit def addAssert[A](value: A) = new {
+    def assert(assertions: (A => Boolean)*) = {
+      assertions.map(assertion => Predef.assert(assertion(value)))
+      value
+    }
+  }
+
+  def assertNear(threshold: Double, left: Double, right: Double) {
+    Predef.assert(
+      (left - right).abs <= threshold,
+      "left, right: %s, %s".format(left, right))
+  }
 }

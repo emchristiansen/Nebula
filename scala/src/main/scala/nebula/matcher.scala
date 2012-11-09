@@ -15,6 +15,12 @@ import wideBaseline._
 import spray.json._
 import JSONUtil._
 
+import breeze.linalg.DenseMatrix
+
+import DenseMatrixUtil._
+
+import java.awt.image._
+
 ///////////////////////////////////////////////////////////
 
 sealed trait Matcher extends HasOriginal with JSONSerializable {
@@ -183,17 +189,6 @@ object MatcherType extends Enumeration {
   type MatcherType = Value
   val L0, L1, L1Interval, L2, KendallTau, Cayley, CayleyRotate4, RobustCayley, GeneralizedL0 = Value
 
-  //  val instances = List(
-  //    classOf[L0Matcher],
-  //    classOf[L1Matcher],
-  //    classOf[L1IntervalMatcher],
-  //    classOf[L2Matcher],
-  //    classOf[KendallTauMatcher],
-  //    classOf[CayleyMatcher],
-  //    classOf[CayleyRotate4Matcher],
-  //    classOf[RobustCayleyMatcher],
-  //    classOf[GeneralizedL0Matcher])
-
   implicit def implicitMatcher(self: MatcherType): Matcher = new SingleMatcher {
     override def matchSingle = {
       def cast[A: Manifest](distance: (IndexedSeq[A], IndexedSeq[A]) => Double) =
@@ -227,6 +222,83 @@ object MatcherType extends Enumeration {
 
 ///////////////////////////////////////////////////////////
 
+case class LogPolarMatcher(
+  matcherType: MatcherType.MatcherType,
+  normalizeByOverlap: Boolean)
+
+object LogPolarMatcher {
+  import MatcherType._
+
+  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
+    val seqSeq = matrix.toSeqSeq
+    // Zero pad the right side of the array.
+    val padded = seqSeq.map(_ ++ IndexedSeq.fill(matrix.cols)(0.0))
+    // Replicate it on a 2x2 grid.
+    val replicatedHorizontal = padded.map(row => row ++ row)
+    val grid = replicatedHorizontal ++ replicatedHorizontal
+
+    grid.toMatrix
+  }
+
+  def getResponseMap(
+    normalizeByOverlap: Boolean,
+    correlationDistance: (IndexedSeq[Double], IndexedSeq[Double]) => Double,
+    left: DenseMatrix[Double],
+    right: DenseMatrix[Double]): DenseMatrix[Double] = {
+    val leftPadded = prepareMatrixForConvolution(left)
+    assert(leftPadded.rows == 2 * left.rows)
+    assert(leftPadded.cols == 4 * left.cols)
+
+    val unnormalized =
+      MathUtil.crossDistance(correlationDistance, leftPadded, right)
+
+    // Proportional to how much support (non zero region in the
+    // left image) exists at various x locations.
+    val quarterWidth = left.rows
+    def support(x: Int): Double = {
+      if (x <= quarterWidth) {
+        quarterWidth - x
+      } else if (x <= 2 * quarterWidth) {
+        x - quarterWidth
+      } else {
+        assert(x <= 3 * quarterWidth)
+        quarterWidth - (x - 2 * quarterWidth)
+      }
+    }
+
+    if (normalizeByOverlap)
+      TODO
+    //      unnormalized.mapPairs((yx, response) => response / (support(yx._2) + .0001))
+    else
+      unnormalized
+  }
+
+  implicit def implicitMatcher(self: LogPolarMatcher): Matcher = new SingleMatcher {
+    override def matchSingle = (left: Descriptor, right: Descriptor) => {
+      val leftMatrix = left.original.asInstanceOf[DenseMatrix[Double]]
+      val rightMatrix = right.original.asInstanceOf[DenseMatrix[Double]]
+
+      val correlationDistance = self.matcherType match {
+        case L1 => l1[Double] _
+        case L2 => l2[Double] _
+        case _ => sys.error("Not using supported distance")
+      }
+
+      getResponseMap(
+        self.normalizeByOverlap,
+        correlationDistance,
+        leftMatrix,
+        rightMatrix).min
+    }
+
+    override def original = self
+
+    override def json = JSONUtil.toJSON(self, Nil)
+  }
+}
+
+///////////////////////////////////////////////////////////
+
 object MatcherJsonProtocol extends DefaultJsonProtocol {
   implicit val matcherType = enumeration(
     "MatcherType",
@@ -243,19 +315,36 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////
 
+  implicit val logPolarMatcher =
+    jsonFormat2(LogPolarMatcher.apply).addClassInfo("LogPolarMatcher")
+
+  /////////////////////////////////////////////////////////      
+
   implicit object MatcherJsonFormat extends RootJsonFormat[Matcher] {
     override def write(self: Matcher) = self.original match {
       case original: MatcherType.MatcherType => original.toJson
+      case original: LogPolarMatcher => original.toJson
     }
-    override def read(value: JsValue) = value.convertTo[MatcherType.MatcherType]
+    override def read(value: JsValue) = {
+      value match {
+        case JsString(_) => value.convertTo[MatcherType.MatcherType]
+        case _ => value.asJsObject.fields("scalaClass") match {
+          case JsString("LogPolarMatcher") => {
+            value.convertTo[LogPolarMatcher]
+          }
+          case _ => throw new DeserializationException("Matcher expected")
+        }
+      }
+    }
+
   }
-  
-//      override def read(value: JsValue) =
-//      value.asJsObject.getFields("matcherType", "scalaClass") match {
-//        case Seq(JsString(matcherType), JsString("MatcherType")) => {
-//          val asdf = JsString(matcherType)
-//          asdf.convertTo[MatcherType.MatcherType]
-//        }
-//        case _ => throw new DeserializationException("Matcher expected")
-//      }
+
+  //      override def read(value: JsValue) =
+  //      value.asJsObject.getFields("matcherType", "scalaClass") match {
+  //        case Seq(JsString(matcherType), JsString("MatcherType")) => {
+  //          val asdf = JsString(matcherType)
+  //          asdf.convertTo[MatcherType.MatcherType]
+  //        }
+  //        case _ => throw new DeserializationException("Matcher expected")
+  //      }
 }

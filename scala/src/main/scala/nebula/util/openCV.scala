@@ -11,16 +11,16 @@ import nebula.wideBaseline._
 import java.awt.image.BufferedImage
 import java.io.File
 
-import scala.math.{atan, cos, sin, toDegrees, toRadians}
+import scala.math.{ atan, cos, sin, toDegrees, toRadians }
 import scala.math.BigInt.int2bigInt
 
-import org.apache.commons.math3.linear.{Array2DRowRealMatrix, ArrayRealVector, LUDecomposition, RealVector}
+import org.apache.commons.math3.linear.{ Array2DRowRealMatrix, ArrayRealVector, LUDecomposition, RealVector }
 import org.opencv.core.Mat
-import org.opencv.features2d.{DMatch, KeyPoint}
+import org.opencv.features2d.{ DMatch, KeyPoint }
 import org.opencv.highgui.Highgui.imread
 
 import javax.imageio.ImageIO
-import net.liftweb.json.{Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo}
+import net.liftweb.json.{ Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo }
 
 import spray.json._
 import JSONUtil._
@@ -28,6 +28,9 @@ import JSONUtil._
 ///////////////////////////////////////////////////////////
 
 object KeyPointUtil {
+  def apply(x: Float, y: Float) = 
+    new KeyPoint(x, y, 0, -1, 0, 0, -1)
+  
   def isWithinBounds(width: Int, height: Int)(keyPoint: KeyPoint): Boolean = {
     def linearBound(max: Int, pt: Double): Boolean = (pt >= 0) && (pt < max)
     linearBound(width, keyPoint.pt.x) && linearBound(height, keyPoint.pt.y)
@@ -53,17 +56,17 @@ object KeyPointUtil {
       true)
     (new LUDecomposition(parallelepiped)).getDeterminant
   }
-  
+
   // Consider the unit vector from |xyPoint| pointing in direction |angle|.
   // Its image under the homography gives the new angle and a scaling factor.
   // The angle is in degrees.
   def locationAndSizeAndAngleUnderHomography(
-      homography: Homography,
-      basePoint: RealVector,
-      size: Double,
-      angleInDegrees: Double): Tuple3[RealVector, Double, Double] = {
+    homography: Homography,
+    basePoint: RealVector,
+    size: Double,
+    angleInDegrees: Double): Tuple3[RealVector, Double, Double] = {
     val basePointImage = homography.transform(basePoint)
-    
+
     val tipPointImage = {
       val tipPoint = {
         val angleInRadians = toRadians(angleInDegrees)
@@ -73,13 +76,13 @@ object KeyPointUtil {
       }
       homography.transform(tipPoint)
     }
-    
+
     val delta = tipPointImage.subtract(basePointImage)
-    
+
     val imageAngle = atan(delta.getEntry(1) / delta.getEntry(0))
     (basePointImage, scaleFactor(homography, basePoint) * size, toDegrees(imageAngle))
   }
-  
+
   // A proper warping of a keypoint between images, mapping over the
   // size and angle under the homography.
   // TODO: What to do with |octave|?
@@ -90,13 +93,13 @@ object KeyPointUtil {
       keyPoint.pt.y))
 
     val (imagePoint, imageSize, imageAngle) = locationAndSizeAndAngleUnderHomography(
-        homography, 
-        xyPoint, 
-        keyPoint.size, 
-        keyPoint.angle)
+      homography,
+      xyPoint,
+      keyPoint.size,
+      keyPoint.angle)
 
-        // TODO: This is probably broken.
-        // 0, 0, 0, -1, 0, 0, -1
+    // TODO: This is probably broken.
+    // 0, 0, 0, -1, 0, 0, -1
     new KeyPoint(
       imagePoint.getEntry(0).toFloat,
       imagePoint.getEntry(1).toFloat,
@@ -104,16 +107,16 @@ object KeyPointUtil {
       keyPoint.angle,
       keyPoint.response,
       keyPoint.octave,
-      keyPoint.class_id)        
-        
-//    new KeyPoint(
-//      imagePoint.getEntry(0).toFloat,
-//      imagePoint.getEntry(1).toFloat,
-//      imageSize.toFloat,
-//      imageAngle.toFloat,
-//      keyPoint.response,
-//      keyPoint.octave,
-//      keyPoint.class_id)
+      keyPoint.class_id)
+
+    //    new KeyPoint(
+    //      imagePoint.getEntry(0).toFloat,
+    //      imagePoint.getEntry(1).toFloat,
+    //      imageSize.toFloat,
+    //      imageAngle.toFloat,
+    //      keyPoint.response,
+    //      keyPoint.octave,
+    //      keyPoint.class_id)
   }
 }
 
@@ -123,9 +126,9 @@ object OpenCVUtil {
   def bufferedImageToMat(image: BufferedImage): Mat = {
     // TODO: Figure out how to do this without IO.
     val file = File.createTempFile("bufferedImageToCvMat", ".bmp")
-    file.deleteOnExit
     ImageIO.write(image, "bmp", file)
     val mat = imread(file.toString)
+    file.delete
     assert(mat != null)
     mat
   }
@@ -167,10 +170,10 @@ object DMatchJsonProtocol extends DefaultJsonProtocol {
       "trainIdx" -> JsNumber(self.trainIdx),
       "distance" -> JsNumber(self.distance),
       "scalaClass" -> JsString("DMatch"))
-    override def read(value: JsValue) = 
+    override def read(value: JsValue) =
       value.asJsObject.getFields("queryIdx", "trainIdx", "distance", "scalaClass") match {
-      case Seq(JsNumber(queryIdx), JsNumber(trainIdx), JsNumber(distance), JsString(scalaClass)) =>
-        new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
-    }
+        case Seq(JsNumber(queryIdx), JsNumber(trainIdx), JsNumber(distance), JsString(scalaClass)) =>
+          new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
+      }
   }
 }

@@ -1,9 +1,9 @@
 package nebula.util.imageProcessing
 
-import java.awt.{Color, Rectangle}
+import java.awt.{ Color, Rectangle }
 import java.awt.color.ColorSpace
 import java.awt.geom.AffineTransform
-import java.awt.image.{AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel}
+import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
 
 import nebula.graveyard._
 import nebula.mpie._
@@ -14,14 +14,30 @@ import nebula.util.imageProcessing._
 import nebula.wideBaseline._
 import nebula._
 
-import scala.Array.{canBuildFrom, fallbackCanBuildFrom}
+import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }
 
 import org.opencv.features2d.KeyPoint
+
+import java.awt.image.AffineTransformOp.TYPE_BILINEAR
 
 ///////////////////////////////////////////////////////////
 
 object ImageUtil {
   import RichImage._
+
+  def scale(factor: Double, image: BufferedImage): BufferedImage = {
+    val transformMatrix = new AffineTransform(
+      factor, 0, // column 1
+      0, factor, // column 2
+      0, 0) // column 3
+
+    val transformOp = new AffineTransformOp(transformMatrix, TYPE_BILINEAR);
+
+    val scaled = transformOp.filter(image, null)
+    assert(scaled.getWidth == (factor * image.getWidth).round)
+    assert(scaled.getHeight == (factor * image.getHeight).round)
+    scaled
+  }
 
   def boxBlur(boxWidth: Int, image: BufferedImage): BufferedImage = {
 
@@ -77,7 +93,7 @@ object ImageUtil {
       case e: IllegalArgumentException => None
     }
   }
-  
+
   def deepCopy(bi: BufferedImage): BufferedImage = {
     val newImage = new BufferedImage(bi.getWidth, bi.getHeight, bi.getType)
     val graphics = newImage.createGraphics
@@ -164,7 +180,7 @@ object ImageUtil {
 
   def toRaw(image: BufferedImage): BufferedImage = powerImage(image, gamma)
 
-  def fromRaw(image: BufferedImage): BufferedImage = powerImage(image, 1.0 / gamma)  
+  def fromRaw(image: BufferedImage): BufferedImage = powerImage(image, 1.0 / gamma)
 }
 
 

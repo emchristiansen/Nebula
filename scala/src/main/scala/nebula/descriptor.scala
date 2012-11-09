@@ -7,7 +7,6 @@ import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.core.CvType
 import grizzled.math._
-import breeze.linalg.DenseMatrix
 import breeze.linalg.DenseVector
 import util.imageProcessing.RichImage._
 import graveyard._
@@ -18,6 +17,8 @@ import util._
 import util.imageProcessing._
 import wideBaseline._
 import com.twitter.util.Eval
+
+import breeze.linalg.DenseMatrix
 
 ///////////////////////////////////////////////////////////
 
@@ -35,24 +36,33 @@ sealed trait Descriptor extends HasOriginal {
     val int = implicitly[Manifest[Int]]
     val double = implicitly[Manifest[Double]]
 
-    val cast = if (elementManifest == boolean) {
+    def boolToInt(boolean: Boolean): Int =
+      if (boolean) 1 else 0
+
+    val cast = if (elementManifest <:< aManifest) {
+      valuesUncast.asInstanceOf[IndexedSeq[A]]
+    } else if (elementManifest == boolean) {
       if (aManifest == boolean)
-        valuesUncast.asInstanceOf[IndexedSeq[Boolean]]
+        valuesUncast.asInstanceOf[IndexedSeq[A]]
+      else if (aManifest == int)
+        valuesUncast.asInstanceOf[IndexedSeq[Boolean]].map(boolToInt)
+      else if (aManifest == double)
+        valuesUncast.asInstanceOf[IndexedSeq[Boolean]].map(boolToInt).map(_.toDouble)
       else sys.error("Bad match")
     } else if (elementManifest == int) {
       if (aManifest == int)
-        valuesUncast.asInstanceOf[IndexedSeq[Int]]
-      if (aManifest == double)
+        valuesUncast.asInstanceOf[IndexedSeq[A]]
+      else if (aManifest == double)
         valuesUncast.asInstanceOf[IndexedSeq[Int]].map(_.toDouble)
-      else sys.error("Bad match")
+      else sys.error("Bad match: %s %s %s".format(elementManifest, aManifest, elementManifest == aManifest))
     } else if (elementManifest == double) {
       if (aManifest == int)
         valuesUncast.asInstanceOf[IndexedSeq[Double]].map(_.toInt)
-      if (aManifest == double)
-        valuesUncast.asInstanceOf[IndexedSeq[Double]]
+      else if (aManifest == double)
+        valuesUncast.asInstanceOf[IndexedSeq[A]]
       else sys.error("Bad match")
     } else sys.error("Bad match")
-    
+
     cast.asInstanceOf[IndexedSeq[A]]
 
     //      // TODO
@@ -128,6 +138,20 @@ object SortDescriptor {
         numCycles
       }
     }
+}
+
+///////////////////////////////////////////////////////////
+
+object DenseMatrixImplicits {
+  implicit def denseMatrix2Descriptor(self: DenseMatrix[Double]) = new Descriptor {
+    override type ElementType = Double
+
+    override def elementManifest = implicitly[Manifest[Double]]
+
+    override def valuesUncast = sys.error("Not defined")
+
+    override def original = self
+  }
 }
 
 ///////////////////////////////////////////////////////////

@@ -15,6 +15,7 @@ import org.opencv.features2d.DMatch
 import breeze.linalg.DenseMatrix
 
 import MathUtil._
+import DenseMatrixUtil._
 
 import SummaryUtil._
 import grizzled.math._

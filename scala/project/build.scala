@@ -27,7 +27,7 @@ object SFSPipelineBuild extends Build {
       "org.apache.commons" % "commons-math" % "2.2",
       "commons-io" % "commons-io" % "2.3",
 //      "com.frugalmechanic" % "scala-optparse" % "1.0",
-      "org.scalatest" %% "scalatest" % "1.8" % "test",
+      "org.scalatest" %% "scalatest" % "2.0.M4" % "test",
       "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
       "com.github.mhendred.face4j" % "face4j-core" % "1.6.2",
 //      "org.scala-tools" %% "scala-stm" % "0.6",
@@ -41,7 +41,8 @@ object SFSPipelineBuild extends Build {
       "org.scalanlp" %% "breeze-process" % "0.1",
       "org.scalanlp" %% "breeze-viz" % "0.1",
       "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-      "io.spray" %%  "spray-json" % "1.2.2" cross CrossVersion.full
+      "io.spray" %%  "spray-json" % "1.2.2" cross CrossVersion.full,
+      "junit" % "junit" % "4.10" % "test"
     )
   )
 

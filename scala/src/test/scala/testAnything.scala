@@ -24,8 +24,168 @@ import spray.json._
 import nebula.util.Memoize._
 import nebula.util._
 
+import breeze.linalg._
+
+import DetectorJsonProtocol._
+import ExtractorJsonProtocol._
+import MatcherJsonProtocol._
+import ExperimentJsonProtocol._
+import ExperimentResultsJsonProtocol._
+
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+
+import TestUtil._
+
+import org.scalatest.FunSuite
+import org.opencv.features2d._
+import javax.imageio.ImageIO
+import java.io.File
+import org.opencv.core.MatOfKeyPoint
+import org.opencv.features2d.{ FeatureDetector, KeyPoint }
+import nebula._
+import org.apache.xmlgraphics.image.loader.ImageManager
+import org.opencv.core.Mat
+import java.awt.Color
+import java.awt.image.BufferedImage
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
+import nebula.util.Homography
+import nebula.util.OpenCVUtil
+import nebula.util.KeyPointUtil
+
+import javax.imageio.ImageIO
+
+import java.awt.{ Color, Rectangle }
+import java.awt.color.ColorSpace
+import java.awt.geom.AffineTransform
+import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
+
+import nebula.graveyard._
+import nebula.mpie._
+import nebula.summary._
+import nebula.smallBaseline._
+import nebula.util._
+import nebula.util.imageProcessing._
+import nebula.wideBaseline._
+import nebula._
+
+import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }
+
+import org.opencv.features2d.KeyPoint
+
+import java.awt.image.AffineTransformOp.TYPE_BILINEAR
+
+import breeze.linalg.DenseMatrix
+
+import org.opencv.features2d.{ DMatch, KeyPoint }
+
+import DenseMatrixUtil._
+
+import TestUtil._
+
+///////////////////////////////////////////////////////////
+
+@RunWith(classOf[JUnitRunner])
 class TestAnything extends FunSuite {
+  val image = ImageIO.read(new File(
+    getClass.getResource("/iSpy.jpg").getFile))  
+  
   test("blah") {
+    
+    val patchWidth = math.min(image.getWidth, image.getHeight)
+    val imageCenter = (image.getWidth / 2, image.getHeight / 2)
+
+    val leftPatch = image.getSubimage(
+      imageCenter._1 - patchWidth / 2,
+      imageCenter._2 - patchWidth / 2,
+      patchWidth,
+      patchWidth)
+
+    dumpImage("leftPatch", leftPatch)
+
+    val rotate = new AffineTransformOp(
+      AffineTransform.getRotateInstance(
+        math.Pi / 2,
+        patchWidth / 2,
+        patchWidth / 2),
+      TYPE_BILINEAR)
+    val scaleFactor = 2
+    val scale = new AffineTransformOp(
+      AffineTransform.getScaleInstance(scaleFactor, scaleFactor),
+      TYPE_BILINEAR)
+
+    val rightPatch = scale.filter(rotate.filter(leftPatch, null), null)
+
+    dumpImage("rightPatch", rightPatch)
+
+    val extractor = LogPolarExtractor(
+      PatchExtractorType.Rank,
+      false,
+      true,
+      1,
+      patchWidth / 2 - 1,
+      64,
+      64,
+      3,
+      "Gray")
+
+    val leftKeyPoint = new KeyPoint(patchWidth / 2, patchWidth / 2, 0)
+    val rightKeyPoint = new KeyPoint(
+      scaleFactor * patchWidth / 2,
+      scaleFactor * patchWidth / 2, 0)
+    println(leftKeyPoint)
+    println(rightKeyPoint)
+    println(extractor)
+
+    val leftDescriptor =
+      extractor.extractSingle(leftPatch, leftKeyPoint).get.original.asInstanceOf[DenseMatrix[Double]]
+    val rightDescriptor =
+      extractor.extractSingle(rightPatch, rightKeyPoint).get.original.asInstanceOf[DenseMatrix[Double]]
+    
+    dumpImage("leftDescriptor", leftDescriptor.toScaledImage)
+    dumpImage("rightDescriptor", rightDescriptor.toScaledImage)
+
+    val leftPadded = LogPolarMatcher.prepareMatrixForConvolution(leftDescriptor)
+
+    dumpImage("leftPadded", leftPadded.toScaledImage)
+
+    val matcherType = MatcherType.L1
+
+    import MatcherType._
+    import Matcher._
+    val correlationDistance = matcherType match {
+      case L1 => l1[Double] _
+      case L2 => l2[Double] _
+      case _ => sys.error("Not using supported distance")
+    }
+
+    val unnormalizedResponse = LogPolarMatcher.getResponseMap(
+          false, 
+          correlationDistance,
+          leftDescriptor, 
+          rightDescriptor)
+    //    val normalizedResponse = 
+    //      LogPolarMatcher.getResponseMap(true, leftDescriptor, rightDescriptor)
+
+    def highlight(x: Double) = -1 * x
+
+    dumpImage(
+      "unnormalizedResponse",
+      unnormalizedResponse.map(highlight).toScaledImage)
+    //    dumpImage(
+    //        "normalizedResponse", 
+    //        normalizedResponse.map(highlight).toScaledImage)        
+
+    println("unnormalizedResponse max and argmax: %s, %s".format(
+      unnormalizedResponse.max,
+      unnormalizedResponse.argmax))
+
+    //    println("normalizedResponse max and argmax: %s, %s".format(
+    //        normalizedResponse.max, 
+    //        normalizedResponse.argmax))
+  }
+}
+
 //    import tools.nsc.interpreter.ProductCompletion
 //
 //    case class Person(name: String, age: Int)
@@ -151,5 +311,3 @@ class TestAnything extends FunSuite {
 //    println(asdf())
 //    
 //    //    val asdf = json2.convertTo[Detector]
-  }
-}

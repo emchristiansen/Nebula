@@ -10,33 +10,119 @@ import nebula.wideBaseline._
 import nebula._
 
 import java.awt.image.BufferedImage
+import java.awt.image.BufferedImage._
 import java.io.File
 
 import scala.Array.canBuildFrom
-import scala.text.{DocText, Document}
+import scala.text.{ DocText, Document }
 import scala.util.Random
 
 import org.opencv.features2d.KeyPoint
 
 import nebula._
-import net.liftweb.json.{JField, JObject, JString, Serialization}
-import net.liftweb.json.{ShortTypeHints, parse, render}
+import net.liftweb.json.{ JField, JObject, JString, Serialization }
+import net.liftweb.json.{ ShortTypeHints, parse, render }
 import net.liftweb.json.Serialization.write
+
+import breeze.linalg._
+
+import RichImage._
+import MathUtil._
+
+///////////////////////////////////////////////////////////
+
+object DenseMatrixUtil {
+  implicit def implicitSeqSeqToDenseMatrix[A: ClassManifest](seqSeq: IndexedSeq[IndexedSeq[A]]) = new {
+    def toMatrix: DenseMatrix[A] = {
+      val rows = seqSeq.size
+      val cols = seqSeq.head.size
+      for (row <- seqSeq) assert(row.size == cols)
+
+      val matrix = new DenseMatrix[A](rows, cols)
+      for (i <- 0 until rows; j <- 0 until cols) {
+        matrix(i, j) = seqSeq(i)(j)
+      }
+      matrix
+    }
+  }
+
+  implicit def implicitDenseMatrixToSeqSeq[A](matrix: DenseMatrix[A]) = new {
+    def toSeqSeq: IndexedSeq[IndexedSeq[A]] =
+      for (i <- 0 until matrix.rows) yield {
+        for (j <- 0 until matrix.cols) yield matrix(i, j)
+      }
+  }
+
+  implicit def implicitDenseMatrixMethods[A: ClassManifest](matrix: DenseMatrix[A]) = new {
+    def rollVertical(deltaY: Int): DenseMatrix[A] =
+      matrix.mapPairs({
+        case ((y, x), value) => matrix((y - deltaY) mod matrix.rows, x)
+      })
+  }
+
+  implicit def implicitDenseMatrixTo(self: DenseMatrix[Int]) = new {
+    //    // Simply dumps the Ints into the BufferedImage, with no concern
+    //    // as to the resulting colors.
+    //    def toImage: BufferedImage = {
+    //      val image = new BufferedImage(self.cols, self.rows, TYPE_INT_ARGB)
+    //      for (y <- 0 until self.rows; x <- 0 until self.cols) {
+    //        image.setRGB(x, y, self(y, x))
+    //      }
+    //      image
+    //    }
+
+    def toImage: BufferedImage = {
+      val image = new BufferedImage(self.cols, self.rows, TYPE_BYTE_GRAY)
+      for (y <- 0 until self.rows; x <- 0 until self.cols) {
+        val value = self(y, x)
+        assert(value >= 0 && value < 256)
+
+        val pixel = Pixel(255, value, value, value)
+        image.setRGB(x, y, pixel.argb)
+      }
+      image
+    }
+  }
+
+  implicit def implicitDenseMatrixDoubleTo(self: DenseMatrix[Double]) = new {
+    def toScaledImage: BufferedImage = {
+      val translated = self - self.min
+      val scaled = (translated / translated.max).map(_ * 255).map(_.round.toInt)
+      scaled.toImage
+    }
+  }
+
+  implicit def addScaled(self: DenseMatrix[Int]) = new {
+    def toScaledImage: BufferedImage = self.map(_.toDouble).toScaledImage
+  }
+
+  implicit def bufferedImageToDenseMatrix(self: BufferedImage) = new {
+    def toMatrix: DenseMatrix[Int] = {
+      val matrix = new DenseMatrix[Int](self.getHeight, self.getWidth)
+      for (y <- 0 until self.getHeight; x <- 0 until self.getWidth) {
+        val pixel = self.getPixel(x, y)
+        matrix(y, x) = pixel.gray.head
+      }
+      matrix
+    }
+  }
+}
 
 ///////////////////////////////////////////////////////////
 
 object Util {
+
   def groupBySizes[A](sizes: Seq[Int], seq: Seq[A]): Seq[Seq[A]] = {
     assert(sizes.sum == seq.size)
     if (!sizes.isEmpty) assert(sizes.min > 0)
-    
-    if (sizes.isEmpty) {    
-     List()
+
+    if (sizes.isEmpty) {
+      List()
     } else {
       Seq(seq.take(sizes.head)) ++ groupBySizes(sizes.tail, seq.drop(sizes.head))
     }
   }
-  
+
   // Groups consecutive identical elements into the same sublists.
   def group[A](seq: List[A]): List[List[A]] = {
     if (seq.isEmpty) List()

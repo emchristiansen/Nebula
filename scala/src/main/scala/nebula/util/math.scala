@@ -1,34 +1,23 @@
 package nebula.util
 
-import breeze.linalg.DenseMatrix
+import nebula._
+import breeze.linalg._
 
 ///////////////////////////////////////////////////////////
 
 object MathUtil {
-  implicit def implicitSeqSeqToDenseMatrix[A: ClassManifest](seqSeq: IndexedSeq[IndexedSeq[A]]) = new {
-    def toMatrix: DenseMatrix[A] = {
-      val rows = seqSeq.size
-      val cols = seqSeq.head.size
-      for (row <- seqSeq) assert(row.size == cols)
-
-      val matrix = new DenseMatrix[A](rows, cols)
-      for (i <- 0 until rows; j <- 0 until cols) {
-        matrix(i, j) = seqSeq(i)(j)
-      }
-      matrix
-    }
-  }
-
-  implicit def implicitDenseMatrixToSeqSeq[A](matrix: DenseMatrix[A]) = new {
-    def toSeqSeq: IndexedSeq[IndexedSeq[A]] =
-      for (i <- 0 until matrix.rows) yield {
-        for (j <- 0 until matrix.cols) yield matrix(i, j)
-      }
+  // The correct implementation of a % b.
+  implicit def addMod(self: Double) = new {
+    def mod(that: Double) =
+      if (self >= 0) self % that
+      else (that + (self % that)) % that
   }
 
   // The correct implementation of a % b.
-  implicit def addMod(self: Double) = new {
-    def mod(that: Double) = self - (self / that).floor * that
+  implicit def addMod(self: Int) = new {
+    def mod(that: Int) =
+      if (self >= 0) self % that
+      else (that + (self % that)) % that
   }
 
   def gaussianKernel(std: Double): Seq[Seq[Double]] = {
@@ -52,4 +41,63 @@ object MathUtil {
       }
     }
   }
+
+  implicit def addToVector(self: DenseMatrix[Double]) = new {
+    def toVector: DenseVector[Double] = {
+      // The copy is necessary when |left| or |right| is just a view
+      // of a larger matrix. 
+      DenseVector(copy(self).data)
+    }
+  }
+
+  def dot(left: DenseMatrix[Double], right: DenseMatrix[Double]): Double = {
+    require(left.rows == right.rows)
+    require(left.cols == right.cols)
+
+    left.toVector.dot(right.toVector)
+  }
+
+  def normalizedDot(left: DenseMatrix[Double], right: DenseMatrix[Double]): Double = {
+    dot(left, right) / (norm(left.toVector) * norm(right.toVector) + .000001)
+  }
+
+  def crossDistance(
+    filterFunction: (IndexedSeq[Double], IndexedSeq[Double]) => Double,
+    base: DenseMatrix[Double],
+    kernel: DenseMatrix[Double]): DenseMatrix[Double] = {
+    val filterRows = (base.rows - kernel.rows + 1) assert (_ > 0)
+    val filterColumns = (base.cols - kernel.cols + 1) assert (_ > 0)
+
+    val filter = new DenseMatrix[Double](filterRows, filterColumns)
+    for (y <- 0 until filterRows; x <- 0 until filterColumns) {
+      val baseRegion = copy(base(y until y + kernel.rows, x until x + kernel.cols))
+      filter(y, x) = filterFunction(
+        baseRegion.data.toIndexedSeq,
+        kernel.data.toIndexedSeq)
+    }
+    filter
+  }
+
+  def crossFilter(
+    filterFunction: (DenseMatrix[Double], DenseMatrix[Double]) => Double,
+    base: DenseMatrix[Double],
+    kernel: DenseMatrix[Double]): DenseMatrix[Double] = {
+    val filterRows = (base.rows - kernel.rows + 1) assert (_ > 0)
+    val filterColumns = (base.cols - kernel.cols + 1) assert (_ > 0)
+
+    val filter = new DenseMatrix[Double](filterRows, filterColumns)
+    for (y <- 0 until filterRows; x <- 0 until filterColumns) {
+      val baseRegion = base(y until y + kernel.rows, x until x + kernel.cols)
+      filter(y, x) = filterFunction(baseRegion, kernel)
+    }
+    filter
+  }
+
+  def crossCorrelation(
+    base: DenseMatrix[Double],
+    kernel: DenseMatrix[Double]): DenseMatrix[Double] = crossFilter(
+    (left: DenseMatrix[Double], right: DenseMatrix[Double]) =>
+      dot(left, right).toDouble,
+    base,
+    kernel)
 }

@@ -36,9 +36,10 @@ object JSONUtil {
       // TODO: Duplication
       override def read(value: JsValue) = {
         value match {
-          case JsString(string) => deserializeMapping.getOrElse(
-            string,
-            throw new DeserializationException("%s expected".format(scalaClass)))
+          case JsString(string) => deserializeMapping.get(string) match {
+            case Some(x) => x
+            case None => throw new DeserializationException("%s expected".format(scalaClass)) 
+          } 
           case _ => throw new DeserializationException("%s expected".format(scalaClass))
         }
       }

@@ -22,9 +22,16 @@ import org.opencv.features2d.KeyPoint
 
 case class Pixel(alpha: Int, red: Int, green: Int, blue: Int) {
   private def valid(color: Int): Boolean = color >= 0 && color <= 255
-
+  
   assert(valid(alpha) && valid(red) && valid(green) && valid(blue))
 
+  def isSimilar(threshold: Int, that: Pixel): Boolean = {
+    (alpha - that.alpha).abs <= threshold &&
+    (red - that.red).abs <= threshold &&
+    (green - that.green).abs <= threshold &&
+    (blue - that.blue).abs <= threshold
+  }
+  
   def argb: Int = {
     val a: Int = (alpha & 0xff) << 24
     val r: Int = (red & 0xff) << 16

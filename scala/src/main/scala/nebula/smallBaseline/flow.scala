@@ -20,6 +20,7 @@ import util.JSONUtil._
 import util._
 
 import MathUtil._
+import DenseMatrixUtil._
 
 ///////////////////////////////////////////////////////////
 

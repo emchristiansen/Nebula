@@ -1,6 +1,7 @@
 package nebula
 
 import java.awt.image.BufferedImage
+import java.awt.image.BufferedImage._
 import org.opencv.features2d.KeyPoint
 import org.opencv.features2d.DescriptorExtractor
 import org.opencv.core.Mat
@@ -22,6 +23,7 @@ import wideBaseline._
 
 import spray.json._
 import JSONUtil._
+import DenseMatrixUtil._
 
 ///////////////////////////////////////////////////////////
 
@@ -87,7 +89,7 @@ object Extractor {
     }
   }
 
-  def extractorFromEnum(enum: Int): ExtractorActionSingle =
+  def doubleExtractorFromEnum(enum: Int): ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
       val extractor = DescriptorExtractor.create(enum)
       val imageMat = OpenCVUtil.bufferedImageToMat(image)
@@ -98,29 +100,29 @@ object Extractor {
       else {
         assert(descriptor.rows == 1)
         assert(descriptor.cols > 0)
-        assert(descriptor.`type` == CvType.CV_8UC1)
+//        assert(descriptor.`type` == CvType.CV_8UC1)
 
-        val ints = for (c <- 0 until descriptor.cols) yield {
+        val doubles = for (c <- 0 until descriptor.cols) yield {
           val doubles = descriptor.get(0, c)
           assert(doubles.size == 1)
-          doubles.head.toInt
+          doubles.head
         }
 
-        Some(ints)
+        Some(doubles)
       }
     }
 
   def booleanExtractorFromEnum(enum: Int): ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
-      for (descriptor <- extractorFromEnum(enum)(image, keyPoint)) yield {
-        descriptor.values[Int].flatMap(Util.numToBits(8))
+      for (descriptor <- doubleExtractorFromEnum(enum)(image, keyPoint)) yield {
+        descriptor.values[Double].map(_.toInt).flatMap(Util.numToBits(8))
       }
     }
 
   def intExtractorFromEnum(enum: Int): ExtractorActionSingle =
     (image: BufferedImage, keyPoint: KeyPoint) => {
-      for (descriptor <- extractorFromEnum(enum)(image, keyPoint)) yield {
-        descriptor.values[Int]
+      for (descriptor <- doubleExtractorFromEnum(enum)(image, keyPoint)) yield {
+        descriptor.values[Double].map(_.toInt)
       }
     }
 
@@ -137,7 +139,7 @@ import Extractor._
 
 object OpenCVExtractorType extends Enumeration {
   type OpenCVExtractorType = Value
-  val BRISK, FREAK, BRIEF, ORB = Value
+  val BRISK, FREAK, BRIEF, ORB, SIFT, SURF = Value
 }
 
 import OpenCVExtractorType.OpenCVExtractorType
@@ -145,12 +147,6 @@ import OpenCVExtractorType.OpenCVExtractorType
 case class OpenCVExtractor(extractorType: OpenCVExtractorType)
 
 object OpenCVExtractor {
-  //  val instances = List(
-  //    classOf[OpenCVBRISKExtractor],
-  //    classOf[OpenCVFREAKExtractor],
-  //    classOf[OpenCVBRIEFExtractor],
-  //    classOf[OpenCVORBExtractor])
-
   import OpenCVExtractorType._
 
   implicit def implicitOpenCVExtractor(self: OpenCVExtractor): Extractor =
@@ -158,14 +154,88 @@ object OpenCVExtractor {
       // Doing this one by one is super slow.
       // TODO: Make the native OpenCV api less awful.      
       override def extractSingle = {
-        val extractorType = self.extractorType match {
-          case BRISK => DescriptorExtractor.BRISK
-          case FREAK => DescriptorExtractor.FREAK
-          case BRIEF => DescriptorExtractor.BRIEF
-          case ORB => DescriptorExtractor.ORB
-        }
+        self.extractorType match {
+          case BRISK => booleanExtractorFromEnum(DescriptorExtractor.BRISK)
+          case FREAK => booleanExtractorFromEnum(DescriptorExtractor.FREAK)
+          case BRIEF => booleanExtractorFromEnum(DescriptorExtractor.BRIEF)
+          case ORB => booleanExtractorFromEnum(DescriptorExtractor.ORB)
+          case SIFT => doubleExtractorFromEnum(DescriptorExtractor.SIFT)
+          case SURF => doubleExtractorFromEnum(DescriptorExtractor.SURF)
+        }        
+      }
 
-        booleanExtractorFromEnum(extractorType)
+      override def original = self
+
+      override def json = JSONUtil.toJSON(self, Nil)
+    }
+}
+
+///////////////////////////////////////////////////////////    
+
+object PatchExtractorType extends Enumeration {
+  type PatchExtractorType = Value
+  val Raw, NormalizeRange, NCC, Order, Rank, UniformRank = Value
+}
+
+case class PatchExtractor(
+  extractorType: PatchExtractorType.PatchExtractorType,
+  normalizeRotation: Boolean,
+  normalizeScale: Boolean,
+  patchWidth: Int,
+  blurWidth: Int,
+  color: String)
+
+object PatchExtractor {
+  import PatchExtractorType._
+
+  def constructor(extractorType: PatchExtractorType): IndexedSeq[Int] => Descriptor = {
+    extractorType match {
+      case Raw => (raw: IndexedSeq[Int]) => raw
+      case NormalizeRange => (raw: IndexedSeq[Int]) => {
+        val min = raw.min
+        val range = raw.max - min
+        if (range == 0) raw // Do nothing.
+        else {
+          val normalized = raw.map(x => ((x - min) * 255.0 / range).round.toInt)
+          assert(normalized.min == 0)
+          assert(normalized.max == 255)
+          normalized
+        }
+      }
+      case NCC => (raw: IndexedSeq[Int]) => {
+        val mean = stats.mean(raw: _*)
+        val std = stats.sampleStdDev(raw: _*)
+        if (std.abs < 0.001) raw // Don't change it.
+        else {
+          val normalized = raw.map(x => (x - mean) / std)
+          assert(stats.mean(normalized: _*).abs < 0.0001)
+          assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
+          normalized
+        }
+      }
+      case Order => (raw: IndexedSeq[Int]) => {
+        SortDescriptor.fromUnsorted(raw)
+      }
+      case Rank => (raw: IndexedSeq[Int]) => {
+        SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw))
+      }
+      case UniformRank => (raw: IndexedSeq[Int]) => {
+        Extractor.uniformRank(raw)
+      }
+    }
+  }
+
+  implicit def implicitPatchExtractor(self: PatchExtractor): Extractor =
+    new SingleExtractor {
+      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
+        val rawOption = rawPixels(
+          self.normalizeRotation,
+          self.normalizeScale,
+          self.patchWidth,
+          self.blurWidth,
+          self.color)(image, keyPoint)
+
+        for (raw <- rawOption) yield constructor(self.extractorType)(raw)
       }
 
       override def original = self
@@ -176,78 +246,54 @@ object OpenCVExtractor {
 
 ///////////////////////////////////////////////////////////
 
-object PatchExtractorType extends Enumeration {
-  type PatchExtractorType = Value
-  val Raw, NormalizeRange, NCC, Order, Rank, UniformRank = Value
-}
-
-import PatchExtractorType.PatchExtractorType
-
-case class PatchExtractor(
-  extractorType: PatchExtractorType,
-  normalizeRotation: Boolean,
+case class LogPolarExtractor(
+  extractorType: PatchExtractorType.PatchExtractorType,
   normalizeScale: Boolean,
-  patchWidth: Int,
+  partitionIntoRings: Boolean,
+  minRadius: Double,
+  maxRadius: Double,
+  numScales: Int,
+  numAngles: Int,
   blurWidth: Int,
   color: String)
 
-object PatchExtractor {
-  //  val instances = List(
-  //    classOf[RawExtractor],
-  //    classOf[NormalizeRangeExtractor],
-  //    classOf[NCCExtractor],
-  //    classOf[SortExtractor],
-  //    classOf[RankExtractor],
-  //    classOf[UniformRankExtractor])
-
+object LogPolarExtractor {
   import PatchExtractorType._
+  import DenseMatrixImplicits._
 
-  implicit def implicitPatchExtractor(self: PatchExtractor): Extractor =
+  implicit def implicitLogPolarExtractor(self: LogPolarExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
-        val constructor: IndexedSeq[Int] => Descriptor = self.extractorType match {
-          case Raw => (raw: IndexedSeq[Int]) => raw
-          case NormalizeRange => (raw: IndexedSeq[Int]) => {
-            val min = raw.min
-            val range = raw.max - min
-            if (range == 0) raw // Do nothing.
-            else {
-              val normalized = raw.map(x => ((x - min) * 255.0 / range).round.toInt)
-              assert(normalized.min == 0)
-              assert(normalized.max == 255)
-              normalized
+
+        val rawOption = LogPolar.rawLogPolar(
+          self.normalizeScale,
+          self.minRadius,
+          self.maxRadius,
+          self.numScales,
+          self.numAngles,
+          self.blurWidth)(image, keyPoint)
+
+        for (raw <- rawOption) yield {
+          val seqSeq = raw.toSeqSeq
+          if (self.partitionIntoRings) {
+            assert(seqSeq.size == raw.rows)
+            assert(seqSeq.head.size == raw.cols)
+
+            val transposed = for (column <- seqSeq.transpose) yield {
+              PatchExtractor.constructor(
+                self.extractorType)(
+                  column).values[Double]
             }
-          }
-          case NCC => (raw: IndexedSeq[Int]) => {
-            val mean = stats.mean(raw: _*)
-            val std = stats.sampleStdDev(raw: _*)
-            if (std.abs < 0.001) raw // Don't change it.
-            else {
-              val normalized = raw.map(x => (x - mean) / std)
-              assert(stats.mean(normalized: _*).abs < 0.0001)
-              assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
-              normalized
-            }
-          }
-          case Order => (raw: IndexedSeq[Int]) => {
-            SortDescriptor.fromUnsorted(raw)
-          }
-          case Rank => (raw: IndexedSeq[Int]) => {
-            SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw))
-          }
-          case UniformRank => (raw: IndexedSeq[Int]) => {
-            Extractor.uniformRank(raw)
+            
+            transposed.transpose.toMatrix
+          } else {
+            val processed =
+              PatchExtractor.constructor(
+                self.extractorType)(
+                  seqSeq.flatten).values[Double]
+            processed.grouped(seqSeq.head.size).toIndexedSeq[IndexedSeq[Double]].toMatrix
           }
         }
-
-        val rawOption = rawPixels(
-          self.normalizeRotation,
-          self.normalizeScale,
-          self.patchWidth,
-          self.blurWidth,
-          self.color)(image, keyPoint)
-
-        for (raw <- rawOption) yield constructor(raw)
       }
 
       override def original = self
@@ -271,11 +317,6 @@ case class BRISKExtractor(
   normalizeScale: Boolean)
 
 object BRISKExtractor {
-  //  val instances = List(
-  //    classOf[BRISKRawExtractor],
-  //    classOf[BRISKOrderExtractor],
-  //    classOf[BRISKRankExtractor])
-
   import BRISKExtractorType._
 
   implicit def implicitBRISKExtractor(self: BRISKExtractor): Extractor =
@@ -374,7 +415,9 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
       "BRISK" -> OpenCVExtractorType.BRISK,
       "FREAK" -> OpenCVExtractorType.FREAK,
       "BRIEF" -> OpenCVExtractorType.BRIEF,
-      "ORB" -> OpenCVExtractorType.ORB))
+      "ORB" -> OpenCVExtractorType.ORB,
+      "SIFT" -> OpenCVExtractorType.SIFT,
+      "SURF" -> OpenCVExtractorType.SURF))
 
   implicit val openCVExtractor =
     jsonFormat1(OpenCVExtractor.apply).addClassInfo("OpenCVExtractor")
@@ -393,6 +436,11 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
 
   implicit val patchExtractor =
     jsonFormat6(PatchExtractor.apply).addClassInfo("PatchExtractor")
+
+  /////////////////////////////////////////////////////////
+
+  implicit val logPolarExtractor =
+    jsonFormat9(LogPolarExtractor.apply).addClassInfo("LogPolarExtractor")
 
   /////////////////////////////////////////////////////////
 
@@ -417,12 +465,14 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
     override def write(self: Extractor) = self.original match {
       case original: OpenCVExtractor => original.toJson
       case original: PatchExtractor => original.toJson
+      case original: LogPolarExtractor => original.toJson
       case original: BRISKExtractor => original.toJson
       case original: ELUCIDExtractor => original.toJson
     }
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
       case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
       case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
+      case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
       case JsString("BRISKExtractor") => value.convertTo[BRISKExtractor]
       case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
       case _ => throw new DeserializationException("Extractor expected")
