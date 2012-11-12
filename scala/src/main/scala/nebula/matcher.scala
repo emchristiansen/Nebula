@@ -1,25 +1,16 @@
 package nebula
 
+import scala.collection.{IndexedSeq, Map, Seq}
+
 import org.opencv.features2d.DMatch
 
-import collection._
-
-import graveyard._
-import mpie._
-import summary._
-import smallBaseline._
-import util._
-import util.imageProcessing._
-import wideBaseline._
-
-import spray.json._
-import JSONUtil._
-
 import breeze.linalg.DenseMatrix
-
-import DenseMatrixUtil._
-
-import java.awt.image._
+import graveyard.EpsilonL1Match
+import nebula.SortDescriptor.{implicitIndexedSeq, sortDescriptor}
+import nebula.util.JSONUtil.implicitAddClassName
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny}
+import util.JSONUtil.enumeration
+import util.Util
 
 ///////////////////////////////////////////////////////////
 
@@ -181,11 +172,9 @@ object Matcher {
 
 ///////////////////////////////////////////////////////////
 
-import Matcher._
-
-///////////////////////////////////////////////////////////
-
 object MatcherType extends Enumeration {
+  import Matcher._
+  
   type MatcherType = Value
   val L0, L1, L1Interval, L2, KendallTau, Cayley, CayleyRotate4, RobustCayley, GeneralizedL0 = Value
 
@@ -215,8 +204,6 @@ object MatcherType extends Enumeration {
     }
 
     override def original = self
-
-//    override def json = JSONUtil.toJSON(self, Nil)
   }
 }
 
@@ -229,51 +216,8 @@ case class LogPolarMatcher(
   scaleSearchRadius: Int)
 
 object LogPolarMatcher {
+  import Matcher._  
   import MatcherType._
-
-  //  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
-  //    val seqSeq = matrix.toSeqSeq
-  //    // Zero pad the right side of the array.
-  //    val padded = seqSeq.map(_ ++ IndexedSeq.fill(matrix.cols)(0.0))
-  //    // Replicate it on a 2x2 grid.
-  //    val replicatedHorizontal = padded.map(row => row ++ row)
-  //    val grid = replicatedHorizontal ++ replicatedHorizontal
-  //
-  //    grid.toMatrix
-  //  }
-  //
-  //  def getResponseMap(
-  //    normalizeByOverlap: Boolean,
-  //    correlationDistance: (IndexedSeq[Double], IndexedSeq[Double]) => Double,
-  //    left: DenseMatrix[Double],
-  //    right: DenseMatrix[Double]): DenseMatrix[Double] = {
-  //    val leftPadded = prepareMatrixForConvolution(left)
-  //    assert(leftPadded.rows == 2 * left.rows)
-  //    assert(leftPadded.cols == 4 * left.cols)
-  //
-  //    val unnormalized =
-  //      MathUtil.crossDistance(correlationDistance, leftPadded, right)
-  //
-  //    // Proportional to how much support (non zero region in the
-  //    // left image) exists at various x locations.
-  //    val quarterWidth = left.rows
-  //    def support(x: Int): Double = {
-  //      if (x <= quarterWidth) {
-  //        quarterWidth - x
-  //      } else if (x <= 2 * quarterWidth) {
-  //        x - quarterWidth
-  //      } else {
-  //        assert(x <= 3 * quarterWidth)
-  //        quarterWidth - (x - 2 * quarterWidth)
-  //      }
-  //    }
-  //
-  //    if (normalizeByOverlap)
-  //      TODO
-  //    //      unnormalized.mapPairs((yx, response) => response / (support(yx._2) + .0001))
-  //    else
-  //      unnormalized
-  //  }
 
   implicit def implicitMatcher(self: LogPolarMatcher): Matcher = new SingleMatcher {
     override def matchSingle = (left: Descriptor, right: Descriptor) => {
@@ -309,8 +253,6 @@ object LogPolarMatcher {
     }
 
     override def original = self
-
-//    override def json = JSONUtil.toJSON(self, Nil)
   }
 }
 
@@ -355,13 +297,4 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
     }
 
   }
-
-  //      override def read(value: JsValue) =
-  //      value.asJsObject.getFields("matcherType", "scalaClass") match {
-  //        case Seq(JsString(matcherType), JsString("MatcherType")) => {
-  //          val asdf = JsString(matcherType)
-  //          asdf.convertTo[MatcherType.MatcherType]
-  //        }
-  //        case _ => throw new DeserializationException("Matcher expected")
-  //      }
 }

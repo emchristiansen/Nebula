@@ -2,12 +2,12 @@ package nebula
 
 import java.awt.image.BufferedImage
 
-//import util.JSONSerializable
-
-import spray.json._
-import util.JSONUtil._
-import wideBaseline._
-import smallBaseline._
+import nebula.smallBaseline.SmallBaselineExperiment.implicitExperiment
+import nebula.util.JSONUtil.implicitAddClassName
+import nebula.wideBaseline.WideBaselineExperiment.implicitExperiment
+import smallBaseline.SmallBaselineExperiment
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny}
+import wideBaseline.WideBaselineExperiment
 
 ///////////////////////////////////////////////////////////
 

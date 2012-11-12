@@ -1,63 +1,13 @@
 package nebula
-import org.opencv.features2d._
-import javax.imageio.ImageIO
-import java.io.File
-import org.opencv.core.MatOfKeyPoint
-import org.opencv.features2d.{ FeatureDetector, KeyPoint }
-import nebula._
-//import org.apache.xmlgraphics.image.loader.ImageManager
-import org.opencv.core.Mat
-import java.awt.Color
+
 import java.awt.image.BufferedImage
-import org.apache.commons.math3.linear.Array2DRowRealMatrix
-import nebula.util.Homography
-import nebula.util.OpenCVUtil
-import nebula.util.KeyPointUtil
-
-import javax.imageio.ImageIO
-
-import java.awt.{ Color, Rectangle }
-import java.awt.color.ColorSpace
-import java.awt.geom.AffineTransform
-import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
-
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.util.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
-
-import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }
 
 import org.opencv.features2d.KeyPoint
 
-import java.awt.image.AffineTransformOp.TYPE_BILINEAR
-
-import breeze.linalg._
-
-import org.opencv.features2d.{ DMatch, KeyPoint }
-
-import DenseMatrixUtil._
-
-import scala.util._
-import nebula.util.imageProcessing.RichImage._
-import MathUtil._
-import grizzled.math.stats
-
-import breeze.linalg._
-import nebula.util.imageProcessing.Pixel
-import org.opencv.features2d.KeyPoint
-import java.awt.image.BufferedImage
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseMatrix, DenseVector, copy}
+import nebula.util.DenseMatrixUtil.{implicitDenseMatrixToSeqSeq, implicitSeqSeqToDenseMatrix}
 import nebula.util.imageProcessing.ImageUtil
-import nebula.util.imageProcessing.RichImage._
-import nebula.util.imageProcessing._
-import nebula.util.DenseMatrixUtil._
-
-import org.imgscalr.Scalr
+import nebula.util.imageProcessing.RichImage.bufferedImage
 
 ///////////////////////////////////////////////////////////
 
@@ -105,10 +55,6 @@ object LogPolar {
 
     val scaledImages = for (scaleFactor <- idealScaleFactors) yield {
       ImageUtil.scale(scaleFactor, blurred)
-      //      val scaleOp = new AffineTransformOp(
-      //        AffineTransform.getScaleInstance(scaleFactor, scaleFactor),
-      //        AffineTransformOp.TYPE_BICUBIC)
-      //      scaleOp.filter(blurred, null)
     }
 
     (idealScaleFactors, scaledImages)
@@ -163,17 +109,14 @@ object LogPolar {
           val (scaledX, scaledY) = (
             scaleFactorX * keyPoint.pt.x,
             scaleFactorY * keyPoint.pt.y)
-          //          println(scaleFactors(scaleIndex), scaleFactorX, scaleFactorY)
 
           val angle = 2 * math.Pi * angleIndex.toDouble / numAngles
           val pixelOffset = DenseVector(
             samplingRadius * math.sin(angle),
             samplingRadius * math.cos(angle))
-//          println(pixelOffset)
 
           val (x, y) = (scaledX + pixelOffset(0), scaledY + pixelOffset(1))
           val pixel = scaledImage.getSubPixel(x, y).get
-          //          val pixel = scaledImage.getPixel(x.round.toInt, y.round.toInt)
 
           matrix(angleIndex, scaleIndex) = pixel.gray.head
         }
@@ -296,24 +239,6 @@ object LogPolar {
     }
   }
 }
-
-//  def rawLogPolar(
-//    normalizeScale: Boolean,
-//    minRadius: Double,
-//    maxRadius: Double,
-//    numScales: Int,
-//    numAngles: Int,
-//    blurWidth: Int)(
-//      image: BufferedImage,
-//      keyPoint: KeyPoint): Option[DenseMatrix[Int]] = {
-//    assert(!normalizeScale)
-//
-//    val blurred = ImageUtil.boxBlur(blurWidth, image)
-//
-//    def pixel(offset: DenseVector[Double]): Pixel = {
-//      val (x, y) = (keyPoint.pt.x + offset(0), keyPoint.pt.y + offset(1))
-//      blurred.getSubPixel(x, y).get
-//    }
 //
 //    try {
 //      // TODO: Make parameter

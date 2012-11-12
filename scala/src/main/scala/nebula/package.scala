@@ -3,14 +3,6 @@ import com.twitter.util.Eval
 ///////////////////////////////////////////////////////////
 
 package object nebula {
-  //  // TODO: Test if these imports do anything.
-  //  import mpie._
-  //  import smallBaseline._
-  //  import summary._
-  //  import util._
-  //  import util.imageProcessing._
-  //  import wideBaseline._
-
   implicit def intTimes(int: Int) = new {
     def times[A](function: => A): IndexedSeq[A] =
       (0 until int).map(_ => function)
@@ -42,11 +34,11 @@ package object nebula {
       (left - right).abs <= threshold,
       "left, right: %s, %s".format(left, right))
   }
-  
-  def assertNear2(left: Double, right: Double): Unit = 
+
+  def assertNear2(left: Double, right: Double): Unit =
     assertNear(0.00001, left, right)
-    
+
   implicit def addTo[A](obj: A) = new {
-    def to[B](implicit conversion: A => B): B = conversion(obj) 
+    def to[B](implicit conversion: A => B): B = conversion(obj)
   }
 }

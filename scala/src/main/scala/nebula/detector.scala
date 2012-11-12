@@ -1,32 +1,14 @@
 package nebula
 
 import java.awt.image.BufferedImage
+
 import org.opencv.core.MatOfKeyPoint
-import org.opencv.features2d.{ FeatureDetector, KeyPoint }
-import util.{ JSONUtil, OpenCVUtil }
-//import net.liftweb.json.Serializer
-//import net.liftweb.json.Formats
-//import net.liftweb.json.MappingException
-import org.opencv.features2d.DMatch
-//import net.liftweb.json.JsonAST.JObject
-//import net.liftweb.json.JsonAST.JValue
-//import net.liftweb.json.TypeInfo
-//import net.liftweb.json.JsonAST.JField
-//import net.liftweb.json.JsonAST.JDouble
-//import net.liftweb.json.JsonAST.JString
-//import net.liftweb.json.JsonAST.JInt
-//import net.liftweb.json.Serialization
-//import net.liftweb.json.ShortTypeHints
-import spray.json.DefaultJsonProtocol
+import org.opencv.features2d.{FeatureDetector, KeyPoint}
 
-import spray.json.JsObject
-import spray.json.RootJsonFormat
-import spray.json.JsValue
-
-import util._
-
-import spray.json._
-import JSONUtil._
+import nebula.util.JSONUtil.implicitAddClassName
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny}
+import util.JSONUtil.enumeration
+import util.OpenCVUtil
 
 ///////////////////////////////////////////////////////////
 
@@ -50,11 +32,6 @@ case class OpenCVDetector(
   maxKeyPointsOption: Option[Int])
 
 object OpenCVDetector {
-  //  val instances = List(
-  //    classOf[OpenCVDenseDetector],
-  //    classOf[OpenCVFASTDetector],
-  //    classOf[OpenCVBRISKDetector])
-
   import OpenCVDetectorType._
   
   implicit def implicitOpenCVDetector(self: OpenCVDetector): Detector =
@@ -76,8 +53,6 @@ object OpenCVDetector {
       }
 
       override def original = self
-
-//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 

@@ -1,23 +1,5 @@
 package nebula
 
-import java.awt.image.BufferedImage
-import org.opencv.features2d.KeyPoint
-import org.opencv.features2d.DescriptorExtractor
-import org.opencv.core.Mat
-import org.opencv.core.MatOfKeyPoint
-import org.opencv.core.CvType
-import grizzled.math._
-import breeze.linalg.DenseVector
-import util.imageProcessing.RichImage._
-import graveyard._
-import mpie._
-import summary._
-import smallBaseline._
-import util._
-import util.imageProcessing._
-import wideBaseline._
-import com.twitter.util.Eval
-
 import breeze.linalg.DenseMatrix
 
 ///////////////////////////////////////////////////////////
@@ -161,18 +143,6 @@ trait PermutationLike[A] {
   def compose(otherPermutation: A): A
   def numCycles: Int
 }
-
-//
-//  def values[E: Manifest]: IndexedSeq[E] = {
-//    def helper[E: Manifest] = {
-//      val manifest = implicitly[Manifest[E]]
-//      this match {
-//        case d: SortDescriptor if implicitly[Manifest[Int]] <:< manifest =>
-//          d.values.asInstanceOf[IndexedSeq[E]]
-//        case d: RawDescriptor[_] if d.elementType <:< manifest =>
-//          d.values.asInstanceOf[IndexedSeq[E]]
-//        case _ => sys.error("failed match")
-//      }
 //    }
 //
 //    val manifest = implicitly[Manifest[E]]

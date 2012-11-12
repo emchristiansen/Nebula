@@ -1,29 +1,23 @@
 package nebula
 
 import java.awt.image.BufferedImage
-import java.awt.image.BufferedImage._
-import org.opencv.features2d.KeyPoint
-import org.opencv.features2d.DescriptorExtractor
-import org.opencv.core.Mat
-import org.opencv.core.MatOfKeyPoint
-import org.opencv.core.CvType
-import grizzled.math._
 
-import breeze.linalg.DenseMatrix
+import scala.Option.option2Iterable
+
+import org.opencv.core.{ Mat, MatOfKeyPoint }
+import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
+
 import breeze.linalg.DenseVector
-import util.imageProcessing.RichImage._
-
-import graveyard._
-import mpie._
-import summary._
-import smallBaseline._
-import util._
-import util.imageProcessing._
-import wideBaseline._
-
-import spray.json._
-import JSONUtil._
-import DenseMatrixUtil._
+import grizzled.math.stats
+import nebula.Descriptor.implicitIndexedSeq
+import nebula.SortDescriptor.implicitIndexedSeq
+import nebula.util.DenseMatrixUtil.{ implicitDenseMatrixToSeqSeq, implicitSeqSeqToDenseMatrix }
+import nebula.util.JSONUtil.implicitAddClassName
+import nebula.util.imageProcessing.RichImage.bufferedImage
+import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny }
+import util.{ OpenCVUtil, Util }
+import util.JSONUtil.enumeration
+import util.imageProcessing.{ ImageUtil, Pixel }
 
 ///////////////////////////////////////////////////////////
 
@@ -133,20 +127,15 @@ object Extractor {
 
 ///////////////////////////////////////////////////////////
 
-import Extractor._
-
-///////////////////////////////////////////////////////////
-
 object OpenCVExtractorType extends Enumeration {
   type OpenCVExtractorType = Value
   val BRISK, FREAK, BRIEF, ORB, SIFT, SURF = Value
 }
 
-import OpenCVExtractorType.OpenCVExtractorType
-
-case class OpenCVExtractor(extractorType: OpenCVExtractorType)
+case class OpenCVExtractor(extractorType: OpenCVExtractorType.OpenCVExtractorType)
 
 object OpenCVExtractor {
+  import Extractor._
   import OpenCVExtractorType._
 
   implicit def implicitOpenCVExtractor(self: OpenCVExtractor): Extractor =
@@ -165,8 +154,6 @@ object OpenCVExtractor {
       }
 
       override def original = self
-
-//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -186,6 +173,7 @@ case class PatchExtractor(
   color: String)
 
 object PatchExtractor {
+  import Extractor._
   import PatchExtractorType._
 
   def constructor(extractorType: PatchExtractorType): IndexedSeq[Int] => Descriptor = {
@@ -239,8 +227,6 @@ object PatchExtractor {
       }
 
       override def original = self
-
-//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -258,6 +244,7 @@ case class LogPolarExtractor(
   color: String)
 
 object LogPolarExtractor {
+  import Extractor._
   import PatchExtractorType._
   import DenseMatrixImplicits._
 
@@ -296,13 +283,11 @@ object LogPolarExtractor {
           }
         }
       }
-      
+
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) =>
         extract(image, Seq(keyPoint)).head
 
       override def original = self
-
-//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -313,14 +298,13 @@ object BRISKExtractorType extends Enumeration {
   val Raw, Order, Rank = Value
 }
 
-import BRISKExtractorType.BRISKExtractorType
-
 case class BRISKExtractor(
-  extractorType: BRISKExtractorType,
+  extractorType: BRISKExtractorType.BRISKExtractorType,
   normalizeRotation: Boolean,
   normalizeScale: Boolean)
 
 object BRISKExtractor {
+  import Extractor._
   import BRISKExtractorType._
 
   implicit def implicitBRISKExtractor(self: BRISKExtractor): Extractor =
@@ -342,8 +326,6 @@ object BRISKExtractor {
       }
 
       override def original = self
-
-//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -359,6 +341,8 @@ case class ELUCIDExtractor(
   color: String)
 
 object ELUCIDExtractor {
+  import Extractor._
+
   implicit def implicitELUCIDExtractor(self: ELUCIDExtractor): Extractor =
     new SingleExtractor {
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
@@ -405,8 +389,6 @@ object ELUCIDExtractor {
       }
 
       override def original = self
-
-//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 

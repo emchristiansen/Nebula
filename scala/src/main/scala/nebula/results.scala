@@ -11,23 +11,27 @@ import spray.json._
 import util.JSONUtil._
 import util._
 
+import ExperimentJsonProtocol._
+import DMatchJsonProtocol._
+import smallBaseline.FlowFieldJsonProtocol._
+
 ///////////////////////////////////////////////////////////
 
 trait ExperimentResults extends HasOriginal {
   def experiment: Experiment
   def save: Unit
-  
+
   def experimentStringNoTime = experiment.name + "_" + experiment.parameters.map(
-      p => p._1 + "-" + p._2).mkString("_") 
-  
+    p => p._1 + "-" + p._2).mkString("_")
+
   def experimentString = experiment.unixEpoch + "_" + experimentStringNoTime
-      
+
   def filenameNoTime: String = experimentStringNoTime + ".json"
 
   def filename: String = experiment.unixEpoch + "_" + filenameNoTime
 
   def outDirectory: File = Global.run[RuntimeConfig].projectChildPath(
-      "results/experiment_data/")
+    "results/experiment_data/")
 
   def path: File = new File(outDirectory, filename)
 
@@ -52,10 +56,6 @@ object ExperimentResults {
 ///////////////////////////////////////////////////////////
 
 object ExperimentResultsJsonProtocol extends DefaultJsonProtocol {
-  import ExperimentJsonProtocol._
-  import DMatchJsonProtocol._
-  import smallBaseline.FlowFieldJsonProtocol._
-
   implicit val wideBaselineExperimentResults =
     jsonFormat2(WideBaselineExperimentResults.apply).addClassInfo(
       "WideBaselineExperimentResults")
