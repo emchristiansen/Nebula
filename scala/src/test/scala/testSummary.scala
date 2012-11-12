@@ -9,7 +9,6 @@ import java.io.File
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
 import nebula._
-import org.apache.xmlgraphics.image.loader.ImageManager
 import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
 import nebula.util.JSONUtil
@@ -48,7 +47,6 @@ import java.io.File
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
 import nebula._
-import org.apache.xmlgraphics.image.loader.ImageManager
 import org.opencv.core.Mat
 import java.awt.Color
 import java.awt.image.BufferedImage

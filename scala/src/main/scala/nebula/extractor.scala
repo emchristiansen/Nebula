@@ -27,7 +27,7 @@ import DenseMatrixUtil._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Extractor extends HasOriginal with JSONSerializable {
+sealed trait Extractor extends HasOriginal {
   def extract: Extractor.ExtractorAction
 
   def extractSingle: Extractor.ExtractorActionSingle
@@ -100,7 +100,7 @@ object Extractor {
       else {
         assert(descriptor.rows == 1)
         assert(descriptor.cols > 0)
-//        assert(descriptor.`type` == CvType.CV_8UC1)
+        //        assert(descriptor.`type` == CvType.CV_8UC1)
 
         val doubles = for (c <- 0 until descriptor.cols) yield {
           val doubles = descriptor.get(0, c)
@@ -161,12 +161,12 @@ object OpenCVExtractor {
           case ORB => booleanExtractorFromEnum(DescriptorExtractor.ORB)
           case SIFT => doubleExtractorFromEnum(DescriptorExtractor.SIFT)
           case SURF => doubleExtractorFromEnum(DescriptorExtractor.SURF)
-        }        
+        }
       }
 
       override def original = self
 
-      override def json = JSONUtil.toJSON(self, Nil)
+//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -240,7 +240,7 @@ object PatchExtractor {
 
       override def original = self
 
-      override def json = JSONUtil.toJSON(self, Nil)
+//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -262,44 +262,47 @@ object LogPolarExtractor {
   import DenseMatrixImplicits._
 
   implicit def implicitLogPolarExtractor(self: LogPolarExtractor): Extractor =
-    new SingleExtractor {
-      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
+    new Extractor {
+      override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
         assert(self.color == "Gray")
-        
-        val rawOption = LogPolar.rawLogPolar(
+
+        val rawOptions = LogPolar.rawLogPolarSeq(
           self.steerScale,
           self.minRadius,
           self.maxRadius,
           self.numScales,
           self.numAngles,
-          self.blurWidth)(image, keyPoint)
+          self.blurWidth)(image, keyPoints)
 
-        for (raw <- rawOption) yield {
-          val seqSeq = raw.toSeqSeq
-          if (self.partitionIntoRings) {
-            assert(seqSeq.size == raw.rows)
-            assert(seqSeq.head.size == raw.cols)
+        for (rawOption <- rawOptions) yield {
+          for (raw <- rawOption) yield {
+            val seqSeq = raw.toSeqSeq
+            if (self.partitionIntoRings) {
+              assert(seqSeq.size == raw.rows)
+              assert(seqSeq.head.size == raw.cols)
 
-            val transposed = for (column <- seqSeq.transpose) yield {
-              PatchExtractor.constructor(
-                self.extractorType)(
-                  column).values[Double]
+              val transposed = for (column <- seqSeq.transpose) yield {
+                PatchExtractor.constructor(
+                  self.extractorType)(
+                    column).values[Double]
+              }
+
+              transposed.transpose.toMatrix.to[Descriptor]
+            } else {
+              val processed = PatchExtractor.constructor(self.extractorType)(
+                seqSeq.flatten).values[Double]
+              processed.grouped(seqSeq.head.size).toIndexedSeq[IndexedSeq[Double]].toMatrix.to[Descriptor]
             }
-            
-            transposed.transpose.toMatrix
-          } else {
-            val processed =
-              PatchExtractor.constructor(
-                self.extractorType)(
-                  seqSeq.flatten).values[Double]
-            processed.grouped(seqSeq.head.size).toIndexedSeq[IndexedSeq[Double]].toMatrix
           }
         }
       }
+      
+      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) =>
+        extract(image, Seq(keyPoint)).head
 
       override def original = self
 
-      override def json = JSONUtil.toJSON(self, Nil)
+//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -340,7 +343,7 @@ object BRISKExtractor {
 
       override def original = self
 
-      override def json = JSONUtil.toJSON(self, Nil)
+//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 
@@ -403,7 +406,7 @@ object ELUCIDExtractor {
 
       override def original = self
 
-      override def json = JSONUtil.toJSON(self, Nil)
+//      override def json = JSONUtil.toJSON(self, Nil)
     }
 }
 

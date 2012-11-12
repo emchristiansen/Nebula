@@ -20,7 +20,7 @@ import org.opencv.features2d.{ DMatch, KeyPoint }
 import org.opencv.highgui.Highgui.imread
 
 import javax.imageio.ImageIO
-import net.liftweb.json.{ Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo }
+//import net.liftweb.json.{ Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo }
 
 import spray.json._
 import JSONUtil._
@@ -134,32 +134,32 @@ object OpenCVUtil {
   }
 }
 
-///////////////////////////////////////////////////////////
-
-class DMatchSerializer extends Serializer[DMatch] {
-  private val DMatchClass = classOf[DMatch]
-
-  def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), DMatch] = {
-    case (TypeInfo(DMatchClass, _), json) => json match {
-      case JObject(
-        JField("jsonClass", JString("DMatch")) ::
-          JField("queryIdx", JInt(queryIdx)) ::
-          JField("trainIdx", JInt(trainIdx)) ::
-          JField("distance", JDouble(distance)) :: Nil) =>
-        new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
-      case x => throw new MappingException("Can't convert " + x + " to DMatch")
-    }
-  }
-
-  def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
-    case x: DMatch =>
-      JObject(
-        JField("jsonClass", JString("DMatch")) ::
-          JField("queryIdx", JInt(x.queryIdx)) ::
-          JField("trainIdx", JInt(x.trainIdx)) ::
-          JField("distance", JDouble(x.distance)) :: Nil)
-  }
-}
+/////////////////////////////////////////////////////////////
+//
+//class DMatchSerializer extends Serializer[DMatch] {
+//  private val DMatchClass = classOf[DMatch]
+//
+//  def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), DMatch] = {
+//    case (TypeInfo(DMatchClass, _), json) => json match {
+//      case JObject(
+//        JField("jsonClass", JString("DMatch")) ::
+//          JField("queryIdx", JInt(queryIdx)) ::
+//          JField("trainIdx", JInt(trainIdx)) ::
+//          JField("distance", JDouble(distance)) :: Nil) =>
+//        new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
+//      case x => throw new MappingException("Can't convert " + x + " to DMatch")
+//    }
+//  }
+//
+//  def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
+//    case x: DMatch =>
+//      JObject(
+//        JField("jsonClass", JString("DMatch")) ::
+//          JField("queryIdx", JInt(x.queryIdx)) ::
+//          JField("trainIdx", JInt(x.trainIdx)) ::
+//          JField("distance", JDouble(x.distance)) :: Nil)
+//  }
+//}
 
 ///////////////////////////////////////////////////////////
 

@@ -23,7 +23,7 @@ import java.awt.image._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Matcher extends HasOriginal with JSONSerializable {
+sealed trait Matcher extends HasOriginal {
   def doMatch: Matcher.MatcherAction
 }
 
@@ -216,7 +216,7 @@ object MatcherType extends Enumeration {
 
     override def original = self
 
-    override def json = JSONUtil.toJSON(self, Nil)
+//    override def json = JSONUtil.toJSON(self, Nil)
   }
 }
 
@@ -224,7 +224,9 @@ object MatcherType extends Enumeration {
 
 case class LogPolarMatcher(
   matcherType: MatcherType.MatcherType,
-  normalizeByOverlap: Boolean)
+  normalizeByOverlap: Boolean,
+  rotationInvariant: Boolean,
+  scaleSearchRadius: Int)
 
 object LogPolarMatcher {
   import MatcherType._
@@ -280,20 +282,26 @@ object LogPolarMatcher {
 
       require(leftMatrix.rows == rightMatrix.rows)
       require(leftMatrix.cols == rightMatrix.cols)
+      require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < leftMatrix.cols)
       
       val distance = LogPolar.getDistance(self.matcherType)
 
+      val angleIndices = if (self.rotationInvariant) {
+        0 until leftMatrix.rows
+      } else 0 until 1
+      
+      val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius  
+      
        // TODO
       val response = LogPolar.getResponseMap(
         self.normalizeByOverlap,
         distance,
-        LogPolar.prepareMatrixForConvolution(leftMatrix),
+        LogPolar.stackVertical(leftMatrix),
         rightMatrix,
-        0 until leftMatrix.rows,
-        0 until 1)
+        angleIndices,
+        scaleIndices)
         
-      val best = response.argmin
-      assert(best._2 == 0)
+//      val best = response.argmin
       
 //      println("theta offset is %s".format(best._1 / leftMatrix.rows.toDouble * 2 * math.Pi))
       
@@ -302,7 +310,7 @@ object LogPolarMatcher {
 
     override def original = self
 
-    override def json = JSONUtil.toJSON(self, Nil)
+//    override def json = JSONUtil.toJSON(self, Nil)
   }
 }
 
@@ -325,7 +333,7 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
   /////////////////////////////////////////////////////////
 
   implicit val logPolarMatcher =
-    jsonFormat2(LogPolarMatcher.apply).addClassInfo("LogPolarMatcher")
+    jsonFormat4(LogPolarMatcher.apply).addClassInfo("LogPolarMatcher")
 
   /////////////////////////////////////////////////////////      
 

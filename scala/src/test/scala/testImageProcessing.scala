@@ -53,7 +53,7 @@ import org.opencv.features2d.KeyPoint
 
 import java.awt.image.AffineTransformOp.TYPE_BILINEAR
 
-import breeze.linalg.DenseMatrix
+import breeze.linalg._
 
 import org.opencv.features2d.{ DMatch, KeyPoint }
 
@@ -66,42 +66,62 @@ import TestUtil._
 @RunWith(classOf[JUnitRunner])
 class TestRichImage extends FunSuite {
   val url = getClass.getResource("/goldfish_girl.jpg")
-  val image = ImageIO.read(new File(url.getFile))  
-  
+  val image = ImageIO.read(new File(url.getFile))
+
+  test("spot check with a small image") {
+    val matrix = DenseMatrix.tabulate(3, 3)((y, x) => 10 * (y * 3 + x))
+    val image = matrix.toImage
+
+    val subsampled = for (y <- 0.0 until 3.0 by 0.4) yield {
+      for (x <- 0.0 until 3.0 by 0.4) yield image.getSubPixel(x, y).get.gray.head
+    }
+
+    val golden = Seq(
+      Seq(0, 0, 3, 7, 11, 15, 19),
+      Seq(0, 0, 3, 7, 11, 15, 19),
+      Seq(9, 9, 12, 16, 20, 24, 28),
+      Seq(21, 21, 24, 28, 32, 36, 40),
+      Seq(33, 33, 36, 40, 44, 48, 52),
+      Seq(45, 45, 48, 52, 56, 60, 64),
+      Seq(57, 57, 60, 64, 68, 72, 76))
+
+    assert(subsampled == golden)
+  }
+
   test("resizing the image with getSubPixel should be the same as resizing " +
     "it with an AffineOp and linear interpolation") {
     val resizeFactor = 2
-    
+
     val goldenImage = {
       val resizeOp = new AffineTransformOp(
-          AffineTransform.getScaleInstance(resizeFactor, resizeFactor),
-          AffineTransformOp.TYPE_BILINEAR)
+        AffineTransform.getScaleInstance(resizeFactor, resizeFactor),
+        AffineTransformOp.TYPE_BILINEAR)
       resizeOp.filter(image, null)
     }
-    
+
     val estimatedImage = {
       val resized = new BufferedImage(
-          resizeFactor * image.getWidth,
-          resizeFactor * image.getHeight,
-          image.getType)
+        resizeFactor * image.getWidth,
+        resizeFactor * image.getHeight,
+        image.getType)
       for (y <- 0 until resized.getHeight; x <- 0 until resized.getWidth) {
         val pixel = image.getSubPixel(
-            x / resizeFactor.toDouble, 
-            y / resizeFactor.toDouble)
+          x / resizeFactor.toDouble,
+          y / resizeFactor.toDouble)
         assert(pixel.isDefined)
         resized.setPixel(x, y, pixel.get)
       }
       resized
     }
 
-    val difference = 
+    val difference =
       (goldenImage.toMatrix - estimatedImage.toMatrix)
-      
-    dumpImage("getSubPixelGolden", goldenImage)
-    dumpImage("getSubPixelEstimated", estimatedImage)
-    dumpImage("getSubPixelDifference_shouldBeZeros", difference.toScaledImage)
-    
-//    assert(goldenImage.toMatrix == estimatedImage.toMatrix)
+
+    //    dumpImage("getSubPixelGolden", goldenImage)
+    //    dumpImage("getSubPixelEstimated", estimatedImage)
+    //    dumpImage("getSubPixelDifference_shouldBeZeros", difference.toScaledImage)
+
+    //    assert(goldenImage.toMatrix == estimatedImage.toMatrix)
   }
 }
 

@@ -23,19 +23,19 @@ import spray.json._
 import java.awt.image.BufferedImage
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
-import net.liftweb.json.Serializer
-import net.liftweb.json.Formats
-import net.liftweb.json.MappingException
+//import net.liftweb.json.Serializer
+//import net.liftweb.json.Formats
+//import net.liftweb.json.MappingException
 import org.opencv.features2d.DMatch
-import net.liftweb.json.JsonAST.JObject
-import net.liftweb.json.JsonAST.JValue
-import net.liftweb.json.TypeInfo
-import net.liftweb.json.JsonAST.JField
-import net.liftweb.json.JsonAST.JDouble
-import net.liftweb.json.JsonAST.JString
-import net.liftweb.json.JsonAST.JInt
-import net.liftweb.json.Serialization
-import net.liftweb.json.ShortTypeHints
+//import net.liftweb.json.JsonAST.JObject
+//import net.liftweb.json.JsonAST.JValue
+//import net.liftweb.json.TypeInfo
+//import net.liftweb.json.JsonAST.JField
+//import net.liftweb.json.JsonAST.JDouble
+//import net.liftweb.json.JsonAST.JString
+//import net.liftweb.json.JsonAST.JInt
+//import net.liftweb.json.Serialization
+//import net.liftweb.json.ShortTypeHints
 import spray.json.DefaultJsonProtocol
 
 import spray.json.JsObject

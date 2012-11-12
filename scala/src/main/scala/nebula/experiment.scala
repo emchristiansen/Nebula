@@ -2,7 +2,7 @@ package nebula
 
 import java.awt.image.BufferedImage
 
-import util.JSONSerializable
+//import util.JSONSerializable
 
 import spray.json._
 import util.JSONUtil._

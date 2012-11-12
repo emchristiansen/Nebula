@@ -12,14 +12,14 @@ import scala.xml.Node
 import scala.xml.XML
 import com.twitter.util.Eval
 import javax.imageio.ImageIO
-import net.liftweb.json.Formats
-import net.liftweb.json.Serialization
-import net.liftweb.json.Serialization.read
-import net.liftweb.json.Serialization.write
-import net.liftweb.json.ShortTypeHints
-import net.liftweb.json.parse
-import net.liftweb.json.pretty
-import net.liftweb.json.render
+//import net.liftweb.json.Formats
+//import net.liftweb.json.Serialization
+//import net.liftweb.json.Serialization.read
+//import net.liftweb.json.Serialization.write
+//import net.liftweb.json.ShortTypeHints
+//import net.liftweb.json.parse
+//import net.liftweb.json.pretty
+//import net.liftweb.json.render
 import nebula.Detector
 import nebula.Extractor
 import nebula.Matcher
@@ -129,29 +129,29 @@ object IO {
 
   def readObjectFromFilename[A](filename: String)(implicit m: Manifest[A]) = readObjectFromFile[A](new File(filename))
 
-  def fromJSONFileAbstract[A <: AnyRef](formats: Formats, file: File)(implicit manifest: Manifest[A]): A = {
-    val json = org.apache.commons.io.FileUtils.readFileToString(file)
-    // TODO: There must be a better way to make |formats| implicit.
-    implicit val implicitFormats = formats
-    read[A](json)
-  }
-
-  def fromJSONFile[A <: AnyRef](file: File)(implicit manifest: Manifest[A]): A = {
-    val formats = Serialization.formats(ShortTypeHints(List(manifest.erasure)))
-    fromJSONFileAbstract[A](formats, file)
-  }
-
-  def toJSONFileAbstract[A <: AnyRef](formats: Formats, item: A, file: File)(implicit manifest: Manifest[A]) {
-    // TODO: There must be a better way to make |formats| implicit.
-    implicit val implicitFormats = formats
-    val json = pretty(render(parse(write(item))))
-    org.apache.commons.io.FileUtils.writeStringToFile(file, json)
-  }
-
-  def toJSONFile[A <: AnyRef](item: A, file: File)(implicit manifest: Manifest[A]) {
-    val formats = Serialization.formats(ShortTypeHints(List(manifest.erasure)))
-    toJSONFileAbstract(formats, item, file)
-  }
+//  def fromJSONFileAbstract[A <: AnyRef](formats: Formats, file: File)(implicit manifest: Manifest[A]): A = {
+//    val json = org.apache.commons.io.FileUtils.readFileToString(file)
+//    // TODO: There must be a better way to make |formats| implicit.
+//    implicit val implicitFormats = formats
+//    read[A](json)
+//  }
+//
+//  def fromJSONFile[A <: AnyRef](file: File)(implicit manifest: Manifest[A]): A = {
+//    val formats = Serialization.formats(ShortTypeHints(List(manifest.erasure)))
+//    fromJSONFileAbstract[A](formats, file)
+//  }
+//
+//  def toJSONFileAbstract[A <: AnyRef](formats: Formats, item: A, file: File)(implicit manifest: Manifest[A]) {
+//    // TODO: There must be a better way to make |formats| implicit.
+//    implicit val implicitFormats = formats
+//    val json = pretty(render(parse(write(item))))
+//    org.apache.commons.io.FileUtils.writeStringToFile(file, json)
+//  }
+//
+//  def toJSONFile[A <: AnyRef](item: A, file: File)(implicit manifest: Manifest[A]) {
+//    val formats = Serialization.formats(ShortTypeHints(List(manifest.erasure)))
+//    toJSONFileAbstract(formats, item, file)
+//  }
 
   def writeImage(directory: File, image: BufferedImage): File = {
     require(directory.isDirectory)

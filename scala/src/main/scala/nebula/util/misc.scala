@@ -20,9 +20,9 @@ import scala.util.Random
 import org.opencv.features2d.KeyPoint
 
 import nebula._
-import net.liftweb.json.{ JField, JObject, JString, Serialization }
-import net.liftweb.json.{ ShortTypeHints, parse, render }
-import net.liftweb.json.Serialization.write
+//import net.liftweb.json.{ JField, JObject, JString, Serialization }
+//import net.liftweb.json.{ ShortTypeHints, parse, render }
+//import net.liftweb.json.Serialization.write
 
 import breeze.linalg._
 
@@ -72,7 +72,7 @@ object DenseMatrixUtil {
     //    }
 
     def toImage: BufferedImage = {
-      val image = new BufferedImage(self.cols, self.rows, TYPE_BYTE_GRAY)
+      val image = new BufferedImage(self.cols, self.rows, TYPE_INT_ARGB)
       for (y <- 0 until self.rows; x <- 0 until self.cols) {
         val value = self(y, x)
         assert(value >= 0 && value < 256)

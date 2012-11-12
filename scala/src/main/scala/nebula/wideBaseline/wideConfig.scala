@@ -22,8 +22,8 @@ import nebula.util._
 import nebula.util.imageProcessing._
 import nebula.wideBaseline._
 import nebula._
-import net.liftweb.json.JsonAST.JField
-import net.liftweb.json.JsonAST.JObject
+//import net.liftweb.json.JsonAST.JField
+//import net.liftweb.json.JsonAST.JObject
 
 import DetectorJsonProtocol._
 import ExtractorJsonProtocol._

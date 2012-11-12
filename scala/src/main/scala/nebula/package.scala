@@ -45,4 +45,8 @@ package object nebula {
   
   def assertNear2(left: Double, right: Double): Unit = 
     assertNear(0.00001, left, right)
+    
+  implicit def addTo[A](obj: A) = new {
+    def to[B](implicit conversion: A => B): B = conversion(obj) 
+  }
 }
