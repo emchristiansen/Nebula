@@ -15,6 +15,8 @@ package object nebula {
       import nebula._;
       import nebula.smallBaseline._;
       import nebula.wideBaseline._;
+      import spark.SparkContext;
+      import SparkContext._;
       
       val value: %s = { %s };
       value""".format(implicitly[Manifest[A]], expression)

@@ -6,6 +6,9 @@ import scala.util.Random
 
 import util.IO
 
+import spark.SparkContext
+import SparkContext._
+
 ///////////////////////////////////////////////////////////
 
 object Global {
@@ -27,7 +30,7 @@ object Global {
 trait RuntimeConfigTrait {
   val projectRoot: File
   val nebulaRoot: File
-  val parallel: Boolean
+  val sparkContext: SparkContext
   val tempDirectory: Option[File]
   val deleteTemporaryFiles: Boolean
   val skipCompletedExperiments: Boolean
@@ -53,7 +56,7 @@ trait RuntimeConfigTrait {
 case class RuntimeConfig(
   override val projectRoot: File,
   override val nebulaRoot: File,
-  override val parallel: Boolean,
+  override val sparkContext: SparkContext,
   override val tempDirectory: Option[File],
   override val deleteTemporaryFiles: Boolean,
   override val skipCompletedExperiments: Boolean,

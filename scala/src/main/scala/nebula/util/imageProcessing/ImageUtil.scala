@@ -26,18 +26,25 @@ import org.imgscalr.Scalr
 object ImageUtil {
   import RichImage._
 
-  def scale(scaleFactor: Double, image: BufferedImage): BufferedImage = {
-    if (scaleFactor == 1) image
+  def scale(
+      scaleFactor: Double, 
+      image: BufferedImage): Tuple2[Tuple2[Double, Double], BufferedImage] = {
+    if (scaleFactor == 1) ((1, 1), image)
     else {
       val scaledWidth = (scaleFactor * image.getWidth).round.toInt
       val scaledHeight = (scaleFactor * image.getHeight).round.toInt
 
-      Scalr.resize(
+      val scaled = Scalr.resize(
         image,
         Scalr.Method.ULTRA_QUALITY,
         Scalr.Mode.FIT_EXACT,
         scaledWidth,
         scaledHeight);
+      
+      val realFactorX = scaledWidth.toDouble / image.getWidth
+      val realFactorY = scaledHeight.toDouble / image.getHeight
+      
+      ((realFactorX, realFactorY), scaled)
     }
 
     //    val transformMatrix = new AffineTransform(

@@ -292,11 +292,11 @@ object Util {
     these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
 
-  // TODO: This doesn't actually work. It always returns what are effectively
-  // serial collections.
-  def parallelize[A](seq: Seq[A]): collection.GenSeq[A] = {
-    if (Global.run[RuntimeConfig].parallel) seq.par else seq
-  }
+//  // TODO: This doesn't actually work. It always returns what are effectively
+//  // serial collections.
+//  def parallelize[A](seq: Seq[A]): collection.GenSeq[A] = {
+//    if (Global.run[RuntimeConfig].parallel) seq.par else seq
+//  }
 
   def truncate(list: Seq[Double]): String = {
     list.map(l => "%.4f".format(l)).mkString(" ")

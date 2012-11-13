@@ -53,11 +53,11 @@ object LogPolar {
 
     val blurred = ImageUtil.boxBlur(blurWidth, image)
 
-    val scaledImages = for (scaleFactor <- idealScaleFactors) yield {
+    val (realFactors, scaledImages) = (for (scaleFactor <- idealScaleFactors) yield {
       ImageUtil.scale(scaleFactor, blurred)
-    }
+    }) unzip
 
-    (idealScaleFactors, scaledImages)
+    (idealScaleFactors, realFactors, scaledImages)
   }
 
   def rawLogPolarSeq(
@@ -73,7 +73,7 @@ object LogPolar {
     // but the larger the largest resized image.
     val samplingRadius = 4.0
 
-    val (scaleFactors, scaledImages) = scaleImage(
+    val (idealScaleFactors, realScaleFactors, scaledImages) = scaleImage(
       samplingRadius,
       minRadius,
       maxRadius,
@@ -83,8 +83,8 @@ object LogPolar {
 
     for (keyPoint <- keyPoints) yield {
       def isInsideBounds(keyPoint: KeyPoint): Boolean = {
-        val x = keyPoint.pt.x * scaleFactors.last
-        val y = keyPoint.pt.y * scaleFactors.last
+        val x = keyPoint.pt.x * realScaleFactors.last._1
+        val y = keyPoint.pt.y * realScaleFactors.last._2
         val width = scaledImages.last.getWidth
         val height = scaledImages.last.getHeight
 
@@ -99,12 +99,13 @@ object LogPolar {
         val matrix = DenseMatrix.fill(numAngles, numScales)(0)
         for (scaleIndex <- 0 until numScales; angleIndex <- 0 until numAngles) {
           val scaledImage = scaledImages(scaleIndex)
+          val (scaleFactorX, scaleFactorY) = realScaleFactors(scaleIndex)
 
-          // The image may not have been scaled precisely according to the
-          // scale factor, in order to get an integer size. Here we get
-          // the actual scale factors.
-          val scaleFactorX = scaledImage.getWidth.toDouble / image.getWidth
-          val scaleFactorY = scaledImage.getHeight.toDouble / image.getHeight
+//          // The image may not have been scaled precisely according to the
+//          // scale factor, in order to get an integer size. Here we get
+//          // the actual scale factors.
+//          val scaleFactorX = scaledImage.getWidth.toDouble / image.getWidth
+//          val scaleFactorY = scaledImage.getHeight.toDouble / image.getHeight
 
           val (scaledX, scaledY) = (
             scaleFactorX * keyPoint.pt.x,
@@ -116,6 +117,7 @@ object LogPolar {
             samplingRadius * math.cos(angle))
 
           val (x, y) = (scaledX + pixelOffset(0), scaledY + pixelOffset(1))
+//          println((scaledX, scaledY), pixelOffset, (x, y))
           val pixel = scaledImage.getSubPixel(x, y).get
 
           matrix(angleIndex, scaleIndex) = pixel.gray.head
