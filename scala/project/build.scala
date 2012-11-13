@@ -7,14 +7,14 @@ import AssemblyKeys._
 object SFSPipelineBuild extends Build {
   def extraResolvers = Seq(
     resolvers ++= Seq(
-      "NativeLibs4Java Respository" at "http://nativelibs4java.sourceforge.net/maven/",
-      "Sonatype OSS Snapshots Repository" at "http://oss.sonatype.org/content/groups/public",
+//      "NativeLibs4Java Respository" at "http://nativelibs4java.sourceforge.net/maven/",
+//      "Sonatype OSS Snapshots Repository" at "http://oss.sonatype.org/content/groups/public",
       "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
       "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
-      "repo.codahale.com" at "http://repo.codahale.com",
-      "maven.twttr.com" at "http://maven.twttr.com",
-      "typesafe-releases" at "http://repo.typesafe.com/typesafe/repo",
-      "spray-io" at "http://repo.spray.io/"
+//      "repo.codahale.com" at "http://repo.codahale.com",
+//      "maven.twttr.com" at "http://maven.twttr.com",
+      "spray-io" at "http://repo.spray.io/",
+      "typesafe-releases" at "http://repo.typesafe.com/typesafe/repo"
     )
   )
 
@@ -43,10 +43,19 @@ object SFSPipelineBuild extends Build {
 //      "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
       "io.spray" %%  "spray-json" % "1.2.2" cross CrossVersion.full,
       "junit" % "junit" % "4.10" % "test",
-      "org.imgscalr" % "imgscalr-lib" % "4.2",
-      "org.spark-project" %% "spark-core" % "0.6.0"
+      "org.spark-project" %% "spark-core" % "0.6.0",
+      "org.imgscalr" % "imgscalr-lib" % "4.2"
     )
   )
+
+  // def extraAssemblySettings() = Seq(test in assembly := {}) ++ Seq(
+  //   mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) => {
+  //     // See https://github.com/sbt/sbt-assembly/issues/57
+  //     case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard 
+  //     case "reference.conf" => MergeStrategy.concat
+  //     case _ => MergeStrategy.first
+  //   }}
+  // ) 
 
   def scalaSettings = Seq(
     scalaVersion := "2.9.2",
@@ -58,7 +67,7 @@ object SFSPipelineBuild extends Build {
     )
   )
 
-  def libSettings = Project.defaultSettings ++ extraResolvers ++ extraLibraryDependencies ++ scalaSettings ++ assemblySettings
+  def libSettings = Project.defaultSettings ++ extraResolvers ++ extraLibraryDependencies ++ scalaSettings ++ assemblySettings// ++ extraAssemblySettings
 
   lazy val root = {
     val settings = libSettings ++ Seq(name := "nebula")
