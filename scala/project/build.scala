@@ -28,6 +28,8 @@ object SFSPipelineBuild extends Build {
       "commons-io" % "commons-io" % "2.4",
 //      "com.frugalmechanic" % "scala-optparse" % "1.0",
       "org.scalatest" %% "scalatest" % "2.0.M4" % "test",
+//      "org.scalatest" % "scalatest_2.10.0-RC2" % "2.0.M4" % "test",
+//      "org.scalacheck" % "scalacheck_2.10.0-RC2" % "1.10.0" % "test",
       "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
 //      "com.github.mhendred.face4j" % "face4j-core" % "1.6.2",
 //      "org.scala-tools" %% "scala-stm" % "0.6",
@@ -36,14 +38,14 @@ object SFSPipelineBuild extends Build {
 //      "com.chuusai" %% "shapeless" % "1.2.2",
 //      "play" % "play_2.9.1" % "2.0.3",
       "org.clapper" %% "grizzled-scala" % "1.0.13",
-      "org.scalanlp" %% "breeze-math" % "0.1",
+      "org.scalanlp" %% "breeze-math" % "0.2-SNAPSHOT",
 //      "org.scalanlp" %% "breeze-learn" % "0.1",
 //      "org.scalanlp" %% "breeze-process" % "0.1",
 //      "org.scalanlp" %% "breeze-viz" % "0.1",
 //      "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-      "io.spray" %%  "spray-json" % "1.2.2" cross CrossVersion.full,
+      "io.spray" %% "spray-json" % "1.2.2" cross CrossVersion.full,
       "junit" % "junit" % "4.10" % "test",
-      "org.spark-project" %% "spark-core" % "0.6.0",
+      "org.spark-project" % "spark-core_2.9.2" % "0.6.0",
       "org.imgscalr" % "imgscalr-lib" % "4.2"
     )
   )
@@ -62,8 +64,11 @@ object SFSPipelineBuild extends Build {
     scalacOptions ++= Seq(
       "-optimize",
       "-unchecked",
-      "-deprecation",
-      "-Ydependent-method-types"
+      "-deprecation"
+      // "-feature",
+      // "-language:implicitConversions",
+      // "-language:reflectiveCalls",
+      // "-language:postfixOps"
     )
   )
 

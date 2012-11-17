@@ -91,98 +91,11 @@ class TestAnything extends FunSuite {
     getClass.getResource("/iSpy.jpg").getFile))  
   
   test("blah") {
+    implicit def int = 3
     
-    val patchWidth = math.min(image.getWidth, image.getHeight)
-    val imageCenter = (image.getWidth / 2, image.getHeight / 2)
-
-    val leftPatch = image.getSubimage(
-      imageCenter._1 - patchWidth / 2,
-      imageCenter._2 - patchWidth / 2,
-      patchWidth,
-      patchWidth)
-
-    dumpImage("leftPatch", leftPatch)
-
-    val rotate = new AffineTransformOp(
-      AffineTransform.getRotateInstance(
-        math.Pi / 2,
-        patchWidth / 2,
-        patchWidth / 2),
-      TYPE_BILINEAR)
-    val scaleFactor = 2
-    val scale = new AffineTransformOp(
-      AffineTransform.getScaleInstance(scaleFactor, scaleFactor),
-      TYPE_BILINEAR)
-
-    val rightPatch = scale.filter(rotate.filter(leftPatch, null), null)
-
-    dumpImage("rightPatch", rightPatch)
-
-    val extractor = LogPolarExtractor(
-      PatchExtractorType.Rank,
-      false,
-      true,
-      1,
-      patchWidth / 2 - 1,
-      64,
-      64,
-      3,
-      "Gray")
-
-    val leftKeyPoint = new KeyPoint(patchWidth / 2, patchWidth / 2, 0)
-    val rightKeyPoint = new KeyPoint(
-      scaleFactor * patchWidth / 2,
-      scaleFactor * patchWidth / 2, 0)
-    println(leftKeyPoint)
-    println(rightKeyPoint)
-    println(extractor)
-
-//    val leftDescriptor =
-//      extractor.extractSingle(leftPatch, leftKeyPoint).get.original.asInstanceOf[DenseMatrix[Double]]
-//    val rightDescriptor =
-//      extractor.extractSingle(rightPatch, rightKeyPoint).get.original.asInstanceOf[DenseMatrix[Double]]
-//    
-//    dumpImage("leftDescriptor", leftDescriptor.toScaledImage)
-//    dumpImage("rightDescriptor", rightDescriptor.toScaledImage)
-//
-//    val leftPadded = LogPolarMatcher.prepareMatrixForConvolution(leftDescriptor)
-//
-//    dumpImage("leftPadded", leftPadded.toScaledImage)
-//
-//    val matcherType = MatcherType.L1
-//
-//    import MatcherType._
-//    import Matcher._
-//    val correlationDistance = matcherType match {
-//      case L1 => l1[Double] _
-//      case L2 => l2[Double] _
-//      case _ => sys.error("Not using supported distance")
-//    }
-//
-//    val unnormalizedResponse = LogPolarMatcher.getResponseMap(
-//          false, 
-//          correlationDistance,
-//          leftDescriptor, 
-//          rightDescriptor)
-//    //    val normalizedResponse = 
-//    //      LogPolarMatcher.getResponseMap(true, leftDescriptor, rightDescriptor)
-//
-//    def highlight(x: Double) = -1 * x
-//
-//    dumpImage(
-//      "unnormalizedResponse",
-//      unnormalizedResponse.map(highlight).toScaledImage)
-//    //    dumpImage(
-//    //        "normalizedResponse", 
-//    //        normalizedResponse.map(highlight).toScaledImage)        
-//
-//    println("unnormalizedResponse max and argmax: %s, %s".format(
-//      unnormalizedResponse.max,
-//      unnormalizedResponse.argmax))
-//
-//    //    println("normalizedResponse max and argmax: %s, %s".format(
-//    //        normalizedResponse.max, 
-//    //        normalizedResponse.argmax))
+    implicit def asd(string: String)(implicit int: Int): Int = 1 + int
+    
+    println("hi".to[Int])
   }
 }
 

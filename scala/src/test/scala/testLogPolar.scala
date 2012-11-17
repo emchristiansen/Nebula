@@ -99,7 +99,7 @@ class TestLogPolar extends FunSuite {
           keyPoint.pt.x - scaleFactor * keyPoint.pt.x,
           keyPoint.pt.y - scaleFactor * keyPoint.pt.y),
         AffineTransformOp.TYPE_BICUBIC)
-      val scaled = translateOp.filter(ImageUtil.scale(scaleFactor, image), null)
+      val scaled = translateOp.filter(ImageUtil.scale(scaleFactor, image)._2, null)
 
       // Just make sure the point really did stay the same.
       val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
@@ -130,7 +130,7 @@ class TestLogPolar extends FunSuite {
   val blurWidth = 5
 
   ignore("scaleImage should work properly") {
-    val (scaleFactors, scaledImages) = LogPolar.scaleImage(
+    val (scaleFactors, _, scaledImages) = LogPolar.scaleImage(
       4,
       minRadius,
       maxRadius,
