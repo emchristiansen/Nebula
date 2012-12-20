@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage
 import scala.Option.option2Iterable
 import org.opencv.features2d.{ DMatch, KeyPoint }
 import breeze.linalg.DenseMatrix
-import nebula.{ Experiment, ExperimentResults, Extractor, Global, HasEstimate, HasGroundTruth, HasImagePair, Matcher, RuntimeConfig }
+import nebula.{ Experiment, ExperimentResults, Extractor, HasEstimate, HasGroundTruth, HasImagePair, Matcher, RuntimeConfig }
 
 import nebula.util.{ ExperimentIO, IO, JSONUtil }
 import nebula._
@@ -45,15 +45,20 @@ object SmallBaselineExperiment {
         ("E", JSONUtil.abbreviate(self.extractor)),
         ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
+
+      override def getResults(implicit runtime: RuntimeConfig) =
+        SmallBaselineExperimentResults(self)
     }
 
-  implicit def implicitImagePairLike(self: SmallBaselineExperiment): HasImagePair with HasGroundTruth[FlowField] =
+  implicit def implicitImagePairLike(
+    self: SmallBaselineExperiment)(
+      implicit runtime: RuntimeConfig): HasImagePair with HasGroundTruth[FlowField] =
     new HasImagePair with HasGroundTruth[FlowField] {
       override val SmallBaselinePair(
         leftImage,
         rightImage,
         groundTruth) = SmallBaselinePair.apply(
-        Global.run[RuntimeConfig].projectChildPath("data/middleburyImages"),
+        runtime.projectChildPath("data/middleburyImages"),
         self.imageClass)
     }
 
@@ -78,7 +83,7 @@ object SmallBaselineExperiment {
         -1,
         -1,
         -1)
-      Global.random.shuffle(all).take(numSamples)
+      (new scala.util.Random).shuffle(all).take(numSamples)
     }
 
     val flow = DenseMatrix.fill[Option[FlowVector]](
@@ -133,7 +138,9 @@ object SmallBaselineExperiment {
     FlowField(flow)
   }
 
-  implicit def implicitHasEstimate(self: SmallBaselineExperiment): HasEstimate[FlowField] =
+  implicit def implicitHasEstimate(
+    self: SmallBaselineExperiment)(
+      implicit runtime: RuntimeConfig): HasEstimate[FlowField] =
     new HasEstimate[FlowField] {
       override def estimate = {
         estimateFlow(
@@ -155,9 +162,11 @@ case class SmallBaselineExperimentResults(
   estimate: FlowField)
 
 object SmallBaselineExperimentResults {
-  def apply(experiment: SmallBaselineExperiment): SmallBaselineExperimentResults = {
+  def apply(
+    experiment: SmallBaselineExperiment)(
+      implicit runtime: RuntimeConfig): SmallBaselineExperimentResults = {
     val noResults = SmallBaselineExperimentResults(experiment, null, null)
-    if (noResults.alreadyRun && Global.run[RuntimeConfig].skipCompletedExperiments) {
+    if (noResults.alreadyRun && runtime.skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
       val jsonString = org.apache.commons.io.FileUtils.readFileToString(file)
@@ -165,7 +174,8 @@ object SmallBaselineExperimentResults {
     } else run(experiment)
   }
 
-  private def run(self: SmallBaselineExperiment): SmallBaselineExperimentResults = {
+  private def run(self: SmallBaselineExperiment)(
+    implicit runtime: RuntimeConfig): SmallBaselineExperimentResults = {
     //    {
     //      // TODO: Remove this block
     //      val zeros = DenseMatrix.fill[Option[FlowVector]](
@@ -193,26 +203,36 @@ object SmallBaselineExperimentResults {
   implicit def implicitExperimentResults(self: SmallBaselineExperimentResults): ExperimentResults =
     new ExperimentResults {
       override def experiment = self.experiment
-      override def save = {
+      override def save(implicit runtime: RuntimeConfig) = {
         println("Writing to %s".format(self.path))
         // TODO
         val json = smallBaselineExperimentResults.write(self)
         org.apache.commons.io.FileUtils.writeStringToFile(self.path, json.prettyPrint)
       }
       override def original = self
+
+      // TODO: Pull into another record.
+      override def toSummary(implicit runtime: RuntimeConfig) = new ExperimentSummary {
+        def original = self
+        def results = self
+        def summaryNumbers = Map(
+          "mse" -> Memoize(() => self.groundTruth.mse(self.estimate)))
+        def summaryImages = Map()
+      }
     }
 }
 
 ///////////////////////////////////////////////////////////
 
-object SmallBaselineExperimentSummary {
-  implicit def implicitSmallBaselineExperimentResults(self: SmallBaselineExperimentResults) = new {
-    def toSummary = new ExperimentSummary {
-      def original = self
-      def results = self
-      def summaryNumbers = Map(
-        "mse" -> Memoize(() => self.groundTruth.mse(self.estimate)))
-      def summaryImages = Map()
-    }
-  }
-}
+//object SmallBaselineExperimentSummary {
+//  implicit def implicitSmallBaselineExperimentResults(self: SmallBaselineExperimentResults)(
+//    implicit runtime: RuntimeConfig) = new {
+//    def toSummary = new ExperimentSummary {
+//      def original = self
+//      def results = self
+//      def summaryNumbers = Map(
+//        "mse" -> Memoize(() => self.groundTruth.mse(self.estimate)))
+//      def summaryImages = Map()
+//    }
+//  }
+//}

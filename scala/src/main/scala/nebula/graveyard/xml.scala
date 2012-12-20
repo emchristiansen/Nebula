@@ -1,5 +1,7 @@
 package nebula.graveyard
 
+import nebula._
+
 import java.io.File
 
 import scala.xml.{Node, XML}
@@ -30,7 +32,7 @@ object XMLUtil {
     list.head.text
   }
 
-  def save(path: String, node: Node) {
+  def save(path: String, node: Node)(implicit runtime: RuntimeConfig) {
     val temp = IO.createTempFile("unformattedXML", ".xml")
     XML.save(temp.toString, node)
     val command = "xmllint --format %s --output %s".format(temp.toString, path)

@@ -14,8 +14,8 @@ import java.io.File
 import javax.imageio.ImageIO
 import org.opencv.features2d.DMatch
 
-import wideBaseline.WideBaselineExperimentSummary._
-import smallBaseline.SmallBaselineExperimentSummary._
+//import wideBaseline.WideBaselineExperimentSummary._
+//import smallBaseline.SmallBaselineExperimentSummary._
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -25,18 +25,18 @@ trait ExperimentSummary extends HasOriginal {
   def summaryNumbers: Map[String, () => Double]
   def summaryImages: Map[String, () => BufferedImage]
 
-  def outDirectory = Global.run[RuntimeConfig].projectChildPath(
+  def outDirectory(implicit runtime: RuntimeConfig) = runtime.projectChildPath(
     "summary")
 }
 
-object ExperimentSummary {
-  implicit def implicitExperimentResults(self: ExperimentResults) = new {
-    def toSummary = self.original match {
-      case original: WideBaselineExperimentResults => original.toSummary
-      case original: SmallBaselineExperimentResults => original.toSummary
-    }
-  }
-}
+//object ExperimentSummary {
+//  implicit def implicitExperimentResults(self: ExperimentResults) = new {
+//    def toSummary = self.original match {
+//      case original: WideBaselineExperimentResults => original.toSummary
+//      case original: SmallBaselineExperimentResults => original.toSummary
+//    }
+//  }
+//}
 
 object SummaryUtil {
   def recognitionRate(dmatches: Seq[DMatch]): Double = {

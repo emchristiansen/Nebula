@@ -19,14 +19,15 @@ import org.opencv.features2d.DMatch
 case class Histogram(
   title: String,
   sameDistances: Seq[Double],
-  differentDistances: Seq[Double]) {
+  differentDistances: Seq[Double])(
+      implicit runtime: RuntimeConfig) {
   def draw {
     val image = render
     ImageIO.write(image, "png", path)
 
     println("wrote %s".format(path))
   }
-
+  
   // TODO: Improve this and the above name.
   def render: BufferedImage = {
     val tempContents = "%s\n%s\n%s".format(
@@ -37,7 +38,7 @@ case class Histogram(
     org.apache.commons.io.FileUtils.writeStringToFile(tempFile, tempContents)
 
     // TODO: Fix path
-    val pythonScript = Global.run[RuntimeConfig].nebulaChildPath("python/distance_histogram.py")
+    val pythonScript = runtime.nebulaChildPath("python/distance_histogram.py")
     val outputFile = IO.createTempFile("histogram", ".png")
     val command = "python %s %s %s".format(pythonScript, tempFile, outputFile)
     IO.runSystemCommand(command)
@@ -47,12 +48,15 @@ case class Histogram(
 
   def path: File = {
     val filename = title.replace(" ", "_") + ".png"
-    Global.run[RuntimeConfig].projectChildPathNew("summary/histograms/%s".format(filename))
+    runtime.projectChildPathNew("summary/histograms/%s".format(filename))
   }
 }
 
 object Histogram {
-  def apply(results: WideBaselineExperimentResults, title: String): Histogram = {
+  def apply(
+      results: WideBaselineExperimentResults, 
+      title: String)(
+      implicit runtime: RuntimeConfig): Histogram = {
     val (same, different) = results.dmatches.partition(dmatch => dmatch.queryIdx == dmatch.trainIdx)
     Histogram(title, same.map(_.distance.toDouble), different.map(_.distance.toDouble))
   }

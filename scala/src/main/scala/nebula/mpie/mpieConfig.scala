@@ -38,7 +38,9 @@ case class MPIERuntimeConfig(
   backgroundRoot: String,
   scaleFactor: Double,
   numFolds: Int,
-  numIdentities: Int) extends RuntimeConfigTrait
+  numIdentities: Int) extends RuntimeConfigTrait {
+  val random = new scala.util.Random(0)
+}
 
 case class MPIEExperimentConfig(
   roi: List[String],

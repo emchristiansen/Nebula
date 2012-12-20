@@ -36,6 +36,8 @@ trait Experiment extends HasOriginal {
   // Parameter names and values
   def parameters: Seq[Tuple2[String, String]]
   
+  def getResults(implicit runtime: RuntimeConfig): ExperimentResults
+  
   /////////////////////////////////////////////////////////// 
   
   val unixEpoch = System.currentTimeMillis / 1000L

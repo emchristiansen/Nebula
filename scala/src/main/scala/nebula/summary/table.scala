@@ -52,7 +52,7 @@ object Table {
       stringsTable.map(_.mkString("\t")).mkString("\n")
     }
 
-    def path: File = Global.run[RuntimeConfig].projectChildPathNew(
+    def path(runtime: RuntimeConfig): File = runtime.projectChildPathNew(
       "summary/%s_%s.csv".format(self.unixEpoch, self.title))
   }
 

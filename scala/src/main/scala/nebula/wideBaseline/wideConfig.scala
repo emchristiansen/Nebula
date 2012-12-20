@@ -44,10 +44,12 @@ case class WideBaselineExperiment(
   matcher: Matcher)
 
 object WideBaselineExperiment {
-  implicit def implicitHasGroundTruth(self: WideBaselineExperiment): HasGroundTruth[Homography] =
+  implicit def implicitHasGroundTruth(
+    self: WideBaselineExperiment)(
+      implicit runtime: RuntimeConfig): HasGroundTruth[Homography] =
     new HasGroundTruth[Homography] {
       override def groundTruth = {
-        val homographyFile = Global.run[RuntimeConfig].projectChildPath(
+        val homographyFile = runtime.projectChildPath(
           "data/oxfordImages/%s/homographies/H1to%sp".format(
             self.imageClass,
             self.otherImage))
@@ -65,18 +67,23 @@ object WideBaselineExperiment {
         ("E", JSONUtil.abbreviate(self.extractor)),
         ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
+
+      override def getResults(implicit runtime: RuntimeConfig) =
+        WideBaselineExperimentResults(self)
     }
 
-  implicit def implicitImagePairLike(self: WideBaselineExperiment): HasImagePair =
+  implicit def implicitImagePairLike(
+    self: WideBaselineExperiment)(
+      implicit runtime: RuntimeConfig): HasImagePair =
     new HasImagePair {
       override def leftImage = {
-        val file = Global.run[RuntimeConfig].projectChildPath(
+        val file = runtime.projectChildPath(
           "data/oxfordImages/%s/images/img1.bmp".format(
             self.imageClass))
         ImageIO.read(file)
       }
       override def rightImage = {
-        val file = Global.run[RuntimeConfig].projectChildPath(
+        val file = runtime.projectChildPath(
           "data/oxfordImages/%s/images/img%s.bmp".format(
             self.imageClass,
             self.otherImage))
@@ -93,10 +100,11 @@ case class WideBaselineExperimentResults(
 
 object WideBaselineExperimentResults {
   def apply(
-    experiment: WideBaselineExperiment): WideBaselineExperimentResults = {
+    experiment: WideBaselineExperiment)(
+      implicit runtime: RuntimeConfig): WideBaselineExperimentResults = {
     // TODO: Code is duplicated
     val noResults = WideBaselineExperimentResults(experiment, null)
-    if (noResults.alreadyRun && Global.run[RuntimeConfig].skipCompletedExperiments) {
+    if (noResults.alreadyRun && runtime.skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
       val jsonString = org.apache.commons.io.FileUtils.readFileToString(file)
@@ -104,7 +112,9 @@ object WideBaselineExperimentResults {
     } else run(experiment)
   }
 
-  private def run(self: WideBaselineExperiment): WideBaselineExperimentResults = {
+  private def run(
+    self: WideBaselineExperiment)(
+      implicit runtime: RuntimeConfig): WideBaselineExperimentResults = {
     println("Running %s".format(self))
 
     val leftImage = self.leftImage
@@ -140,30 +150,42 @@ object WideBaselineExperimentResults {
   implicit def implicitExperimentResults(self: WideBaselineExperimentResults): ExperimentResults =
     new ExperimentResults {
       override def experiment = self.experiment
-      override def save = {
+      override def save(implicit runtime: RuntimeConfig) = {
         println("Writing to %s".format(self.path))
         // TODO
         val json = wideBaselineExperimentResults.write(self)
         org.apache.commons.io.FileUtils.writeStringToFile(self.path, json.prettyPrint)
       }
       override def original = self
+
+      // TODO: Pull into another record.      
+      override def toSummary(implicit runtime: RuntimeConfig) = new ExperimentSummary {
+        def original = self
+        def results = self
+        def summaryNumbers = Map(
+          "recognitionRate" -> Memoize(() => SummaryUtil.recognitionRate(self.dmatches)))
+        def summaryImages = Map(
+          "histogram" -> Memoize(() => Histogram(self, "").render))
+      }
     }
 }
 
 ///////////////////////////////////////////////////////////
 
-object WideBaselineExperimentSummary {
-  implicit def implicitWideBaselineExperimentResults(self: WideBaselineExperimentResults) = new {
-    def toSummary = new ExperimentSummary {
-      def original = self
-      def results = self
-      def summaryNumbers = Map(
-        "recognitionRate" -> Memoize(() => SummaryUtil.recognitionRate(self.dmatches)))
-      def summaryImages = Map(
-        "histogram" -> Memoize(() => Histogram(self, "").render))
-    }
-  }
-}
+//object WideBaselineExperimentSummary {
+//  implicit def implicitWideBaselineExperimentResults(
+//    self: WideBaselineExperimentResults)(
+//      implicit runtime: RuntimeConfig) = new {
+//    def toSummary = new ExperimentSummary {
+//      def original = self
+//      def results = self
+//      def summaryNumbers = Map(
+//        "recognitionRate" -> Memoize(() => SummaryUtil.recognitionRate(self.dmatches)))
+//      def summaryImages = Map(
+//        "histogram" -> Memoize(() => Histogram(self, "").render))
+//    }
+//  }
+//}
 
 
 

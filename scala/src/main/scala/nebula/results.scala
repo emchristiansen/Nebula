@@ -1,6 +1,7 @@
 package nebula
 
 import java.io.File
+import nebula.summary._
 
 import nebula.smallBaseline.SmallBaselineExperimentResults.implicitExperimentResults
 import nebula.wideBaseline.WideBaselineExperimentResults.implicitExperimentResults
@@ -19,8 +20,10 @@ import smallBaseline.FlowFieldJsonProtocol._
 
 trait ExperimentResults extends HasOriginal {
   def experiment: Experiment
-  def save: Unit
+  def save(implicit runtime: RuntimeConfig): Unit
 
+  def toSummary(implicit runtime: RuntimeConfig): ExperimentSummary
+  
   def experimentStringNoTime = experiment.name + "_" + experiment.parameters.map(
     p => p._1 + "-" + p._2).mkString("_")
 
@@ -30,39 +33,39 @@ trait ExperimentResults extends HasOriginal {
 
   def filename: String = experiment.unixEpoch + "_" + filenameNoTime
 
-  def outDirectory: File = Global.run[RuntimeConfig].projectChildPath(
+  def outDirectory(implicit runtime: RuntimeConfig): File = runtime.projectChildPath(
     "results/experiment_data/")
 
-  def path: File = new File(outDirectory, filename)
+  def path(implicit runtime: RuntimeConfig): File = new File(outDirectory, filename)
 
-  def existingResultsFiles: Seq[File] = {
+  def existingResultsFiles(implicit runtime: RuntimeConfig): Seq[File] = {
     val allPaths = outDirectory.list.toList.map(path => outDirectory + "/" + path.toString)
     val matchingPaths = allPaths.filter(_.contains(filenameNoTime))
     matchingPaths.sortBy(identity).reverse.map(path => new File(path))
   }
 
-  def existingResultsFile: Option[File] = existingResultsFiles.headOption
+  def existingResultsFile(implicit runtime: RuntimeConfig): Option[File] = existingResultsFiles.headOption
 
-  def alreadyRun: Boolean = !existingResultsFile.isEmpty
+  def alreadyRun(implicit runtime: RuntimeConfig): Boolean = !existingResultsFile.isEmpty
 }
 
-object ExperimentResults {
-  def apply(experiment: Experiment): ExperimentResults = experiment.original match {
-    case original: WideBaselineExperiment => WideBaselineExperimentResults(original)
-    case original: SmallBaselineExperiment => SmallBaselineExperimentResults(original)
-  }
-}
+//object ExperimentResults {
+//  def apply(experiment: Experiment): ExperimentResults = experiment.original match {
+//    case original: WideBaselineExperiment => WideBaselineExperimentResults(original)
+//    case original: SmallBaselineExperiment => SmallBaselineExperimentResults(original)
+//  }
+//}
 
 ///////////////////////////////////////////////////////////
 
 object ExperimentResultsJsonProtocol extends DefaultJsonProtocol {
+  implicit val smallBaselineExperimentResults: RootJsonFormat[SmallBaselineExperimentResults] =
+    jsonFormat3(SmallBaselineExperimentResults.apply).addClassInfo(
+      "SmallBaselineExperimentResults")  
+  
   implicit val wideBaselineExperimentResults =
     jsonFormat2(WideBaselineExperimentResults.apply).addClassInfo(
       "WideBaselineExperimentResults")
-
-  implicit val smallBaselineExperimentResults =
-    jsonFormat3(SmallBaselineExperimentResults.apply).addClassInfo(
-      "SmallBaselineExperimentResults")
 
   implicit object ExperimentResultsJsonProtocol extends RootJsonFormat[ExperimentResults] {
     override def write(self: ExperimentResults) = self.original match {
@@ -72,8 +75,9 @@ object ExperimentResultsJsonProtocol extends DefaultJsonProtocol {
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
       case JsString("WideBaselineExperimentResults") =>
         value.convertTo[WideBaselineExperimentResults]
-      case JsString("SmallBaselineExperimentResults") =>
-        value.convertTo[SmallBaselineExperimentResults]
+      case JsString("SmallBaselineExperimentResults") => wideBaselineExperimentResults.read(value)
+      // TODO: For some reason the implicit conversion isn't being picked up.
+//        value.convertTo[SmallBaselineExperimentResults]
       case _ => throw new DeserializationException("ExperimentResults expected")
     }
   }

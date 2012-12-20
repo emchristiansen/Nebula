@@ -21,7 +21,11 @@ import nebula.util.imageProcessing._
 import nebula.wideBaseline._
 import nebula._
 
-class LazyImage(originalPath: String, condition: MPIECondition, roiString: String) {
+class LazyImage(
+  originalPath: String,
+  condition: MPIECondition,
+  roiString: String)(
+    implicit runtime: MPIERuntimeConfig) {
   private val mpieProperties = MPIEProperties.parseMPIEPath(originalPath)
 
   val id = mpieProperties.id
@@ -36,7 +40,7 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
       // first get the file with the alignment matrix in it
       val pathSegment = mpieProperties.pathSegment
       val filename = "%s_%s_%s_%s_mean_align.txt".format(mpieProperties.id, mpieProperties.session, mpieProperties.expression, mpieProperties.pose)
-      val path = "%s/processed/%s/%s".format(Global.run[MPIERuntimeConfig].piSliceRoot, pathSegment, filename)
+      val path = "%s/processed/%s/%s".format(runtime.piSliceRoot, pathSegment, filename)
 
       val tformParams = io.Source.fromFile(path).mkString.split("\t|\n").map(_.toDouble)
 
@@ -52,7 +56,13 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
     }
 
     def scale(image: BufferedImage): BufferedImage = {
-      val scaleMatrix = new AffineTransform(Global.run[MPIERuntimeConfig].scaleFactor, 0, 0, Global.run[MPIERuntimeConfig].scaleFactor, 0, 0)
+      val scaleMatrix = new AffineTransform(
+        runtime.scaleFactor,
+        0,
+        0,
+        runtime.scaleFactor,
+        0,
+        0)
       val scaleOp = new AffineTransformOp(scaleMatrix, TYPE_BILINEAR)
       scaleOp.filter(image, null)
     }
@@ -99,7 +109,7 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
           x <- 0 until image.getWidth
         ) {
           val pixel = Pixel.getPixel(image, x, y)
-          val List(rNoise, gNoise, bNoise) = (0 until 3).toList.map(_ => Global.random.nextGaussian * std).map(_.toInt)
+          val List(rNoise, gNoise, bNoise) = (0 until 3).toList.map(_ => runtime.random.nextGaussian * std).map(_.toInt)
           val sum = Pixel.add(pixel, rNoise, gNoise, bNoise)
           image.setRGB(x, y, sum.argb)
         }
@@ -127,12 +137,12 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
 
           val pathSegment = mpieProperties.pathSegment
           val filename = "%s_%s_%s_%s_mean_fiducials.txt".format(mpieProperties.id, mpieProperties.session, mpieProperties.expression, mpieProperties.pose)
-          val path = "%s/processed/%s/%s".format(Global.run[MPIERuntimeConfig].piSliceRoot, pathSegment, filename)
+          val path = "%s/processed/%s/%s".format(runtime.piSliceRoot, pathSegment, filename)
           val lines = io.Source.fromFile(path).mkString.split("\n").filter(_.size > 0)
 
           val all = for (l <- lines) yield {
             val Parser(x, y) = l
-            (padding + x.toDouble * Global.run[MPIERuntimeConfig].scaleFactor, padding + y.toDouble * Global.run[MPIERuntimeConfig].scaleFactor)
+            (padding + x.toDouble * runtime.scaleFactor, padding + y.toDouble * runtime.scaleFactor)
           }
 
           // We 4 fiducials for the misalignment for each pose. Note the frontal pose
@@ -149,8 +159,8 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
         }
 
         def perturb(xy: Tuple2[Double, Double]): Tuple2[Double, Double] = {
-          val xNoise = Global.random.nextGaussian * std
-          val yNoise = Global.random.nextGaussian * std
+          val xNoise = runtime.random.nextGaussian * std
+          val yNoise = runtime.random.nextGaussian * std
 
           val (x, y) = xy
           (x + xNoise, y + yNoise)
@@ -193,19 +203,19 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
       val mask = {
         val pathSegment = mpieProperties.pathSegment
         val filename = "%s_%s_%s_%s_mean_alpha.png".format(mpieProperties.id, mpieProperties.session, mpieProperties.expression, mpieProperties.pose)
-        val path = "%s/processed/%s/%s".format(Global.run[MPIERuntimeConfig].piSliceRoot, pathSegment, filename)
+        val path = "%s/processed/%s/%s".format(runtime.piSliceRoot, pathSegment, filename)
         padImage(scale(warp(ImageIO.read(new File(path)))))
       }
 
       lazy val syntheticBackground = {
-        val directory = "%s/session%s".format(Global.run[MPIERuntimeConfig].backgroundRoot, mpieProperties.session)
+        val directory = "%s/session%s".format(runtime.backgroundRoot, mpieProperties.session)
         val file = {
           val files = (new File(directory)).listFiles.toList.filter(!_.toString.contains(".DS_Store"))
-          Global.random.shuffle(files).head
+          runtime.random.shuffle(files).head
         }
         val synthetic = ImageIO.read(file)
-        val x = Global.random.nextInt(synthetic.getWidth - image.getWidth)
-        val y = Global.random.nextInt(synthetic.getHeight - image.getHeight)
+        val x = runtime.random.nextInt(synthetic.getWidth - image.getWidth)
+        val y = runtime.random.nextInt(synthetic.getHeight - image.getHeight)
         synthetic.getSubimage(x, y, image.getWidth, image.getHeight)
       }
 
@@ -237,7 +247,7 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
         case "051" => "05_1"
       }
 
-      val roiPath = Global.run[MPIERuntimeConfig].piSliceRoot ++ "/processed/roi/" ++ poseUnderscore ++ "/" ++ roiString ++ ".png"
+      val roiPath = runtime.piSliceRoot ++ "/processed/roi/" ++ poseUnderscore ++ "/" ++ roiString ++ ".png"
       val roiImg = padImage(scale(ImageIO.read(new File(roiPath))))
 
       ImageUtil.extractROI(roiImg, image)
@@ -250,9 +260,9 @@ class LazyImage(originalPath: String, condition: MPIECondition, roiString: Strin
     val conditioned = roi(misalignment(background(jpeg(noise(blur(illumination(scaled)))))))
 
     val tempPrefix = "%s_%s_%s".format(id, roiString, condition.toString)
-    val path = IO.createTempFile(tempPrefix, ".png")
+    val path: File = sys.error("fix me") //IO.createTempFile(tempPrefix, ".png")
 
-    if (Global.run[RuntimeConfig].deleteTemporaryFiles) path.deleteOnExit
+    if (runtime.deleteTemporaryFiles) path.deleteOnExit
 
     ImageIO.write(conditioned, "png", path)
     path.toString

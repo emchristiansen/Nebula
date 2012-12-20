@@ -178,13 +178,16 @@ object IO {
     while (!(new File(path).exists)) Thread.sleep(100) // 100 milliseconds
   }
 
-  def createTempFile(prefix: String, suffix: String) = {
-    val file = Global.run[RuntimeConfig].tempDirectory match {
+  def createTempFile(
+      prefix: String, 
+      suffix: String)(
+          implicit runtime: RuntimeConfig) = {
+    val file = runtime.tempDirectory match {
       case Some(file) => File.createTempFile(prefix, suffix, file)
       case None => File.createTempFile(prefix, suffix)
     }
 
-    if (Global.run[RuntimeConfig].deleteTemporaryFiles) file.deleteOnExit
+    if (runtime.deleteTemporaryFiles) file.deleteOnExit
     file
   }
 }

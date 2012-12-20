@@ -293,41 +293,41 @@ object LogPolarExtractor {
 
 ///////////////////////////////////////////////////////////    
 
-object BRISKExtractorType extends Enumeration {
-  type BRISKExtractorType = Value
-  val Raw, Order, Rank = Value
-}
-
-case class BRISKExtractor(
-  extractorType: BRISKExtractorType.BRISKExtractorType,
-  normalizeRotation: Boolean,
-  normalizeScale: Boolean)
-
-object BRISKExtractor {
-  import Extractor._
-  import BRISKExtractorType._
-
-  implicit def implicitBRISKExtractor(self: BRISKExtractor): Extractor =
-    new SingleExtractor {
-      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
-        val constructor: Descriptor => Descriptor = self.extractorType match {
-          case Raw => identity
-          case Order => (raw: Descriptor) => {
-            SortDescriptor.fromUnsorted(raw.values[Int])
-          }
-          case Rank => (raw: Descriptor) => {
-            SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw.values[Int]))
-          }
-        }
-
-        val rawOption = intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)
-
-        for (raw <- rawOption) yield constructor(raw)
-      }
-
-      override def original = self
-    }
-}
+//object BRISKExtractorType extends Enumeration {
+//  type BRISKExtractorType = Value
+//  val Raw, Order, Rank = Value
+//}
+//
+//case class BRISKExtractor(
+//  extractorType: BRISKExtractorType.BRISKExtractorType,
+//  normalizeRotation: Boolean,
+//  normalizeScale: Boolean)
+//
+//object BRISKExtractor {
+//  import Extractor._
+//  import BRISKExtractorType._
+//
+//  implicit def implicitBRISKExtractor(self: BRISKExtractor): Extractor =
+//    new SingleExtractor {
+//      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
+//        val constructor: Descriptor => Descriptor = self.extractorType match {
+//          case Raw => identity
+//          case Order => (raw: Descriptor) => {
+//            SortDescriptor.fromUnsorted(raw.values[Int])
+//          }
+//          case Rank => (raw: Descriptor) => {
+//            SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw.values[Int]))
+//          }
+//        }
+//
+//        val rawOption = intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)
+//
+//        for (raw <- rawOption) yield constructor(raw)
+//      }
+//
+//      override def original = self
+//    }
+//}
 
 ///////////////////////////////////////////////////////////      
 
@@ -430,15 +430,15 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////
 
-  implicit val briskExtractorType = enumeration(
-    "BRISKExtractorType",
-    Map(
-      "Raw" -> BRISKExtractorType.Raw,
-      "Order" -> BRISKExtractorType.Order,
-      "Rank" -> BRISKExtractorType.Rank))
+//  implicit val briskExtractorType = enumeration(
+//    "BRISKExtractorType",
+//    Map(
+//      "Raw" -> BRISKExtractorType.Raw,
+//      "Order" -> BRISKExtractorType.Order,
+//      "Rank" -> BRISKExtractorType.Rank))
 
-  implicit val briskExtractor =
-    jsonFormat3(BRISKExtractor.apply).addClassInfo("BRISKExtractor")
+//  implicit val briskExtractor =
+//    jsonFormat3(BRISKExtractor.apply).addClassInfo("BRISKExtractor")
 
   /////////////////////////////////////////////////////////
 
@@ -452,14 +452,14 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
       case original: OpenCVExtractor => original.toJson
       case original: PatchExtractor => original.toJson
       case original: LogPolarExtractor => original.toJson
-      case original: BRISKExtractor => original.toJson
+//      case original: BRISKExtractor => original.toJson
       case original: ELUCIDExtractor => original.toJson
     }
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
       case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
       case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
       case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
-      case JsString("BRISKExtractor") => value.convertTo[BRISKExtractor]
+//      case JsString("BRISKExtractor") => value.convertTo[BRISKExtractor]
       case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
       case _ => throw new DeserializationException("Extractor expected")
     }

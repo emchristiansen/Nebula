@@ -11,19 +11,19 @@ import SparkContext._
 
 ///////////////////////////////////////////////////////////
 
-object Global {
-  val random = new Random(0)
-  val homeDirectory = new File(System.getProperty("user.home"))
-  var runVar: Option[RuntimeConfigTrait] = None
-  // TODO: This asInstanceOf stuff has bad code smell.
-  def run[R <: RuntimeConfigTrait](implicit manifest: Manifest[R]): R = runVar match {
-    case Some(config) => {
-      assert(manifest.erasure.isInstance(config))
-      config.asInstanceOf[R]
-    }
-    case None => throw new Exception("Global.run not initialized")
-  }
-}
+//object Global {
+//  val random = new Random(0)
+//  val homeDirectory = new File(System.getProperty("user.home"))
+//  var runVar: Option[RuntimeConfigTrait] = None
+//  // TODO: This asInstanceOf stuff has bad code smell.
+//  def run[R <: RuntimeConfigTrait](implicit manifest: Manifest[R]): R = runVar match {
+//    case Some(config) => {
+//      assert(manifest.erasure.isInstance(config))
+//      config.asInstanceOf[R]
+//    }
+//    case None => throw new Exception("Global.run not initialized")
+//  }
+//}
 
 ///////////////////////////////////////////////////////////
 
@@ -65,16 +65,19 @@ case class RuntimeConfig(
   for (temp <- tempDirectory) {
     if (!temp.isDirectory) assert(temp.mkdir)
   }
+  
+  val random = new scala.util.Random(0)
 }
 
 object RuntimeConfig {
   // TODO: Put this somewhere more appropriate.
   System.loadLibrary("opencv_java")
 
-  def init(runtimeConfigFile: File) {
+  def apply(runtimeConfigFile: File): RuntimeConfig = {
     val runtimeConfig = IO.interpretFile[RuntimeConfig](runtimeConfigFile)
-    Global.runVar = Some(runtimeConfig)
+//    Global.runVar = Some(runtimeConfig)
     println(runtimeConfig)
+    runtimeConfig
   }
 }
 
