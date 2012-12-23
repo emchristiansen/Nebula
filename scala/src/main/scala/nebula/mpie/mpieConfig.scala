@@ -19,15 +19,12 @@ import nebula._
 
 import java.io.File
 
-import spark.SparkContext
-import SparkContext._
 import org.apache.commons.io.FilenameUtils
 
 // TODO: Duplication. Grr.
 case class MPIERuntimeConfig(
   override val projectRoot: File,
   override val nebulaRoot: File,
-  override val sparkContext: SparkContext,
   override val tempDirectory: Option[File],
   override val deleteTemporaryFiles: Boolean,
   override val skipCompletedExperiments: Boolean,

@@ -75,9 +75,8 @@ object ExperimentResultsJsonProtocol extends DefaultJsonProtocol {
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
       case JsString("WideBaselineExperimentResults") =>
         value.convertTo[WideBaselineExperimentResults]
-      case JsString("SmallBaselineExperimentResults") => wideBaselineExperimentResults.read(value)
-      // TODO: For some reason the implicit conversion isn't being picked up.
-//        value.convertTo[SmallBaselineExperimentResults]
+      case JsString("SmallBaselineExperimentResults") =>
+        value.convertTo[SmallBaselineExperimentResults]
       case _ => throw new DeserializationException("ExperimentResults expected")
     }
   }

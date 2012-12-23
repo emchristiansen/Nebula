@@ -152,8 +152,7 @@ object WideBaselineExperimentResults {
       override def experiment = self.experiment
       override def save(implicit runtime: RuntimeConfig) = {
         println("Writing to %s".format(self.path))
-        // TODO
-        val json = wideBaselineExperimentResults.write(self)
+        val json = self.toJson
         org.apache.commons.io.FileUtils.writeStringToFile(self.path, json.prettyPrint)
       }
       override def original = self

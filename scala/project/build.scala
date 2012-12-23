@@ -45,7 +45,7 @@ object SFSPipelineBuild extends Build {
 //      "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
       "io.spray" % "spray-json_2.9.2" % "1.2.3",
       "junit" % "junit" % "4.10" % "test",
-      "org.spark-project" % "spark-core_2.9.2" % "0.6.0",
+//      "org.spark-project" % "spark-core_2.9.2" % "0.6.1" % "provided",
       "org.imgscalr" % "imgscalr-lib" % "4.2"
     )
   )

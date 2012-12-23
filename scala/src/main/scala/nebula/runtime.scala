@@ -6,9 +6,6 @@ import scala.util.Random
 
 import util.IO
 
-import spark.SparkContext
-import SparkContext._
-
 ///////////////////////////////////////////////////////////
 
 //object Global {
@@ -30,7 +27,6 @@ import SparkContext._
 trait RuntimeConfigTrait {
   val projectRoot: File
   val nebulaRoot: File
-  val sparkContext: SparkContext
   val tempDirectory: Option[File]
   val deleteTemporaryFiles: Boolean
   val skipCompletedExperiments: Boolean
@@ -56,7 +52,6 @@ trait RuntimeConfigTrait {
 case class RuntimeConfig(
   override val projectRoot: File,
   override val nebulaRoot: File,
-  override val sparkContext: SparkContext,
   override val tempDirectory: Option[File],
   override val deleteTemporaryFiles: Boolean,
   override val skipCompletedExperiments: Boolean,
@@ -65,20 +60,19 @@ case class RuntimeConfig(
   for (temp <- tempDirectory) {
     if (!temp.isDirectory) assert(temp.mkdir)
   }
-  
-  val random = new scala.util.Random(0)
 }
 
 object RuntimeConfig {
   // TODO: Put this somewhere more appropriate.
   System.loadLibrary("opencv_java")
 
-  def apply(runtimeConfigFile: File): RuntimeConfig = {
-    val runtimeConfig = IO.interpretFile[RuntimeConfig](runtimeConfigFile)
-//    Global.runVar = Some(runtimeConfig)
-    println(runtimeConfig)
-    runtimeConfig
-  }
+//  def apply(runtimeConfigFile: File): Tuple2[RuntimeConfig, SparkContext] = {
+//    val (runtimeConfig, sparkContext) = IO.interpretFile[Tuple2[RuntimeConfig, SparkContext]](runtimeConfigFile)
+////    Global.runVar = Some(runtimeConfig)
+//    println(runtimeConfig)
+//    println(sparkContext)
+//    (runtimeConfig, sparkContext)
+//  }
 }
 
 

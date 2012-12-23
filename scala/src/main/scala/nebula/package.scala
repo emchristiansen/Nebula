@@ -1,4 +1,5 @@
 import com.twitter.util.Eval
+import java.io.File
 
 ///////////////////////////////////////////////////////////
 
@@ -10,7 +11,7 @@ package object nebula {
 
   def TODO = sys.error("TODO")
 
-  def eval[A: Manifest](expression: String) = {
+  def eval[A: Manifest](expression: String): A = {
     val source = """
       import nebula._;
       import nebula.smallBaseline._;
@@ -22,6 +23,11 @@ package object nebula {
       value""".format(implicitly[Manifest[A]], expression)
 
     (new Eval).apply[A](source)
+  }
+  
+  def evalFile[A: Manifest](file: File): A = {
+    val string = org.apache.commons.io.FileUtils.readFileToString(file)
+    eval[A](string)
   }
 
   implicit def addAssert[A](value: A) = new {
