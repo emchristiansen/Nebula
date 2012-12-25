@@ -18,10 +18,15 @@ object SFSPipelineBuild extends Build {
     )
   )
 
+  val slf4jVersion = "1.6.1"
+
   def extraLibraryDependencies = Seq(
     libraryDependencies ++= Seq(
 //      "com.nativelibs4java" % "scalacl" % "0.3-SNAPSHOT",
 //      "com.nativelibs4java" % "javacl" % "1.0-SNAPSHOT",
+      "log4j" % "log4j" % "1.2.16",
+      "org.slf4j" % "slf4j-api" % slf4jVersion,
+      "org.slf4j" % "slf4j-log4j12" % slf4jVersion,
       "commons-lang" % "commons-lang" % "2.6",
       "org.apache.commons" % "commons-math3" % "3.0",
   //    "org.apache.commons" % "commons-math" % "2.2",

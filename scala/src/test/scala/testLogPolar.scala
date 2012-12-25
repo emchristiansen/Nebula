@@ -149,7 +149,7 @@ class TestLogPolar extends FunSuite {
     val points = numPoints times { randomPoint(width, height, 100) }
 
     for (point <- points; angleIndex <- 0 until numAngles) {
-//      println(point)
+      //      println(point)
       val angle = 2 * math.Pi * angleIndex.toDouble / numAngles
       //      println(angleIndex, angle)
 
@@ -347,13 +347,14 @@ class TestLogPolar extends FunSuite {
       def distance = LogPolar.getDistance(MatcherType.L1)
 
       val response = LogPolar.getResponseMap(
+        PatchExtractorType.Raw,
         false,
         distance,
         LogPolar.stackVertical(original),
         rotated,
         0 until numAngles,
         0 until 1)
-        
+
       assert(response.argmin == (angleIndex, 0))
     }
   }
@@ -390,10 +391,11 @@ class TestLogPolar extends FunSuite {
 
       def distance = LogPolar.getDistance(MatcherType.L1)
 
-//      dumpImage("rawLogPolarRecoverProperScale_original", scale100(original.toScaledImage))
-//      dumpImage("rawLogPolarRecoverProperScale_scaled", scale100(scaled.toScaledImage))
+      //      dumpImage("rawLogPolarRecoverProperScale_original", scale100(original.toScaledImage))
+      //      dumpImage("rawLogPolarRecoverProperScale_scaled", scale100(scaled.toScaledImage))
 
       val response = LogPolar.getResponseMap(
+        PatchExtractorType.Raw,
         true,
         distance,
         LogPolar.stackVertical(original),
@@ -401,10 +403,10 @@ class TestLogPolar extends FunSuite {
         0 until 1,
         scaleIndices)
 
-//      println(response)
-//      println(scaleIndex)
-//
-//      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
+      //      println(response)
+      //      println(scaleIndex)
+      //
+      //      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
       assert(response.argmin == (0, scaleIndex + numScales - 1))
     }
   }

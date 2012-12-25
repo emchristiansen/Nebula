@@ -36,6 +36,10 @@ object KeyPointUtil {
     linearBound(width, keyPoint.pt.x) && linearBound(height, keyPoint.pt.y)
   }
 
+  def euclideanDistance(left: KeyPoint, right: KeyPoint): Double = {
+    math.sqrt(math.pow(left.pt.x - right.pt.x, 2) + math.pow(left.pt.y - right.pt.y, 2))
+  }
+  
   def scaleFactor(homography: Homography, xyPoint: RealVector): Double = {
     require(xyPoint.getDimension == 2)
 

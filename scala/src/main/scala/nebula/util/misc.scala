@@ -28,6 +28,7 @@ import breeze.linalg._
 
 import RichImage._
 import MathUtil._
+import nebula.util._
 
 ///////////////////////////////////////////////////////////
 
@@ -110,8 +111,14 @@ object DenseMatrixUtil {
 
 ///////////////////////////////////////////////////////////
 
-object Util {
-
+object Util extends Logging {
+  def sortMap[A, B](map: Map[A, B])(implicit ordering: Ordering[A]): collection.immutable.SortedMap[A, B] = {
+    val treeMap = new collection.immutable.TreeMap[A, B]
+    map.toList.foldLeft(treeMap) {
+      case (treeMap, pair) => treeMap + pair
+    }
+  }
+  
   def groupBySizes[A](sizes: Seq[Int], seq: Seq[A]): Seq[Seq[A]] = {
     assert(sizes.sum == seq.size)
     if (!sizes.isEmpty) assert(sizes.min > 0)
@@ -190,6 +197,61 @@ object Util {
     val divisors = (0 until numBits).reverse.map(p => math.pow(2, p).toInt)
     val divided = divisors.map(d => num / d)
     divided.map(_ % 2 == 1)
+  }
+
+  // Takes a set of pairs and ensures they form an onto function.
+  // When onto-ness is violated, all offending pairs are removed from the set.
+  def makeOntoFunction[A, B](pairs: Set[Tuple2[A, B]]): Set[Tuple2[A, B]] = {
+	// Take the first duplicate first entries.
+    val pairs1 = pairs.groupBy(_._1).map(_._2).map(_.head)
+    
+    // Remove all pairs with duplicate second entries.
+    pairs1.groupBy(_._2).filter(_._2.size > 1).map(_._2).map(_.head).toSet
+  } 
+  
+  // Warp the leftKeyPoint by the homography and return its nearest neighbor
+  // among the rightKeyPoints.
+  def nearestUnderWarp(
+    threshold: Double,
+    homography: Homography,
+    rightKeyPoints: Seq[KeyPoint])(leftKeyPoint: KeyPoint): Option[KeyPoint] = {
+    val leftWarped = KeyPointUtil.transform(homography)(leftKeyPoint)
+    val rightWithDistances = rightKeyPoints zip rightKeyPoints.map(
+      right => KeyPointUtil.euclideanDistance(leftWarped, right))
+    val (nearest, distance) = rightWithDistances.minBy(_._2)
+    if (distance < threshold) Some(nearest)
+    else None
+  }
+
+  // Find the nearest neighbor for every leftKeyPoint and return the sequence
+  // of pairs. Remove pairs where the rightKeyPoint isn't found, or where
+  // multiple leftKeyPoints pair with the same rightKeyPoint.
+  def nearestUnderWarpRemoveDuplicates(
+    threshold: Double,
+    homography: Homography,
+    leftKeyPoints: Seq[KeyPoint],
+    rightKeyPoints: Seq[KeyPoint]): Seq[Tuple2[KeyPoint, KeyPoint]] = {
+    // TODO
+    logDebug("leftKeyPoints.size: " + leftKeyPoints.size)
+    logDebug("rightKeyPoints.size: " + rightKeyPoints.size)
+    println("leftKeyPoints.size: " + leftKeyPoints.size)
+    println("rightKeyPoints.size: " + rightKeyPoints.size)    
+    val rightMatches = leftKeyPoints.map(nearestUnderWarp(
+      threshold,
+      homography,
+      rightKeyPoints))
+    assert(leftKeyPoints.size == rightMatches.size)
+    val culledOption = leftKeyPoints zip rightMatches filter (_._2.isDefined)
+    val culled = culledOption map {
+      case (left, rightOption) => (left, rightOption.get)
+    }
+    logDebug("culled.size: " + culled.size)
+    
+    val onto = makeOntoFunction(culled.toSet).toIndexedSeq
+    logDebug("onto.size: " + onto.size)
+    // TODO
+    println("onto.size: " + onto.size)
+    onto
   }
 
   def pruneKeyPoints(
@@ -292,11 +354,11 @@ object Util {
     these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
 
-//  // TODO: This doesn't actually work. It always returns what are effectively
-//  // serial collections.
-//  def parallelize[A](seq: Seq[A]): collection.GenSeq[A] = {
-//    if (Global.run[RuntimeConfig].parallel) seq.par else seq
-//  }
+  //  // TODO: This doesn't actually work. It always returns what are effectively
+  //  // serial collections.
+  //  def parallelize[A](seq: Seq[A]): collection.GenSeq[A] = {
+  //    if (Global.run[RuntimeConfig].parallel) seq.par else seq
+  //  }
 
   def truncate(list: Seq[Double]): String = {
     list.map(l => "%.4f".format(l)).mkString(" ")

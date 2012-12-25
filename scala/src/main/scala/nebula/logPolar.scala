@@ -147,19 +147,19 @@ object LogPolar {
         Seq(keyPoint)).head
   }
 
-  // Pad with |cols| - 1 columns of zeros on either side, and replicate
-  // once vertically, dropping the last row.
-  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
-    val seqSeq = matrix.toSeqSeq
-
-    val zeroPadding = IndexedSeq.fill(matrix.cols - 1)(0.0)
-    val padded = seqSeq.map(zeroPadding ++ _ ++ zeroPadding)
-
-    val replicated = (padded ++ padded.init).toMatrix
-    assert(replicated.cols == 3 * matrix.cols - 2)
-    assert(replicated.rows == 2 * matrix.rows - 1)
-    replicated
-  }
+//  // Pad with |cols| - 1 columns of zeros on either side, and replicate
+//  // once vertically, dropping the last row.
+//  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
+//    val seqSeq = matrix.toSeqSeq
+//
+//    val zeroPadding = IndexedSeq.fill(matrix.cols - 1)(0.0)
+//    val padded = seqSeq.map(zeroPadding ++ _ ++ zeroPadding)
+//
+//    val replicated = (padded ++ padded.init).toMatrix
+//    assert(replicated.cols == 3 * matrix.cols - 2)
+//    assert(replicated.rows == 2 * matrix.rows - 1)
+//    replicated
+//  }
 
   def stackVertical(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
     val seqSeq = matrix.toSeqSeq
@@ -167,6 +167,7 @@ object LogPolar {
   }
 
   def getResponseMap(
+    normalization: PatchExtractorType.PatchExtractorType,
     normalizeByOverlap: Boolean,
     distance: (IndexedSeq[Double], IndexedSeq[Double]) => Double,
     base: DenseMatrix[Double],
@@ -180,6 +181,17 @@ object LogPolar {
     require(scaleIndices.min >= -kernel.cols + 1)
     require(scaleIndices.max < kernel.cols)
 
+    // If |normalization| isn't raw, we do match-time normalization
+    // of the part of the log-polar patterns that overlap.
+    def normalize(patch: DenseMatrix[Double]): IndexedSeq[Double] = {
+      if (normalization == PatchExtractorType.Raw) 
+        patch.toSeqSeq.flatten
+      else {
+        val extractor = PatchExtractor.constructorDouble(normalization)
+        extractor(patch.toSeqSeq.flatten).values[Double]
+      }
+    }
+    
     val response = DenseMatrix.fill(angleIndices.size, scaleIndices.size)(0.0)
     for (angleIndex <- angleIndices; scaleIndex <- scaleIndices) {
       val baseScaleRange =
@@ -187,12 +199,15 @@ object LogPolar {
       val kernelScaleRange =
         math.max(0, -scaleIndex) until math.min(base.cols, base.cols - scaleIndex)
 
-      val baseVector = copy(base(
+      val baseMatrix = copy(base(
         angleIndex until angleIndex + kernel.rows,
-        baseScaleRange)).data.toIndexedSeq
-      val kernelVector = copy(kernel(
+        baseScaleRange))
+      val kernelMatrix = copy(kernel(
         ::,
-        kernelScaleRange)).data.toIndexedSeq
+        kernelScaleRange))
+        
+      val baseVector = normalize(baseMatrix)
+      val kernelVector = normalize(kernelMatrix)
       assert(baseVector.size == kernelVector.size)
       
       val scaleOffset = scaleIndex - scaleIndices.min

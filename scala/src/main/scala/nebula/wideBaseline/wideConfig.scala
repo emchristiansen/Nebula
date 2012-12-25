@@ -30,6 +30,7 @@ import ExtractorJsonProtocol._
 import MatcherJsonProtocol._
 import ExperimentJsonProtocol._
 import ExperimentResultsJsonProtocol._
+import PairDetectorJsonProtocol._
 
 import spray.json._
 import nebula.summary._
@@ -39,7 +40,7 @@ import nebula.summary._
 case class WideBaselineExperiment(
   imageClass: String,
   otherImage: Int,
-  detector: Detector,
+  detector: PairDetector,
   extractor: Extractor,
   matcher: Matcher)
 
@@ -59,13 +60,13 @@ object WideBaselineExperiment {
 
   implicit def implicitExperiment(self: WideBaselineExperiment): Experiment =
     new Experiment {
-      override def name = "WideBaselineExperiment"
-      override def parameters = Seq(
-        ("IC", self.imageClass.toString),
-        ("OI", self.otherImage.toString),
-        ("D", JSONUtil.abbreviate(self.detector)),
-        ("E", JSONUtil.abbreviate(self.extractor)),
-        ("M", JSONUtil.abbreviate(self.matcher)))
+//      override def name = "WideBaselineExperiment"
+//      override def parameters = Seq(
+//        ("IC", self.imageClass.toString),
+//        ("OI", self.otherImage.toString),
+//        ("D", JSONUtil.abbreviate(self.detector)),
+//        ("E", JSONUtil.abbreviate(self.extractor)),
+//        ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
 
       override def getResults(implicit runtime: RuntimeConfig) =
@@ -98,7 +99,7 @@ case class WideBaselineExperimentResults(
   experiment: WideBaselineExperiment,
   dmatches: Seq[DMatch])
 
-object WideBaselineExperimentResults {
+object WideBaselineExperimentResults extends Logging {
   def apply(
     experiment: WideBaselineExperiment)(
       implicit runtime: RuntimeConfig): WideBaselineExperimentResults = {
@@ -120,14 +121,10 @@ object WideBaselineExperimentResults {
     val leftImage = self.leftImage
     val rightImage = self.rightImage
 
-    val (leftKeyPoints, rightKeyPoints) = {
-      val leftKeyPoints = self.detector.detect(leftImage)
-      Util.pruneKeyPoints(
-        leftImage,
-        rightImage,
-        self.groundTruth,
-        leftKeyPoints).unzip
-    }
+    val (leftKeyPoints, rightKeyPoints) = self.detector.detectPair(
+        self.groundTruth, 
+        leftImage, 
+        rightImage) unzip
 
     println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 

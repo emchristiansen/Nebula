@@ -19,7 +19,9 @@ class TestConfig extends FunSuite {
     val wide = WideBaselineExperiment(
       "wall",
       2,
-      OpenCVDetector(FAST, Some(100)),
+      OpenCVPairDetector(
+        OpenCVDetector(FAST, Some(100)),
+        Some(10)),
       PatchExtractor(
         Order,
         false,

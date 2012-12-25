@@ -38,12 +38,12 @@ case class SmallBaselineExperiment(
 object SmallBaselineExperiment {
   implicit def implicitExperiment(self: SmallBaselineExperiment): Experiment =
     new Experiment {
-      override def name = "SmallBaselineExperiment"
-      override def parameters = Seq(
-        ("SR", self.searchRadius.toString),
-        ("IC", self.imageClass),
-        ("E", JSONUtil.abbreviate(self.extractor)),
-        ("M", JSONUtil.abbreviate(self.matcher)))
+//      override def name = "SmallBaselineExperiment"
+//      override def parameters = Seq(
+//        ("SR", self.searchRadius.toString),
+//        ("IC", self.imageClass),
+//        ("E", JSONUtil.abbreviate(self.extractor)),
+//        ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
 
       override def getResults(implicit runtime: RuntimeConfig) =

@@ -24,8 +24,12 @@ trait ExperimentResults extends HasOriginal {
 
   def toSummary(implicit runtime: RuntimeConfig): ExperimentSummary
   
-  def experimentStringNoTime = experiment.name + "_" + experiment.parameters.map(
-    p => p._1 + "-" + p._2).mkString("_")
+  def experimentStringNoTime = {
+    val fullString = JSONUtil.flattenJson(experiment.toJson)
+    // Unfortunately, this string is too long to be part of a filename.
+    fullString.take(100) + "_" + fullString.hashCode
+  }
+    //experiment.name + "_" + experiment.parameters.map(    p => p._1 + "-" + p._2).mkString("_")
 
   def experimentString = experiment.unixEpoch + "_" + experimentStringNoTime
 

@@ -8,6 +8,7 @@ import nebula.wideBaseline.WideBaselineExperiment.implicitExperiment
 import smallBaseline.SmallBaselineExperiment
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny}
 import wideBaseline.WideBaselineExperiment
+import PairDetectorJsonProtocol._
 
 ///////////////////////////////////////////////////////////
 
@@ -31,10 +32,10 @@ trait HasEstimate[A] {
 ///////////////////////////////////////////////////////////
 
 trait Experiment extends HasOriginal {
-  def name: String
-
-  // Parameter names and values
-  def parameters: Seq[Tuple2[String, String]]
+//  def name: String
+//
+//  // Parameter names and values
+//  def parameters: Seq[Tuple2[String, String]]
   
   def getResults(implicit runtime: RuntimeConfig): ExperimentResults
   
@@ -42,7 +43,7 @@ trait Experiment extends HasOriginal {
   
   val unixEpoch = System.currentTimeMillis / 1000L
 
-  def stringMap = parameters.toMap
+//  def stringMap = parameters.toMap
 }
 
 ///////////////////////////////////////////////////////////

@@ -176,6 +176,27 @@ object PatchExtractor {
   import Extractor._
   import PatchExtractorType._
 
+  // TODO: Duplication with next function.
+  def constructorDouble(extractorType: PatchExtractorType): IndexedSeq[Double] => Descriptor = {
+    extractorType match {
+      case NCC => (raw: IndexedSeq[Double]) => {
+        val mean = stats.mean(raw: _*)
+        val std = stats.sampleStdDev(raw: _*)
+        if (std.abs < 0.001) raw // Don't change it.
+        else {
+          val normalized = raw.map(x => (x - mean) / std)
+          assert(stats.mean(normalized: _*).abs < 0.0001)
+          assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
+          normalized
+        }
+      }
+
+      case Rank => (raw: IndexedSeq[Double]) => {
+        SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw))
+      }
+    }
+  }
+
   def constructor(extractorType: PatchExtractorType): IndexedSeq[Int] => Descriptor = {
     extractorType match {
       case Raw => (raw: IndexedSeq[Int]) => raw
@@ -430,15 +451,15 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////
 
-//  implicit val briskExtractorType = enumeration(
-//    "BRISKExtractorType",
-//    Map(
-//      "Raw" -> BRISKExtractorType.Raw,
-//      "Order" -> BRISKExtractorType.Order,
-//      "Rank" -> BRISKExtractorType.Rank))
+  //  implicit val briskExtractorType = enumeration(
+  //    "BRISKExtractorType",
+  //    Map(
+  //      "Raw" -> BRISKExtractorType.Raw,
+  //      "Order" -> BRISKExtractorType.Order,
+  //      "Rank" -> BRISKExtractorType.Rank))
 
-//  implicit val briskExtractor =
-//    jsonFormat3(BRISKExtractor.apply).addClassInfo("BRISKExtractor")
+  //  implicit val briskExtractor =
+  //    jsonFormat3(BRISKExtractor.apply).addClassInfo("BRISKExtractor")
 
   /////////////////////////////////////////////////////////
 
@@ -452,14 +473,14 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
       case original: OpenCVExtractor => original.toJson
       case original: PatchExtractor => original.toJson
       case original: LogPolarExtractor => original.toJson
-//      case original: BRISKExtractor => original.toJson
+      //      case original: BRISKExtractor => original.toJson
       case original: ELUCIDExtractor => original.toJson
     }
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
       case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
       case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
       case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
-//      case JsString("BRISKExtractor") => value.convertTo[BRISKExtractor]
+      //      case JsString("BRISKExtractor") => value.convertTo[BRISKExtractor]
       case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
       case _ => throw new DeserializationException("Extractor expected")
     }

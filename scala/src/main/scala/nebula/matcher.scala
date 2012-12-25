@@ -1,16 +1,17 @@
 package nebula
 
-import scala.collection.{IndexedSeq, Map, Seq}
+import scala.collection.{ IndexedSeq, Map, Seq }
 
 import org.opencv.features2d.DMatch
 
 import breeze.linalg.DenseMatrix
 import graveyard.EpsilonL1Match
-import nebula.SortDescriptor.{implicitIndexedSeq, sortDescriptor}
+import nebula.SortDescriptor.{ implicitIndexedSeq, sortDescriptor }
 import nebula.util.JSONUtil.implicitAddClassName
-import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny}
+import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny }
 import util.JSONUtil.enumeration
 import util.Util
+import ExtractorJsonProtocol._
 
 ///////////////////////////////////////////////////////////
 
@@ -174,7 +175,7 @@ object Matcher {
 
 object MatcherType extends Enumeration {
   import Matcher._
-  
+
   type MatcherType = Value
   val L0, L1, L1Interval, L2, KendallTau, Cayley, CayleyRotate4, RobustCayley, GeneralizedL0 = Value
 
@@ -211,12 +212,13 @@ object MatcherType extends Enumeration {
 
 case class LogPolarMatcher(
   matcherType: MatcherType.MatcherType,
+  normalization: PatchExtractorType.PatchExtractorType,
   normalizeByOverlap: Boolean,
   rotationInvariant: Boolean,
   scaleSearchRadius: Int)
 
 object LogPolarMatcher {
-  import Matcher._  
+  import Matcher._
   import MatcherType._
 
   implicit def implicitMatcher(self: LogPolarMatcher): Matcher = new SingleMatcher {
@@ -227,28 +229,29 @@ object LogPolarMatcher {
       require(leftMatrix.rows == rightMatrix.rows)
       require(leftMatrix.cols == rightMatrix.cols)
       require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < leftMatrix.cols)
-      
+
       val distance = LogPolar.getDistance(self.matcherType)
 
       val angleIndices = if (self.rotationInvariant) {
         0 until leftMatrix.rows
       } else 0 until 1
-      
-      val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius  
-      
-       // TODO
+
+      val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius
+
+      // TODO
       val response = LogPolar.getResponseMap(
+        self.normalization,
         self.normalizeByOverlap,
         distance,
         LogPolar.stackVertical(leftMatrix),
         rightMatrix,
         angleIndices,
         scaleIndices)
-        
-//      val best = response.argmin
-      
-//      println("theta offset is %s".format(best._1 / leftMatrix.rows.toDouble * 2 * math.Pi))
-      
+
+      //      val best = response.argmin
+
+      //      println("theta offset is %s".format(best._1 / leftMatrix.rows.toDouble * 2 * math.Pi))
+
       response.min
     }
 
@@ -275,7 +278,7 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
   /////////////////////////////////////////////////////////
 
   implicit val logPolarMatcher =
-    jsonFormat4(LogPolarMatcher.apply).addClassInfo("LogPolarMatcher")
+    jsonFormat5(LogPolarMatcher.apply).addClassInfo("LogPolarMatcher")
 
   /////////////////////////////////////////////////////////      
 

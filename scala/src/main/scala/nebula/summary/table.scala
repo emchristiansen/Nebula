@@ -19,6 +19,12 @@ import DenseMatrixUtil._
 
 import SummaryUtil._
 import grizzled.math._
+import DetectorJsonProtocol._
+import ExtractorJsonProtocol._
+import MatcherJsonProtocol._
+import ExperimentJsonProtocol._
+import ExperimentResultsJsonProtocol._
+import spray.json._
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -57,12 +63,12 @@ object Table {
   }
 
   def title(experiments: Seq[Experiment]): String = {
-    val maps = experiments.map(_.stringMap).toSet
+    val maps = experiments.map(_.toJson).map(JSONUtil.getParametersFromJson).toSet
     summarizeStructure(maps)
   }
 
   def entryTitles(experiments: Seq[Experiment]): IndexedSeq[String] = {
-    val experimentMaps = experiments.map(_.stringMap)
+    val experimentMaps = experiments.map(_.toJson).map(JSONUtil.getParametersFromJson)
     val union = mapUnion(experimentMaps.toSet)
     val variableKeys = union.filter(_._2.size > 1).keys.toSet
 
