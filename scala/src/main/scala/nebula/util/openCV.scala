@@ -188,4 +188,14 @@ object DMatchJsonProtocol extends DefaultJsonProtocol {
           new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
       }
   }
+  
+  // TODO: This object should be unnecessary. Try removing it when spray-json
+  // is updated (currently 1.2.3).
+  implicit object SeqDMatchJsonProtocol extends RootJsonFormat[Seq[DMatch]] {
+    override def write(self: Seq[DMatch]) = self.map(_.toJson).toJson
+    override def read(value: JsValue) = value match {
+      case JsArray(elements) => elements.map(_.convertTo[DMatch])
+      case _ => sys.error("Expected JsArray")
+    }
+  }
 }

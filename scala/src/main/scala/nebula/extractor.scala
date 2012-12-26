@@ -299,7 +299,7 @@ object LogPolarExtractor {
             } else {
               val processed = PatchExtractor.constructor(self.extractorType)(
                 seqSeq.flatten).values[Double]
-              processed.grouped(seqSeq.head.size).toIndexedSeq[IndexedSeq[Double]].toMatrix.to[Descriptor]
+              processed.grouped(seqSeq.head.size).toIndexedSeq.toMatrix.to[Descriptor]
             }
           }
         }
