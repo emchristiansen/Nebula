@@ -11,8 +11,8 @@ import breeze.linalg.DenseVector
 import grizzled.math.stats
 import nebula.Descriptor.implicitIndexedSeq
 import nebula.SortDescriptor.implicitIndexedSeq
-import nebula.util.DenseMatrixUtil.{ implicitDenseMatrixToSeqSeq, implicitSeqSeqToDenseMatrix }
-import nebula.util.JSONUtil.implicitAddClassName
+import nebula.util.DenseMatrixUtil._
+import nebula.util.JSONUtil._
 import nebula.util.imageProcessing.RichImage.bufferedImage
 import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny }
 import util.{ OpenCVUtil, Util }

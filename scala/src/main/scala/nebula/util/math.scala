@@ -7,14 +7,14 @@ import breeze.linalg._
 
 object MathUtil {
   // The correct implementation of a % b.
-  implicit def addMod(self: Double) = new {
+  implicit class AddMod(self: Double) {
     def mod(that: Double) =
       if (self >= 0) self % that
       else (that + (self % that)) % that
   }
 
   // The correct implementation of a % b.
-  implicit def addMod(self: Int) = new {
+  implicit class AddModInt(self: Int) {
     def mod(that: Int) =
       if (self >= 0) self % that
       else (that + (self % that)) % that
@@ -42,7 +42,7 @@ object MathUtil {
     }
   }
 
-  implicit def addToVector(self: DenseMatrix[Double]) = new {
+  implicit class AddToVector(self: DenseMatrix[Double]) {
     def toVector: DenseVector[Double] = { 
       DenseVector(self.data)
     }

@@ -105,7 +105,7 @@ object IO {
     val obj = new ObjectInputStream(new ByteArrayInputStream(byte_array)) readObject
 
     obj match {
-      case a if m.erasure.isInstance(a) => a.asInstanceOf[A]
+      case a if m.runtimeClass.isInstance(a) => a.asInstanceOf[A]
       case _ => { sys.error("Type not what was expected when reading from file") }
     }
   }
@@ -122,7 +122,7 @@ object IO {
     val obj = new ObjectInputStream(new FileInputStream(file)) readObject
 
     obj match {
-      case a if m.erasure.isInstance(a) => a.asInstanceOf[A]
+      case a if m.runtimeClass.isInstance(a) => a.asInstanceOf[A]
       case _ => { sys.error("Type not what was expected when reading from file") }
     }
   }

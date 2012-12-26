@@ -7,7 +7,7 @@ import org.opencv.features2d.DMatch
 import breeze.linalg.DenseMatrix
 import graveyard.EpsilonL1Match
 import nebula.SortDescriptor.{ implicitIndexedSeq, sortDescriptor }
-import nebula.util.JSONUtil.implicitAddClassName
+import nebula.util.JSONUtil._
 import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny }
 import util.JSONUtil.enumeration
 import util.Util

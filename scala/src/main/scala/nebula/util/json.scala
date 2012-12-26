@@ -65,8 +65,9 @@ object JSONUtil {
   //        }
   //      }
   //    }
-
-  implicit def implicitAddClassName[A](self: RootJsonFormat[A]) = new {
+  
+ 
+  implicit class AddClassName[A](self: RootJsonFormat[A]) {
     def addClassInfo(scalaClass: String): RootJsonFormat[A] = new RootJsonFormat[A] {
       override def write(e: A) = {
         val fields = self.write(e).asJsObject.fields

@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
 
-import nebula.util.JSONUtil.implicitAddClassName
+import nebula.util.JSONUtil._
 import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny }
 import util.JSONUtil.enumeration
 import util.OpenCVUtil

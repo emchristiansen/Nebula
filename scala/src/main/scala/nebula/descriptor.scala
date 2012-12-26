@@ -1,27 +1,28 @@
 package nebula
 
 import breeze.linalg.DenseMatrix
+import reflect.runtime.universe._
 
 ///////////////////////////////////////////////////////////
 
 sealed trait Descriptor extends HasOriginal {
   type ElementType
 
-  def elementManifest: Manifest[ElementType]
+  def elementManifest: TypeTag[ElementType]
 
   def valuesUncast: IndexedSeq[ElementType]
 
-  def values[A: Manifest]: IndexedSeq[A] = {
+  def values[A: TypeTag]: IndexedSeq[A] = {
     // TODO: This explicit enumeration sucks.
-    val aManifest = implicitly[Manifest[A]]
-    val boolean = implicitly[Manifest[Boolean]]
-    val int = implicitly[Manifest[Int]]
-    val double = implicitly[Manifest[Double]]
+    val aManifest = typeTag[A]
+    val boolean = typeTag[Boolean]
+    val int = typeTag[Int]
+    val double = typeTag[Double]
 
     def boolToInt(boolean: Boolean): Int =
       if (boolean) 1 else 0
 
-    val cast = if (elementManifest <:< aManifest) {
+    val cast = if (elementManifest.tpe.baseClasses.contains(aManifest.tpe.typeSymbol)) {
       valuesUncast.asInstanceOf[IndexedSeq[A]]
     } else if (elementManifest == boolean) {
       if (aManifest == boolean)
@@ -60,11 +61,11 @@ sealed trait Descriptor extends HasOriginal {
 
 object Descriptor {
   // Any IndexedSeq can be treated as a Descriptor.
-  implicit def implicitIndexedSeq[A: Manifest](self: IndexedSeq[A]): Descriptor =
+  implicit def implicitIndexedSeq[A: TypeTag](self: IndexedSeq[A]): Descriptor =
     new Descriptor {
       override type ElementType = A
 
-      override def elementManifest = implicitly[Manifest[A]]
+      override def elementManifest = typeTag[A]
 
       override def valuesUncast = self
 
@@ -79,7 +80,7 @@ case class SortDescriptor(values: IndexedSeq[Int]) extends Descriptor {
 
   override type ElementType = Int
 
-  override def elementManifest = implicitly[Manifest[Int]]
+  override def elementManifest = typeTag[Int]
 
   override def valuesUncast = values
 
@@ -128,7 +129,7 @@ object DenseMatrixImplicits {
   implicit def denseMatrix2Descriptor(self: DenseMatrix[Double]) = new Descriptor {
     override type ElementType = Double
 
-    override def elementManifest = implicitly[Manifest[Double]]
+    override def elementManifest = typeTag[Double]
 
     override def valuesUncast = sys.error("Not defined")
 

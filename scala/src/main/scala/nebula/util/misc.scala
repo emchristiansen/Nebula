@@ -30,10 +30,12 @@ import RichImage._
 import MathUtil._
 import nebula.util._
 
+import reflect._
+
 ///////////////////////////////////////////////////////////
 
 object DenseMatrixUtil {
-  implicit def implicitSeqSeqToDenseMatrix[A: ClassManifest](seqSeq: IndexedSeq[IndexedSeq[A]]) = new {
+  implicit class SeqSeqToDenseMatrix[A: ClassTag](seqSeq: IndexedSeq[IndexedSeq[A]]) {
     def toMatrix: DenseMatrix[A] = {
       val rows = seqSeq.size
       val cols = seqSeq.head.size
@@ -47,21 +49,28 @@ object DenseMatrixUtil {
     }
   }
 
-  implicit def implicitDenseMatrixToSeqSeq[A](matrix: DenseMatrix[A]) = new {
+  implicit class DenseMatrixToSeqSeq[A](matrix: DenseMatrix[A]) {
     def toSeqSeq: IndexedSeq[IndexedSeq[A]] =
       for (i <- 0 until matrix.rows) yield {
         for (j <- 0 until matrix.cols) yield matrix(i, j)
       }
-  }
+  }  
+  
+//  implicit def implicitDenseMatrixToSeqSeq[A](matrix: DenseMatrix[A]) = new {
+//    def toSeqSeq: IndexedSeq[IndexedSeq[A]] =
+//      for (i <- 0 until matrix.rows) yield {
+//        for (j <- 0 until matrix.cols) yield matrix(i, j)
+//      }
+//  }
 
-  implicit def implicitDenseMatrixMethods[A: ClassManifest](matrix: DenseMatrix[A]) = new {
+  implicit class DenseMatrixMethods[A: ClassTag](matrix: DenseMatrix[A]) {
     def rollVertical(deltaY: Int): DenseMatrix[A] =
       matrix.mapPairs({
         case ((y, x), value) => matrix((y - deltaY) mod matrix.rows, x)
       })
   }
 
-  implicit def implicitDenseMatrixTo(self: DenseMatrix[Int]) = new {
+  implicit class DenseMatrixTo(self: DenseMatrix[Int]) {
     //    // Simply dumps the Ints into the BufferedImage, with no concern
     //    // as to the resulting colors.
     //    def toImage: BufferedImage = {
@@ -85,7 +94,7 @@ object DenseMatrixUtil {
     }
   }
 
-  implicit def implicitDenseMatrixDoubleTo(self: DenseMatrix[Double]) = new {
+  implicit class DenseMatrixDoubleTo(self: DenseMatrix[Double]) {
     def toScaledImage: BufferedImage = {
       val translated = self - self.min
       val scaled = (translated / translated.max).map(_ * 255).map(_.round.toInt)
@@ -93,11 +102,11 @@ object DenseMatrixUtil {
     }
   }
 
-  implicit def addScaled(self: DenseMatrix[Int]) = new {
+  implicit class AddScaled(self: DenseMatrix[Int]) {
     def toScaledImage: BufferedImage = self.map(_.toDouble).toScaledImage
   }
 
-  implicit def bufferedImageToDenseMatrix(self: BufferedImage) = new {
+  implicit class BufferedImageToDenseMatrix(self: BufferedImage) {
     def toMatrix: DenseMatrix[Int] = {
       val matrix = new DenseMatrix[Int](self.getHeight, self.getWidth)
       for (y <- 0 until self.getHeight; x <- 0 until self.getWidth) {
@@ -308,7 +317,7 @@ object Util extends Logging {
   }
 
   def linesFromFile(file: File): Seq[String] = {
-    io.Source.fromFile(file).mkString.split("\n").map(_.trim).filter(_.size > 0).filter(_.take(2) != "//").toList
+    scala.io.Source.fromFile(file).mkString.split("\n").map(_.trim).filter(_.size > 0).filter(_.take(2) != "//").toList
   }
 
   def assertWithValue[A](assertion: () => Boolean, value: A): A = {

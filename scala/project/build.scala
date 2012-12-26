@@ -42,7 +42,7 @@ object SFSPipelineBuild extends Build {
 //      "com.chuusai" %% "shapeless" % "1.2.2",
 //      "play" % "play_2.9.1" % "2.0.3",
       "org.clapper" % "grizzled-scala_2.9.2" % "1.0.13",
-      "org.scalanlp" % "breeze-math_2.9.2" % "0.1",
+      "org.scalanlp" % "breeze-math_2.10" % "0.2-SNAPSHOT",
 //      "org.scalanlp" %% "breeze-learn" % "0.1",
 //      "org.scalanlp" %% "breeze-process" % "0.1",
 //      "org.scalanlp" %% "breeze-viz" % "0.1",
@@ -71,7 +71,6 @@ object SFSPipelineBuild extends Build {
       "-deprecation",
       "-feature",
       "-language:implicitConversions",
-      "-language:reflectiveCalls",
       "-language:postfixOps",
       "-Yinline-warnings"
     )

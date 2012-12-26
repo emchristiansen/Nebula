@@ -4,7 +4,7 @@ import java.io.File
 ///////////////////////////////////////////////////////////
 
 package object nebula {
-  implicit def intTimes(int: Int) = new {
+  implicit class IntTimes(int: Int) {
     def times[A](function: => A): IndexedSeq[A] =
       (0 until int).map(_ => function)
   }
@@ -30,7 +30,7 @@ package object nebula {
     eval[A](string)
   }
 
-  implicit def addAssert[A](value: A) = new {
+  implicit class AddAssert[A](value: A) {
     def assert(assertions: (A => Boolean)*) = {
       assertions.map(assertion => Predef.assert(assertion(value)))
       value
@@ -46,7 +46,7 @@ package object nebula {
   def assertNear2(left: Double, right: Double): Unit =
     assertNear(0.00001, left, right)
 
-  implicit def addTo[A](obj: A) = new {
+  implicit class AddTo[A](obj: A) {
     def to[B](implicit conversion: A => B): B = conversion(obj)
   }
 }

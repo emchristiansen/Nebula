@@ -28,7 +28,7 @@ import DenseMatrixUtil._
 case class FlowVector(horizontal: Double, vertical: Double)
 
 object FlowVector {
-  implicit def addL2Distance(self: FlowVector) = new {
+  implicit class AddL2Distance(self: FlowVector) {
     def l2Distance(that: FlowVector): Double = {
       val dX = self.horizontal - that.horizontal
       val dY = self.vertical - that.vertical
@@ -93,7 +93,7 @@ object FlowField {
   implicit def implicitDenseMatrix(self: FlowField): DenseMatrix[Option[FlowVector]] =
     self.data
 
-  implicit def addMSE(self: FlowField) = new {
+  implicit class AddMSE(self: FlowField) {
     def mse(that: FlowField): Double = {
       require(self.data.rows == that.data.rows)
       require(self.data.cols == that.data.cols)

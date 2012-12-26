@@ -3,7 +3,7 @@ package nebula
 import java.awt.image.BufferedImage
 
 import nebula.smallBaseline.SmallBaselineExperiment.implicitExperiment
-import nebula.util.JSONUtil.implicitAddClassName
+import nebula.util.JSONUtil._
 import nebula.wideBaseline.WideBaselineExperiment.implicitExperiment
 import smallBaseline.SmallBaselineExperiment
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny}
