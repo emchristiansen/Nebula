@@ -199,15 +199,17 @@ object Util extends Logging {
     divided.map(_ % 2 == 1)
   }
 
-  // Takes a set of pairs and ensures they form an onto function.
-  // When onto-ness is violated, all offending pairs are removed from the set.
-  def makeOntoFunction[A, B](pairs: Set[Tuple2[A, B]]): Set[Tuple2[A, B]] = {
-	// Take the first duplicate first entries.
-    val pairs1 = pairs.groupBy(_._1).map(_._2).map(_.head)
-    
-    // Remove all pairs with duplicate second entries.
-    pairs1.groupBy(_._2).filter(_._2.size > 1).map(_._2).map(_.head).toSet
-  } 
+//  // Takes a set of pairs and ensures they form an onto function.
+//  // When onto-ness is violated, only the best pair is kept.
+//  // The best pair is the one that comes earliest in the ordering.
+//  def makeOntoFunction[A, B](pairs: Seq[Tuple2[A, B]])(
+//      implicit ordering: Ordering[Tuple2[A, B]]): Set[Tuple2[A, B]] = {
+//	// Take the first duplicate first entries.
+//    val pairs1 = pairs.groupBy(_._1).map(_._2).map(_.head)
+//    
+//    // Remove all pairs with duplicate second entries.
+//    pairs1.groupBy(_._2).filter(_._2.size > 1).map(_._2).map(_.head).toSet
+//  } 
   
   // Warp the leftKeyPoint by the homography and return its nearest neighbor
   // among the rightKeyPoints.
@@ -224,13 +226,16 @@ object Util extends Logging {
   }
 
   // Find the nearest neighbor for every leftKeyPoint and return the sequence
-  // of pairs. Remove pairs where the rightKeyPoint isn't found, or where
-  // multiple leftKeyPoints pair with the same rightKeyPoint.
+  // of pairs. Remove pairs where the rightKeyPoint isn't found. When multiple
+  // leftKeyPoints pair with the same rightKeyPoint, take only the pair with
+  // the best leftKeyPoint.
   def nearestUnderWarpRemoveDuplicates(
     threshold: Double,
     homography: Homography,
     leftKeyPoints: Seq[KeyPoint],
     rightKeyPoints: Seq[KeyPoint]): Seq[Tuple2[KeyPoint, KeyPoint]] = {
+    require(leftKeyPoints.size == leftKeyPoints.toSet.size)
+    require(rightKeyPoints.size == rightKeyPoints.toSet.size)
     // TODO
     logDebug("leftKeyPoints.size: " + leftKeyPoints.size)
     logDebug("rightKeyPoints.size: " + rightKeyPoints.size)
@@ -246,12 +251,32 @@ object Util extends Logging {
       case (left, rightOption) => (left, rightOption.get)
     }
     logDebug("culled.size: " + culled.size)
-    
-    val onto = makeOntoFunction(culled.toSet).toIndexedSeq
-    logDebug("onto.size: " + onto.size)
     // TODO
-    println("onto.size: " + onto.size)
-    onto
+    println("culled.size: " + culled.size)
+    
+    // Sort all the putative pairs by their quality.
+    // The best pairs will be _at the end_.
+    val sorted = culled.sortBy(KeyPointUtil.pairQuality)
+    
+//    // Use the Map constructor to quickly filter out repeated keys
+//    // and repeated values.
+//    // Note the constructor favors later key-value pairs over
+//    // earlier pairs, so it will take the pairs with the highest quality.
+//    val noKeyDuplicates = sorted.toMap.toSeq.sortBy(KeyPointUtil.pairQuality)
+    
+    // Now the tricky bit; we flip the map, making keys into values and
+    // vice-versa. We then repeat the constructor trick, this time removing
+    // repeated values.
+    val noDuplicates = sorted.map(_.swap).toMap.toSeq.map(_.swap)
+    
+    // Now sort the results so the best matches come first.
+    noDuplicates.sortBy(KeyPointUtil.pairQuality).reverse
+    
+//    val onto = makeOntoFunction(culled).toIndexedSeq
+//    logDebug("onto.size: " + onto.size)
+//    // TODO
+//    println("onto.size: " + onto.size)
+//    onto
   }
 
   def pruneKeyPoints(

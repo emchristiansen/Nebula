@@ -93,7 +93,7 @@ object OpenCVPairDetector {
           threshold,
           homography,
           left,
-          right).sortBy(pair => pair._1.response + pair._2.response).reverse
+          right).sortBy(KeyPointUtil.pairQuality).reverse
 
         if (self.maxKeyPointsOption.isDefined)
           allPairs.take(self.maxKeyPointsOption.get)

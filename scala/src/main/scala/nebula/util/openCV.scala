@@ -36,6 +36,14 @@ object KeyPointUtil {
     linearBound(width, keyPoint.pt.x) && linearBound(height, keyPoint.pt.y)
   }
 
+  def pairQuality(left: KeyPoint, right: KeyPoint): Double = {
+    require(left.response >= 0)
+    require(right.response >= 0)
+    left.response * right.response
+  }
+  
+  def pairQuality(pair: Tuple2[KeyPoint, KeyPoint]): Double = pairQuality(pair._1, pair._2)
+  
   def euclideanDistance(left: KeyPoint, right: KeyPoint): Double = {
     math.sqrt(math.pow(left.pt.x - right.pt.x, 2) + math.pow(left.pt.y - right.pt.y, 2))
   }

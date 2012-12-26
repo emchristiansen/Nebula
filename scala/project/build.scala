@@ -65,7 +65,7 @@ object SFSPipelineBuild extends Build {
   // ) 
 
   def scalaSettings = Seq(
-    scalaVersion := "2.9.3-RC1",
+    scalaVersion := "2.10.0-RC5",
     scalacOptions ++= Seq(
       "-optimize",
       "-unchecked",
