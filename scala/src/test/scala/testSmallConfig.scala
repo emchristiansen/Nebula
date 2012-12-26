@@ -37,7 +37,7 @@ class TestSmallConfig extends FunSuite {
         try {
           rightImage.setRGB(destX, destY, leftImage.getRGB(sourceX, sourceY))
         } catch {
-          case _ => Unit
+          case _: Throwable => Unit
         }
       }
       rightImage

@@ -29,7 +29,7 @@ import scala.util.matching.Regex
 //  def json: JValue
 //}
 
-object JSONUtil {
+object JSONUtil extends Logging {
   def enumeration[A](scalaClass: String, deserializeMapping: Map[String, A]): RootJsonFormat[A] =
     new RootJsonFormat[A] {
       override def write(e: A) = JsString(e.toString)

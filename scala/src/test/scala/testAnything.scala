@@ -95,7 +95,7 @@ class TestAnything extends FunSuite {
     
     implicit def asd(string: String)(implicit int: Int): Int = 1 + int
     
-    println("hi".to[Int])
+//    println("hi".to[Int])
   }
 }
 
