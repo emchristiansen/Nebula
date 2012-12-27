@@ -1,5 +1,7 @@
-import com.twitter.util.Eval
 import java.io.File
+import scala.reflect.runtime._
+import scala.reflect.runtime
+import scala.tools.reflect.ToolBox
 
 ///////////////////////////////////////////////////////////
 
@@ -11,6 +13,10 @@ package object nebula {
 
   def TODO = sys.error("TODO")
 
+  // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
+  val cm = universe.runtimeMirror(getClass.getClassLoader)
+  val toolbox = cm.mkToolBox()
+  
   def eval[A: Manifest](expression: String): A = {
     val source = """
       import nebula._;
@@ -22,7 +28,7 @@ package object nebula {
       val value: %s = { %s };
       value""".format(implicitly[Manifest[A]], expression)
 
-    (new Eval).apply[A](source)
+    toolbox.eval(toolbox.parse(source)).asInstanceOf[A]
   }
   
   def evalFile[A: Manifest](file: File): A = {

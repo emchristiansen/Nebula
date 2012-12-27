@@ -10,7 +10,6 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import scala.xml.Node
 import scala.xml.XML
-import com.twitter.util.Eval
 import javax.imageio.ImageIO
 //import net.liftweb.json.Formats
 //import net.liftweb.json.Serialization

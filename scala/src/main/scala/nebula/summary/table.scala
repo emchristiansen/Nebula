@@ -37,7 +37,7 @@ case class Table[A](
 }
 
 object Table {
-  implicit def implicitAddNormalize(self: Table[Double]) = new {
+  implicit class AddNormalize(self: Table[Double]) {
     def normalizeColumns: Table[Double] = {
       val transpose = self.entries.toSeqSeq.transpose
       val transposeNormalized = transpose.map(
@@ -46,7 +46,7 @@ object Table {
     }
   }
   
-  implicit def implicitFunctions[A](self: Table[A]) = new {
+  implicit class MoreFunctions[A](self: Table[A]) {
     def toTSV(toString: A => String): String = {
       val topRow = self.title +: self.columnLabels
       val stringEntries: Seq[Seq[String]] = self.entries.map(toString).toSeqSeq

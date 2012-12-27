@@ -24,6 +24,8 @@ object SFSPipelineBuild extends Build {
     libraryDependencies ++= Seq(
 //      "com.nativelibs4java" % "scalacl" % "0.3-SNAPSHOT",
 //      "com.nativelibs4java" % "javacl" % "1.0-SNAPSHOT",
+      "org.scala-lang" % "scala-reflect" % "2.10.0",
+      "org.scala-lang" % "scala-compiler" % "2.10.0",
       "log4j" % "log4j" % "1.2.17",
       "org.slf4j" % "slf4j-api" % slf4jVersion,
       "org.slf4j" % "slf4j-log4j12" % slf4jVersion,
@@ -38,7 +40,7 @@ object SFSPipelineBuild extends Build {
 //      "com.github.mhendred.face4j" % "face4j-core" % "1.6.2",
 //      "org.scala-tools" %% "scala-stm" % "0.6",
 //      "net.liftweb" % "lift-json_2.9.1" % "2.4-RC1",
-      "com.twitter" % "util-eval" % "6.0.4",
+//      "com.twitter" % "util-eval" % "6.0.4",
 //      "com.chuusai" %% "shapeless" % "1.2.2",
 //      "play" % "play_2.9.1" % "2.0.3",
       "org.clapper" % "grizzled-scala_2.9.2" % "1.0.13",
