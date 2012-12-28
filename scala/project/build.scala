@@ -32,6 +32,7 @@ object SFSPipelineBuild extends Build {
       "commons-lang" % "commons-lang" % "2.6",
       "org.apache.commons" % "commons-math3" % "3.1",
       "commons-io" % "commons-io" % "2.4",
+      "org.spire-math" % "spire_2.10.0-RC5" % "0.3.0-M6",
 //      "com.frugalmechanic" % "scala-optparse" % "1.0",
       "org.scalatest" % "scalatest_2.10.0" % "2.0.M5" % "test",
 //      "org.scalatest" % "scalatest_2.10.0-RC2" % "2.0.M4" % "test",

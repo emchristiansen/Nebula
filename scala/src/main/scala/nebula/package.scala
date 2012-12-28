@@ -55,4 +55,8 @@ package object nebula {
   implicit class AddTo[A](obj: A) {
     def to[B](implicit conversion: A => B): B = conversion(obj)
   }
+  
+  implicit class AddCompose[-T1, +R](function1: (T1) => R) {
+    def compose[A, B](function2: (A, B) => T1): (A, B) => R = (a, b) => function1(function2(a, b))
+  }
 }

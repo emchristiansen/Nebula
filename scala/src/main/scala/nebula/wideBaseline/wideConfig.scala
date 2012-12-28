@@ -37,16 +37,16 @@ import nebula.summary._
 
 ///////////////////////////////////////////////////////////
 
-case class WideBaselineExperiment(
+case class WideBaselineExperiment[A](
   imageClass: String,
   otherImage: Int,
   detector: PairDetector,
-  extractor: Extractor,
-  matcher: Matcher)
+  extractor: Extractor[A],
+  matcher: Matcher[A])
 
 object WideBaselineExperiment {
-  implicit def implicitHasGroundTruth(
-    self: WideBaselineExperiment)(
+  implicit def implicitHasGroundTruth[A](
+    self: WideBaselineExperiment[A])(
       implicit runtime: RuntimeConfig): HasGroundTruth[Homography] =
     new HasGroundTruth[Homography] {
       override def groundTruth = {

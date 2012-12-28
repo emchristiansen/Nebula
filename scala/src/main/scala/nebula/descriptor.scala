@@ -5,90 +5,82 @@ import reflect.runtime.universe._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Descriptor extends HasOriginal {
-  type ElementType
+//sealed trait Descriptor extends HasOriginal {
+//  type ElementType
+//
+//  def elementManifest: TypeTag[ElementType]
+//
+//  def valuesUncast: IndexedSeq[ElementType]
+//
+//  def values[A: TypeTag]: IndexedSeq[A] = {
+//    // TODO: This explicit enumeration sucks.
+//    val aManifest = typeTag[A]
+//    val boolean = typeTag[Boolean]
+//    val int = typeTag[Int]
+//    val double = typeTag[Double]
+//
+//    def boolToInt(boolean: Boolean): Int =
+//      if (boolean) 1 else 0
+//
+//    val cast = if (elementManifest.tpe.baseClasses.contains(aManifest.tpe.typeSymbol)) {
+//      valuesUncast.asInstanceOf[IndexedSeq[A]]
+//    } else if (elementManifest == boolean) {
+//      if (aManifest == boolean)
+//        valuesUncast.asInstanceOf[IndexedSeq[A]]
+//      else if (aManifest == int)
+//        valuesUncast.asInstanceOf[IndexedSeq[Boolean]].map(boolToInt)
+//      else if (aManifest == double)
+//        valuesUncast.asInstanceOf[IndexedSeq[Boolean]].map(boolToInt).map(_.toDouble)
+//      else sys.error("Bad match")
+//    } else if (elementManifest == int) {
+//      if (aManifest == int)
+//        valuesUncast.asInstanceOf[IndexedSeq[A]]
+//      else if (aManifest == double)
+//        valuesUncast.asInstanceOf[IndexedSeq[Int]].map(_.toDouble)
+//      else sys.error("Bad match: %s %s %s".format(elementManifest, aManifest, elementManifest == aManifest))
+//    } else if (elementManifest == double) {
+//      if (aManifest == int)
+//        valuesUncast.asInstanceOf[IndexedSeq[Double]].map(_.toInt)
+//      else if (aManifest == double)
+//        valuesUncast.asInstanceOf[IndexedSeq[A]]
+//      else sys.error("Bad match")
+//    } else sys.error("Bad match")
+//
+//    cast.asInstanceOf[IndexedSeq[A]]
+//
+//    //      // TODO
+//    ////      // Run time implicits through JIT compilation.
+//    ////      val source = "import nebula._; implicitly[%s => %s]".format(
+//    ////        elementManifest,
+//    ////        implicitly[Manifest[A]])
+//    ////      (new Eval).apply[ElementType => A](source)
+//    //    }
+//    //    valuesUncast.map(converter)
+//  }
+//}
 
-  def elementManifest: TypeTag[ElementType]
-
-  def valuesUncast: IndexedSeq[ElementType]
-
-  def values[A: TypeTag]: IndexedSeq[A] = {
-    // TODO: This explicit enumeration sucks.
-    val aManifest = typeTag[A]
-    val boolean = typeTag[Boolean]
-    val int = typeTag[Int]
-    val double = typeTag[Double]
-
-    def boolToInt(boolean: Boolean): Int =
-      if (boolean) 1 else 0
-
-    val cast = if (elementManifest.tpe.baseClasses.contains(aManifest.tpe.typeSymbol)) {
-      valuesUncast.asInstanceOf[IndexedSeq[A]]
-    } else if (elementManifest == boolean) {
-      if (aManifest == boolean)
-        valuesUncast.asInstanceOf[IndexedSeq[A]]
-      else if (aManifest == int)
-        valuesUncast.asInstanceOf[IndexedSeq[Boolean]].map(boolToInt)
-      else if (aManifest == double)
-        valuesUncast.asInstanceOf[IndexedSeq[Boolean]].map(boolToInt).map(_.toDouble)
-      else sys.error("Bad match")
-    } else if (elementManifest == int) {
-      if (aManifest == int)
-        valuesUncast.asInstanceOf[IndexedSeq[A]]
-      else if (aManifest == double)
-        valuesUncast.asInstanceOf[IndexedSeq[Int]].map(_.toDouble)
-      else sys.error("Bad match: %s %s %s".format(elementManifest, aManifest, elementManifest == aManifest))
-    } else if (elementManifest == double) {
-      if (aManifest == int)
-        valuesUncast.asInstanceOf[IndexedSeq[Double]].map(_.toInt)
-      else if (aManifest == double)
-        valuesUncast.asInstanceOf[IndexedSeq[A]]
-      else sys.error("Bad match")
-    } else sys.error("Bad match")
-
-    cast.asInstanceOf[IndexedSeq[A]]
-
-    //      // TODO
-    ////      // Run time implicits through JIT compilation.
-    ////      val source = "import nebula._; implicitly[%s => %s]".format(
-    ////        elementManifest,
-    ////        implicitly[Manifest[A]])
-    ////      (new Eval).apply[ElementType => A](source)
-    //    }
-    //    valuesUncast.map(converter)
-  }
-}
-
-object Descriptor {
-  // Any IndexedSeq can be treated as a Descriptor.
-  implicit def implicitIndexedSeq[A: TypeTag](self: IndexedSeq[A]): Descriptor =
-    new Descriptor {
-      override type ElementType = A
-
-      override def elementManifest = typeTag[A]
-
-      override def valuesUncast = self
-
-      override def original = self
-    }
-}
+//object Descriptor {
+//  // Any IndexedSeq can be treated as a Descriptor.
+//  implicit def implicitIndexedSeq[A: TypeTag](self: IndexedSeq[A]): Descriptor =
+//    new Descriptor {
+//      override type ElementType = A
+//
+//      override def elementManifest = typeTag[A]
+//
+//      override def valuesUncast = self
+//
+//      override def original = self
+//    }
+//}
 
 ///////////////////////////////////////////////////////////
 
-case class SortDescriptor(values: IndexedSeq[Int]) extends Descriptor {
+case class SortDescriptor(values: IndexedSeq[Int]) {
   assert(values.sorted == (0 until values.size))
-
-  override type ElementType = Int
-
-  override def elementManifest = typeTag[Int]
-
-  override def valuesUncast = values
-
-  override def original = this
 }
 
 object SortDescriptor {
-  def fromUnsorted[A <% Ordered[A]](values: Seq[A]): SortDescriptor = {
+  def fromUnsorted[A: Ordering](values: Seq[A]): SortDescriptor = {
     val permutation = values.zipWithIndex.sortBy(_._1).map(_._2)
     SortDescriptor(permutation.toIndexedSeq)
   }
@@ -125,17 +117,17 @@ object SortDescriptor {
 
 ///////////////////////////////////////////////////////////
 
-object DenseMatrixImplicits {
-  implicit def denseMatrix2Descriptor(self: DenseMatrix[Double]) = new Descriptor {
-    override type ElementType = Double
-
-    override def elementManifest = typeTag[Double]
-
-    override def valuesUncast = sys.error("Not defined")
-
-    override def original = self
-  }
-}
+//object DenseMatrixImplicits {
+//  implicit def denseMatrix2Descriptor(self: DenseMatrix[Double]) = new Descriptor {
+//    override type ElementType = Double
+//
+//    override def elementManifest = typeTag[Double]
+//
+//    override def valuesUncast = sys.error("Not defined")
+//
+//    override def original = self
+//  }
+//}
 
 ///////////////////////////////////////////////////////////
 
