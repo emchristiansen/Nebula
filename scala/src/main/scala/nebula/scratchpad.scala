@@ -33,5 +33,11 @@ object MatcherInt extends Matcher[Int] {
 
 case class Experiment[A](extractor: Extractor[A], matcher: Matcher[A])
 
+//object Foo {
+//  implicit object Foo[A] {
+//    
+//  }
+//}
+
 
 

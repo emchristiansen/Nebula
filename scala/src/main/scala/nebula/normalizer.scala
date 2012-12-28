@@ -51,10 +51,6 @@ object PatchExtractorType extends Enumeration {
     }
   }
 
-  implicit class NormalizerFromDoubleToFromInt[A](fromDouble: Normalizer[IndexedSeq[Double], A]) extends Normalizer[IndexedSeq[Int], A] {
-    override def normalize: IndexedSeq[Int] => A = data => fromDouble.normalize(data.map(_.toDouble))
-  }
-
   implicit class OrderNormalize[A: Ordering](self: Order.type) extends Normalizer[IndexedSeq[A], SortDescriptor] {
     override def normalize: IndexedSeq[A] => SortDescriptor = data => SortDescriptor.fromUnsorted(data)
   }
@@ -75,6 +71,12 @@ object PatchExtractorType extends Enumeration {
       rank.toIndexedSeq
     }
   }
+  
+  implicit class NormalizerFromDoubleToFromInt[A](fromDouble: Normalizer[IndexedSeq[Double], A]) extends Normalizer[IndexedSeq[Int], A] {
+    override def normalize: IndexedSeq[Int] => A = data => fromDouble.normalize(data.map(_.toDouble))
+  }
+  
+  def matrixNormalizer(normalizerType: PatchExtractorType, normalizeRowsSeparately: Boolean) = sys.error("TODO")
 }
 
 ///////////////////////////////////////////////////////////

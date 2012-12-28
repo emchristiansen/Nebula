@@ -52,6 +52,14 @@ object Extractor {
     (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
       keyPoints.map(k => extractSingle(image, k))
 
+  def apply[A](original: Any, single: ExtractorActionSingle[A]): Extractor[A] = new Extractor[A] {
+    override def extract = applySeveral(extractSingle)
+
+    override def extractSingle = single
+
+    override def original = original
+  }
+
   // TODO: These should be enums, not strings.
   def interpretColor(color: String)(pixel: Pixel): Seq[Int] = color match {
     case "Gray" => pixel.gray
@@ -120,9 +128,9 @@ object Extractor {
     toBoolean compose intExtractorFromEnum(enum)
   }
 
-  trait SingleExtractor[A] extends Extractor[A] {
-    override def extract = applySeveral(extractSingle)
-  }
+  //  trait SingleExtractor[A] extends Extractor[A] {
+  //    override def extract = applySeveral(extractSingle)
+  //  }
 }
 
 ///////////////////////////////////////////////////////////
@@ -130,6 +138,21 @@ object Extractor {
 object OpenCVExtractorType extends Enumeration {
   type OpenCVExtractorType = Value
   val BRISK, FREAK, BRIEF, ORB, SIFT, SURF = Value
+
+  import Extractor._
+
+  implicit def implicitExtractor(self: BRISK.type) =
+    Extractor(self, booleanExtractorFromEnum(DescriptorExtractor.BRISK))
+  implicit def implicitExtractor(self: FREAK.type) =
+    Extractor(self, booleanExtractorFromEnum(DescriptorExtractor.FREAK))
+  implicit def implicitExtractor(self: BRIEF.type) =
+    Extractor(self, booleanExtractorFromEnum(DescriptorExtractor.BRIEF))
+  implicit def implicitExtractor(self: ORB.type) =
+    Extractor(self, booleanExtractorFromEnum(DescriptorExtractor.ORB))
+  implicit def implicitExtractor(self: SIFT.type) =
+    Extractor(self, doubleExtractorFromEnum(DescriptorExtractor.SIFT))
+  implicit def implicitExtractor(self: SURF.type) =
+    Extractor(self, doubleExtractorFromEnum(DescriptorExtractor.SURF))
 }
 
 //sealed trait OpenCVExtractorType
@@ -142,47 +165,33 @@ object OpenCVExtractorType extends Enumeration {
 
 //case class OpenCVExtractor(extractorType: OpenCVExtractorType.OpenCVExtractorType)
 
-object OpenCVExtractor {
-  import Extractor._
-  import OpenCVExtractorType._
-
-  implicit def implicitExtractor(self: BRISK.type) =
-    booleanExtractorFromEnum(DescriptorExtractor.BRISK)
-  implicit def implicitExtractor(self: FREAK.type) =
-    booleanExtractorFromEnum(DescriptorExtractor.FREAK)
-  implicit def implicitExtractor(self: BRIEF.type) =
-    booleanExtractorFromEnum(DescriptorExtractor.BRIEF)
-  implicit def implicitExtractor(self: ORB.type) =
-    booleanExtractorFromEnum(DescriptorExtractor.ORB)
-  implicit def implicitExtractor(self: SIFT.type) =
-    doubleExtractorFromEnum(DescriptorExtractor.SIFT)
-  implicit def implicitExtractor(self: SURF.type) =
-    doubleExtractorFromEnum(DescriptorExtractor.SURF)
-
-  //  implicit def implicitOpenCVExtractor(self: OpenCVExtractor): Extractor =
-  //    new SingleExtractor {
-  //      // Doing this one by one is super slow.
-  //      // TODO: Make the native OpenCV api less awful.      
-  //      override def extractSingle = {
-  //        self.extractorType match {
-  //          case BRISK => booleanExtractorFromEnum(DescriptorExtractor.BRISK)
-  //          case FREAK => booleanExtractorFromEnum(DescriptorExtractor.FREAK)
-  //          case BRIEF => booleanExtractorFromEnum(DescriptorExtractor.BRIEF)
-  //          case ORB => booleanExtractorFromEnum(DescriptorExtractor.ORB)
-  //          case SIFT => doubleExtractorFromEnum(DescriptorExtractor.SIFT)
-  //          case SURF => doubleExtractorFromEnum(DescriptorExtractor.SURF)
-  //        }
-  //      }
-  //
-  //      override def original = self
-  //    }
-}
-
-
-
+//object OpenCVExtractor {
+//  import Extractor._
+//  import OpenCVExtractorType._
+//
+//
+//
+//  //  implicit def implicitOpenCVExtractor(self: OpenCVExtractor): Extractor =
+//  //    new SingleExtractor {
+//  //      // Doing this one by one is super slow.
+//  //      // TODO: Make the native OpenCV api less awful.      
+//  //      override def extractSingle = {
+//  //        self.extractorType match {
+//  //          case BRISK => booleanExtractorFromEnum(DescriptorExtractor.BRISK)
+//  //          case FREAK => booleanExtractorFromEnum(DescriptorExtractor.FREAK)
+//  //          case BRIEF => booleanExtractorFromEnum(DescriptorExtractor.BRIEF)
+//  //          case ORB => booleanExtractorFromEnum(DescriptorExtractor.ORB)
+//  //          case SIFT => doubleExtractorFromEnum(DescriptorExtractor.SIFT)
+//  //          case SURF => doubleExtractorFromEnum(DescriptorExtractor.SURF)
+//  //        }
+//  //      }
+//  //
+//  //      override def original = self
+//  //    }
+//}
 
 case class PatchExtractor(
-//  extractorType: PatchExtractorType.PatchExtractorType,
+  //  extractorType: PatchExtractorType.PatchExtractorType,
   normalizeRotation: Boolean,
   normalizeScale: Boolean,
   patchWidth: Int,
@@ -191,7 +200,7 @@ case class PatchExtractor(
 
 object PatchExtractor {
   import Extractor._
-//  import PatchExtractorType._
+  //  import PatchExtractorType._
 
   //  // TODO: Duplication with next function.
   //  def constructorDouble(extractorType: PatchExtractorType): IndexedSeq[Double] => Descriptor = {
@@ -252,8 +261,9 @@ object PatchExtractor {
   //  }
 
   implicit def implicitPatchExtractor(self: PatchExtractor): Extractor[IndexedSeq[Int]] =
-    new SingleExtractor[IndexedSeq[Int]] {
-      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
+    Extractor(
+      self,
+      (image: BufferedImage, keyPoint: KeyPoint) => {
         val rawOption = rawPixels(
           self.normalizeRotation,
           self.normalizeScale,
@@ -261,20 +271,17 @@ object PatchExtractor {
           self.blurWidth,
           self.color)(image, keyPoint)
 
-          rawOption
-//        for (raw <- rawOption) yield constructor(self.extractorType)(raw)
-      }
-
-      override def original = self
-    }
+        rawOption
+        //        for (raw <- rawOption) yield constructor(self.extractorType)(raw)
+      })
 }
 
 ///////////////////////////////////////////////////////////
 
 case class LogPolarExtractor(
-//  extractorType: PatchExtractorType.PatchExtractorType,
+  //  extractorType: PatchExtractorType.PatchExtractorType,
   steerScale: Boolean,
-//  partitionIntoRings: Boolean,
+  //  partitionIntoRings: Boolean,
   minRadius: Double,
   maxRadius: Double,
   numScales: Int,
@@ -284,8 +291,8 @@ case class LogPolarExtractor(
 
 object LogPolarExtractor {
   import Extractor._
-//  import PatchExtractorType._
-//  import DenseMatrixImplicits._
+  //  import PatchExtractorType._
+  //  import DenseMatrixImplicits._
 
   implicit def implicitLogPolarExtractor(self: LogPolarExtractor): Extractor[DenseMatrix[Int]] =
     new Extractor[DenseMatrix[Int]] {
@@ -301,27 +308,27 @@ object LogPolarExtractor {
           self.blurWidth)(image, keyPoints)
 
         rawOptions
-//        for (rawOption <- rawOptions) yield {
-//          for (raw <- rawOption) yield {
-//            val seqSeq = raw.toSeqSeq
-//            if (self.partitionIntoRings) {
-//              assert(seqSeq.size == raw.rows)
-//              assert(seqSeq.head.size == raw.cols)
-//
-//              val transposed = for (column <- seqSeq.transpose) yield {
-//                PatchExtractor.constructor(
-//                  self.extractorType)(
-//                    column).values[Double]
-//              }
-//
-//              transposed.transpose.toMatrix.to[Descriptor]
-//            } else {
-//              val processed = PatchExtractor.constructor(self.extractorType)(
-//                seqSeq.flatten).values[Double]
-//              processed.grouped(seqSeq.head.size).toIndexedSeq.toMatrix.to[Descriptor]
-//            }
-//          }
-//        }
+        //        for (rawOption <- rawOptions) yield {
+        //          for (raw <- rawOption) yield {
+        //            val seqSeq = raw.toSeqSeq
+        //            if (self.partitionIntoRings) {
+        //              assert(seqSeq.size == raw.rows)
+        //              assert(seqSeq.head.size == raw.cols)
+        //
+        //              val transposed = for (column <- seqSeq.transpose) yield {
+        //                PatchExtractor.constructor(
+        //                  self.extractorType)(
+        //                    column).values[Double]
+        //              }
+        //
+        //              transposed.transpose.toMatrix.to[Descriptor]
+        //            } else {
+        //              val processed = PatchExtractor.constructor(self.extractorType)(
+        //                seqSeq.flatten).values[Double]
+        //              processed.grouped(seqSeq.head.size).toIndexedSeq.toMatrix.to[Descriptor]
+        //            }
+        //          }
+        //        }
       }
 
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) =>
@@ -384,8 +391,9 @@ object ELUCIDExtractor {
   import Extractor._
 
   implicit def implicitELUCIDExtractor(self: ELUCIDExtractor): Extractor[SortDescriptor] =
-    new SingleExtractor[SortDescriptor] {
-      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
+    Extractor(
+      self,
+      (image: BufferedImage, keyPoint: KeyPoint) => {
         val numSamples = self.numRadii * self.numSamplesPerRadius + 1
         val radii = (1 to self.numRadii).map(_ * self.stepSize)
         val angles = (0 until self.numSamplesPerRadius).map(_ * 2 * math.Pi / self.numSamplesPerRadius)
@@ -426,10 +434,7 @@ object ELUCIDExtractor {
           val unsorted = pointOptions.flatten.flatMap(interpretColor(self.color))
           Some(SortDescriptor.fromUnsorted(unsorted))
         }
-      }
-
-      override def original = self
-    }
+      })
 }
 
 ///////////////////////////////////////////////////////////
@@ -445,18 +450,18 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
       "SIFT" -> OpenCVExtractorType.SIFT,
       "SURF" -> OpenCVExtractorType.SURF))
 
-  implicit val openCVExtractor =
-    jsonFormat1(OpenCVExtractor.apply).addClassInfo("OpenCVExtractor")
+  //  implicit val openCVExtractor =
+  //    jsonFormat1(OpenCVExtractor.apply).addClassInfo("OpenCVExtractor")
 
   /////////////////////////////////////////////////////////
 
   implicit val patchExtractor =
-    jsonFormat6(PatchExtractor.apply).addClassInfo("PatchExtractor")
+    jsonFormat5(PatchExtractor.apply).addClassInfo("PatchExtractor")
 
   /////////////////////////////////////////////////////////
 
   implicit val logPolarExtractor =
-    jsonFormat9(LogPolarExtractor.apply).addClassInfo("LogPolarExtractor")
+    jsonFormat7(LogPolarExtractor.apply).addClassInfo("LogPolarExtractor")
 
   /////////////////////////////////////////////////////////
 
@@ -477,20 +482,55 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////    
 
-  implicit object ExtractorJsonFormat extends RootJsonFormat[Extractor] {
-    override def write(self: Extractor) = self.original match {
-      case original: OpenCVExtractor => original.toJson
+  //  implicit def 
+
+  implicit object ExtractorJsonFormatSortDescriptor extends RootJsonFormat[Extractor[SortDescriptor]] {
+    override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
+      case original: ELUCIDExtractor => original.toJson
+    }
+    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+      case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
+      case _ => throw new DeserializationException("Extractor expected")
+    }
+  }
+
+  implicit object ExtractorJsonFormatDenseMatrixInt extends RootJsonFormat[Extractor[DenseMatrix[Int]]] {
+    override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
+      case original: LogPolarExtractor => original.toJson
+    }
+    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+      case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
+      case _ => throw new DeserializationException("Extractor expected")
+    }
+  }
+
+  implicit object ExtractorJsonFormatIndexedSeqBoolean extends RootJsonFormat[Extractor[IndexedSeq[Boolean]]] {
+    override def write(self: Extractor[IndexedSeq[Boolean]]) = self.original match {
+      case original: OpenCVExtractorType.BRISK.type => original.toJson
+      case original: OpenCVExtractorType.FREAK.type => original.toJson
+      case original: OpenCVExtractorType.BRIEF.type => original.toJson
+      case original: OpenCVExtractorType.ORB.type => original.toJson
+    }
+    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+      //      case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
+      case _ => throw new DeserializationException("Extractor expected")
+    }
+  }
+
+  implicit object ExtractorJsonFormatIndexedSeqInt extends RootJsonFormat[Extractor[IndexedSeq[Int]]] {
+    override def write(self: Extractor[IndexedSeq[Int]]) = self.original match {
+      //      case original: OpenCVExtractor => original.toJson
       case original: PatchExtractor => original.toJson
       case original: LogPolarExtractor => original.toJson
       //      case original: BRISKExtractor => original.toJson
       case original: ELUCIDExtractor => original.toJson
     }
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
+      //      case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
       case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
-      case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
+      //      case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
       //      case JsString("BRISKExtractor") => value.convertTo[BRISKExtractor]
-      case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
+      //      case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
       case _ => throw new DeserializationException("Extractor expected")
     }
   }

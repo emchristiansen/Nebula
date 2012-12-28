@@ -15,15 +15,15 @@ import ExtractorJsonProtocol._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Matcher extends HasOriginal {
-  def doMatch: Matcher.MatcherAction
+sealed trait Matcher[A] extends HasOriginal {
+  def doMatch: Matcher.MatcherAction[A]
 }
 
 object Matcher {
-  type MatcherAction = (Boolean, Seq[Descriptor], Seq[Descriptor]) => Seq[DMatch]
-  type DescriptorDistance = (Descriptor, Descriptor) => Double
+  type MatcherAction[A] = (Boolean, Seq[A], Seq[A]) => Seq[DMatch]
+  type DescriptorDistance[A] = (A, A) => Double
 
-  def applyIndividual(distanceMethod: DescriptorDistance): MatcherAction =
+  def applyIndividual[A](distanceMethod: DescriptorDistance[A]): MatcherAction[A] =
     (allPairs, leftDescriptors, rightDescriptors) => {
       if (allPairs) {
         for (
@@ -40,6 +40,12 @@ object Matcher {
         }
       }
     }
+
+  def apply[A](original: Any, distance: DescriptorDistance[A]): Matcher[A] = new Matcher[A] {
+    override def doMatch = applyIndividual(distance)
+
+    override def original = original
+  }
 
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
     (left, right).zipped.count({ case (l, r) => l != r })
@@ -164,11 +170,11 @@ object Matcher {
     leftIntervals.values.zip(rightIntervals.values).map({ case (l, r) => l1Distance(l, r) }).sum
   }
 
-  trait SingleMatcher extends Matcher {
-    override def doMatch = applyIndividual(matchSingle)
-
-    def matchSingle: DescriptorDistance
-  }
+  //  trait SingleMatcher[A] extends Matcher[A] {
+  //    override def doMatch = applyIndividual(matchSingle)
+  //
+  //    def matchSingle: DescriptorDistance[A]
+  //  }
 }
 
 ///////////////////////////////////////////////////////////
@@ -177,42 +183,41 @@ object MatcherType extends Enumeration {
   import Matcher._
 
   type MatcherType = Value
-  val L0, L1, L1Interval, L2, KendallTau, Cayley, CayleyRotate4, RobustCayley, GeneralizedL0 = Value
+  val L0, L1, L2, KendallTau = Value
+  //  val L0, L1, L1Interval, L2, KendallTau, Cayley, CayleyRotate4, RobustCayley, GeneralizedL0 = Value
 
-  implicit def implicitMatcher(self: MatcherType): Matcher = new SingleMatcher {
-    override def matchSingle = {
-      def cast[A: Manifest](distance: (IndexedSeq[A], IndexedSeq[A]) => Double) =
-        (left: Descriptor, right: Descriptor) =>
-          distance(left.values[A], right.values[A])
+  // Turn a distance on IndexedSeq[Int] into a distance on SortDescriptor.
+  private def lift: DescriptorDistance[IndexedSeq[Int]] => DescriptorDistance[SortDescriptor] =
+    distance =>
+      (left, right) => distance(left.toIndexedSeq, right.toIndexedSeq)
 
-      def sort(distance: (SortDescriptor, SortDescriptor) => Double) =
-        (left: Descriptor, right: Descriptor) => (left, right) match {
-          case (left: SortDescriptor, right: SortDescriptor) => distance(left, right)
-          case _ => sys.error("Expected SortDescriptor")
-        }
+  implicit def implicitMatcher(self: L0.type) =
+    Matcher[IndexedSeq[Any]](self, l0)
+  implicit def implicitMatcherSort(self: L0.type) =
+    Matcher[SortDescriptor](self, lift(l0))
+  implicit def implicitMatcher[A <% Double](self: L1.type) =
+    Matcher[IndexedSeq[A]](self, l1)
+  implicit def implicitMatcherSort(self: L1.type) =
+    Matcher[SortDescriptor](self, lift(l1))
+  implicit def implicitMatcher[A <% Double](self: L2.type) =
+    Matcher[IndexedSeq[A]](self, l2)
+  implicit def implicitMatcherSort(self: L2.type) =
+    Matcher[SortDescriptor](self, lift(l2))
+  implicit def implictMatcher(self: KendallTau.type) =
+    Matcher[SortDescriptor](self, kendallTau)
 
-      self match {
-        case L0 => cast[Any](l0)
-        case L1 => cast[Double](l1)
-        case L1Interval => cast[Int](l1IntervalDistance)
-        case L2 => cast[Double](l2)
-        case KendallTau => sort(kendallTau)
-        case Cayley => sort(cayley)
-        case CayleyRotate4 => sort(cayleyRotate4)
-        case RobustCayley => cast[Int](robustCayley)
-        case GeneralizedL0 => cast[Int](generalizedL0)
-      }
-    }
-
-    override def original = self
-  }
+  //        case L1Interval => cast[Int](l1IntervalDistance)
+  //        case Cayley => sort(cayley)
+  //        case CayleyRotate4 => sort(cayleyRotate4)
+  //        case RobustCayley => cast[Int](robustCayley)
+  //        case GeneralizedL0 => cast[Int](generalizedL0)
 }
 
 ///////////////////////////////////////////////////////////
 
-case class LogPolarMatcher(
-  matcherType: MatcherType.MatcherType,
-  normalization: PatchExtractorType.PatchExtractorType,
+case class LogPolarMatcher[A <% Double, B <% Double](
+  normalizer: Normalizer[DenseMatrix[A], DenseMatrix[B]],    
+  matcher: Matcher[DenseMatrix[B]],
   normalizeByOverlap: Boolean,
   rotationInvariant: Boolean,
   scaleSearchRadius: Int)
@@ -240,7 +245,7 @@ object LogPolarMatcher {
 
       // TODO
       val response = LogPolar.getResponseMap(
-        self.normalization,
+        self.normalizer,
         self.normalizeByOverlap,
         distance,
         LogPolar.stackVertical(leftMatrix),

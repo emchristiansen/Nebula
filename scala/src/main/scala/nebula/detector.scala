@@ -28,6 +28,7 @@ object OpenCVDetectorType extends Enumeration {
   val Dense, FAST, BRISK, SIFT, SURF = Value
 }
 
+// TODO: This doesn't need to be OpenCV-specific.
 case class OpenCVDetector(
   detectorType: OpenCVDetectorType.OpenCVDetectorType,
   maxKeyPointsOption: Option[Int])
