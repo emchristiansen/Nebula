@@ -14,6 +14,10 @@ import nebula.util.imageProcessing.RichImage.bufferedImage
 object LogPolar {
   val epsilon = 0.00001
 
+  // Get the minimum, maximum, and exponential base of the scaling
+  // factors. These are used to create the image pyramid from
+  // which descriptors are extracted.
+  // TODO: Why doesn't this just return the factors directly?
   def getFactors(
     samplingRadius: Double,
     minRadius: Double,
@@ -26,13 +30,17 @@ object LogPolar {
     (minScalingFactor, maxScalingFactor, base)
   }
 
+  // Get the image pyramid, as well as the scaling factors that
+  // were used to create it. Since the ideal scaling factors cannot be
+  // used in all cases (integer rounding), we return the ideal factors
+  // plus the actual factors used.
   def scaleImage(
     samplingRadius: Double,
     minRadius: Double,
     maxRadius: Double,
     numScales: Int,
     blurWidth: Int,
-    image: BufferedImage) = {
+    image: BufferedImage): Tuple3[IndexedSeq[Double], IndexedSeq[Tuple2[Double, Double]], IndexedSeq[BufferedImage]] = {
     // We build a set of rescaled images. The biggest image is scaled
     // so that |minRadius| in the original image is |samplingRadius|
     // in the scaled image. The smallest image is scaled so that
@@ -101,12 +109,6 @@ object LogPolar {
           val scaledImage = scaledImages(scaleIndex)
           val (scaleFactorX, scaleFactorY) = realScaleFactors(scaleIndex)
 
-//          // The image may not have been scaled precisely according to the
-//          // scale factor, in order to get an integer size. Here we get
-//          // the actual scale factors.
-//          val scaleFactorX = scaledImage.getWidth.toDouble / image.getWidth
-//          val scaleFactorY = scaledImage.getHeight.toDouble / image.getHeight
-
           val (scaledX, scaledY) = (
             scaleFactorX * keyPoint.pt.x,
             scaleFactorY * keyPoint.pt.y)
@@ -117,7 +119,6 @@ object LogPolar {
             samplingRadius * math.cos(angle))
 
           val (x, y) = (scaledX + pixelOffset(0), scaledY + pixelOffset(1))
-//          println((scaledX, scaledY), pixelOffset, (x, y))
           val pixel = scaledImage.getSubPixel(x, y).get
 
           matrix(angleIndex, scaleIndex) = pixel.gray.head
@@ -161,17 +162,17 @@ object LogPolar {
 //    replicated
 //  }
 
-  def stackVertical(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
-    val seqSeq = matrix.toSeqSeq
-    (seqSeq ++ seqSeq.init).toMatrix
-  }
+//  def stackVertical(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
+//    val seqSeq = matrix.toSeqSeq
+//    (seqSeq ++ seqSeq.init).toMatrix
+//  }
 
-  def getResponseMap(
-    normalization: PatchExtractorType.PatchExtractorType,
+  def getResponseMap[A, B](
+    normalizer: Normalizer[DenseMatrix[A], DenseMatrix[B]],
     normalizeByOverlap: Boolean,
-    distance: (IndexedSeq[Double], IndexedSeq[Double]) => Double,
-    base: DenseMatrix[Double],
-    kernel: DenseMatrix[Double],
+    distance: Matcher.DescriptorDistance[B],
+    base: DenseMatrix[A],
+    kernel: DenseMatrix[B],
     angleIndices: Range,
     scaleIndices: Range): DenseMatrix[Double] = {
     require(2 * kernel.rows - 1 == base.rows)
@@ -248,13 +249,13 @@ object LogPolar {
   //    response
   //  }
 
-  def getDistance(matcherType: MatcherType.MatcherType) = {
-    matcherType match {
-      case MatcherType.L1 => Matcher.l1[Double] _
-      case MatcherType.L2 => Matcher.l2[Double] _
-      case _ => sys.error("Not using supported distance")
-    }
-  }
+//  def getDistance(matcherType: MatcherType.MatcherType) = {
+//    matcherType match {
+//      case MatcherType.L1 => Matcher.l1[Double] _
+//      case MatcherType.L2 => Matcher.l2[Double] _
+//      case _ => sys.error("Not using supported distance")
+//    }
+//  }
 }
 //
 //    try {

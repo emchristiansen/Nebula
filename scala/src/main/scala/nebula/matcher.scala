@@ -17,6 +17,8 @@ import ExtractorJsonProtocol._
 
 sealed trait Matcher[A] extends HasOriginal {
   def doMatch: Matcher.MatcherAction[A]
+
+  def distance: Matcher.DescriptorDistance[A]
 }
 
 object Matcher {
@@ -43,6 +45,8 @@ object Matcher {
 
   def apply[A](original: Any, distance: DescriptorDistance[A]): Matcher[A] = new Matcher[A] {
     override def doMatch = applyIndividual(distance)
+
+    override def distance = distance
 
     override def original = original
   }
@@ -99,53 +103,48 @@ object MatcherType extends Enumeration {
 
 ///////////////////////////////////////////////////////////
 
-case class LogPolarMatcher[A <% Double, B <% Double](
-  normalizer: Normalizer[DenseMatrix[A], DenseMatrix[B]],    
+case class LogPolarMatcher[A, B](
+  normalizer: Normalizer[DenseMatrix[A], DenseMatrix[B]],
   matcher: Matcher[DenseMatrix[B]],
   normalizeByOverlap: Boolean,
   rotationInvariant: Boolean,
   scaleSearchRadius: Int)
 
+import scala.reflect._
+import scala.reflect.runtime.universe._
+
 object LogPolarMatcher {
   import Matcher._
-  import MatcherType._
+  //  import MatcherType._
 
-  implicit def implicitMatcher(self: LogPolarMatcher): Matcher = new SingleMatcher {
-    override def matchSingle = (left: Descriptor, right: Descriptor) => {
-      val leftMatrix = left.original.asInstanceOf[DenseMatrix[Double]]
-      val rightMatrix = right.original.asInstanceOf[DenseMatrix[Double]]
+  implicit def implicitMatcher[A: ClassTag, B](self: LogPolarMatcher[A, B]): Matcher[DenseMatrix[A]] =
+    Matcher(
+      self,
+      (left: DenseMatrix[A], right: DenseMatrix[A]) => {
+        require(left.rows == right.rows)
+        require(left.cols == right.cols)
+        require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
 
-      require(leftMatrix.rows == rightMatrix.rows)
-      require(leftMatrix.cols == rightMatrix.cols)
-      require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < leftMatrix.cols)
+        val distance = self.matcher.distance
 
-      val distance = LogPolar.getDistance(self.matcherType)
+        val angleIndices = if (self.rotationInvariant) {
+          0 until left.rows
+        } else 0 until 1
 
-      val angleIndices = if (self.rotationInvariant) {
-        0 until leftMatrix.rows
-      } else 0 until 1
+        val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius
 
-      val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius
+        // TODO
+        val response = LogPolar.getResponseMap(
+          self.normalizer,
+          self.normalizeByOverlap,
+          self.matcher.distance,
+          DenseMatrix.vertcat(left, left(0 until left.rows - 1, ::)),
+          right,
+          angleIndices,
+          scaleIndices)
 
-      // TODO
-      val response = LogPolar.getResponseMap(
-        self.normalizer,
-        self.normalizeByOverlap,
-        distance,
-        LogPolar.stackVertical(leftMatrix),
-        rightMatrix,
-        angleIndices,
-        scaleIndices)
-
-      //      val best = response.argmin
-
-      //      println("theta offset is %s".format(best._1 / leftMatrix.rows.toDouble * 2 * math.Pi))
-
-      response.min
-    }
-
-    override def original = self
-  }
+        response.min
+      })
 }
 
 ///////////////////////////////////////////////////////////

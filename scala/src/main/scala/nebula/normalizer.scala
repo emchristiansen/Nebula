@@ -81,6 +81,14 @@ object PatchExtractorType extends Enumeration {
 
 ///////////////////////////////////////////////////////////
 
+case class NormalizedExtractor[A, B](extractor: Extractor[A], normalizer: Normalizer[A, B])
+
+object NormalizedExtractor {
+  
+}
+
+///////////////////////////////////////////////////////////
+
 object NormalizerJsonProtocol extends DefaultJsonProtocol {
   implicit val patchExtractorType = JSONUtil.enumeration(
     "PatchExtractorType",

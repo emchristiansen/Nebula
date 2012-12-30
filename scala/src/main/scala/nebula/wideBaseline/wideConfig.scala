@@ -37,14 +37,14 @@ import nebula.summary._
 
 ///////////////////////////////////////////////////////////
 
-case class WideBaselineExperiment[A, B, C](
+case class WideBaselineExperiment[A](
   imageClass: String,
   otherImage: Int,
   detector: PairDetector,
   extractor: Extractor[A],
-  extractorNormalizer: Normalizer[A, B],
-  matcherNormalizer: Normalizer[B, C]
-  matcher: Matcher[C])
+//  extractorNormalizer: Normalizer[A, B],
+//  matcherNormalizer: Normalizer[B, C],
+  matcher: Matcher[A])
 
 object WideBaselineExperiment {
   implicit def implicitHasGroundTruth[A](
