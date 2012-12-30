@@ -34,20 +34,6 @@ object Extractor {
   type ExtractorAction[A] = (BufferedImage, Seq[KeyPoint]) => Seq[Option[A]]
   type ExtractorActionSingle[A] = (BufferedImage, KeyPoint) => Option[A]
 
-  //  // Computes something like the rank, but pixels with the same value receive
-  //  // the same rank, so there is no noise from sort ambiguity.
-  //  // This particular algorithm is quite inefficient.
-  //  def uniformRank(descriptor: IndexedSeq[Int]): IndexedSeq[Int] = {
-  //    val distinctPixelValues = descriptor.toSet.toList
-  //    val rank = SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(descriptor)).toArray
-  //    for (value <- distinctPixelValues) {
-  //      val indices = descriptor.zipWithIndex.filter(_._1 == value).map(_._2)
-  //      val meanRank = (indices.map(rank.apply).sum.toDouble / indices.size).round.toInt
-  //      indices.foreach(i => rank(i) = meanRank)
-  //    }
-  //    rank.toIndexedSeq
-  //  }
-
   def applySeveral[A](extractSingle: ExtractorActionSingle[A]): ExtractorAction[A] =
     (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
       keyPoints.map(k => extractSingle(image, k))
@@ -127,10 +113,6 @@ object Extractor {
       (seq) => seq.map(_.flatMap(Util.numToBits(8)))
     toBoolean compose intExtractorFromEnum(enum)
   }
-
-  //  trait SingleExtractor[A] extends Extractor[A] {
-  //    override def extract = applySeveral(extractSingle)
-  //  }
 }
 
 ///////////////////////////////////////////////////////////
@@ -155,41 +137,6 @@ object OpenCVExtractorType extends Enumeration {
     Extractor(self, doubleExtractorFromEnum(DescriptorExtractor.SURF))
 }
 
-//sealed trait OpenCVExtractorType
-//object BRISK extends OpenCVExtractorType
-//object FREAK extends OpenCVExtractorType
-//object ORB extends OpenCVExtractorType
-//object BRIEF extends OpenCVExtractorType
-//object SIFT extends OpenCVExtractorType
-//object SURF extends OpenCVExtractorType
-
-//case class OpenCVExtractor(extractorType: OpenCVExtractorType.OpenCVExtractorType)
-
-//object OpenCVExtractor {
-//  import Extractor._
-//  import OpenCVExtractorType._
-//
-//
-//
-//  //  implicit def implicitOpenCVExtractor(self: OpenCVExtractor): Extractor =
-//  //    new SingleExtractor {
-//  //      // Doing this one by one is super slow.
-//  //      // TODO: Make the native OpenCV api less awful.      
-//  //      override def extractSingle = {
-//  //        self.extractorType match {
-//  //          case BRISK => booleanExtractorFromEnum(DescriptorExtractor.BRISK)
-//  //          case FREAK => booleanExtractorFromEnum(DescriptorExtractor.FREAK)
-//  //          case BRIEF => booleanExtractorFromEnum(DescriptorExtractor.BRIEF)
-//  //          case ORB => booleanExtractorFromEnum(DescriptorExtractor.ORB)
-//  //          case SIFT => doubleExtractorFromEnum(DescriptorExtractor.SIFT)
-//  //          case SURF => doubleExtractorFromEnum(DescriptorExtractor.SURF)
-//  //        }
-//  //      }
-//  //
-//  //      override def original = self
-//  //    }
-//}
-
 case class PatchExtractor(
   //  extractorType: PatchExtractorType.PatchExtractorType,
   normalizeRotation: Boolean,
@@ -200,79 +147,17 @@ case class PatchExtractor(
 
 object PatchExtractor {
   import Extractor._
-  //  import PatchExtractorType._
-
-  //  // TODO: Duplication with next function.
-  //  def constructorDouble(extractorType: PatchExtractorType): IndexedSeq[Double] => Descriptor = {
-  //    extractorType match {
-  //      case NCC => (raw: IndexedSeq[Double]) => {
-  //        val mean = stats.mean(raw: _*)
-  //        val std = stats.sampleStdDev(raw: _*)
-  //        if (std.abs < 0.001) raw // Don't change it.
-  //        else {
-  //          val normalized = raw.map(x => (x - mean) / std)
-  //          assert(stats.mean(normalized: _*).abs < 0.0001)
-  //          assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
-  //          normalized
-  //        }
-  //      }
-  //
-  //      case Rank => (raw: IndexedSeq[Double]) => {
-  //        SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw))
-  //      }
-  //    }
-  //  }
-  //
-  //  def constructor(extractorType: PatchExtractorType): IndexedSeq[Int] => Descriptor = {
-  //    extractorType match {
-  //      case Raw => (raw: IndexedSeq[Int]) => raw
-  //      case NormalizeRange => (raw: IndexedSeq[Int]) => {
-  //        val min = raw.min
-  //        val range = raw.max - min
-  //        if (range == 0) raw // Do nothing.
-  //        else {
-  //          val normalized = raw.map(x => ((x - min) * 255.0 / range).round.toInt)
-  //          assert(normalized.min == 0)
-  //          assert(normalized.max == 255)
-  //          normalized
-  //        }
-  //      }
-  //      case NCC => (raw: IndexedSeq[Int]) => {
-  //        val mean = stats.mean(raw: _*)
-  //        val std = stats.sampleStdDev(raw: _*)
-  //        if (std.abs < 0.001) raw // Don't change it.
-  //        else {
-  //          val normalized = raw.map(x => (x - mean) / std)
-  //          assert(stats.mean(normalized: _*).abs < 0.0001)
-  //          assert((stats.sampleStdDev(normalized: _*) - 1).abs < 0.0001)
-  //          normalized
-  //        }
-  //      }
-  //      case Order => (raw: IndexedSeq[Int]) => {
-  //        SortDescriptor.fromUnsorted(raw)
-  //      }
-  //      case Rank => (raw: IndexedSeq[Int]) => {
-  //        SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw))
-  //      }
-  //      case UniformRank => (raw: IndexedSeq[Int]) => {
-  //        Extractor.uniformRank(raw)
-  //      }
-  //    }
-  //  }
 
   implicit def implicitPatchExtractor(self: PatchExtractor): Extractor[IndexedSeq[Int]] =
     Extractor(
       self,
       (image: BufferedImage, keyPoint: KeyPoint) => {
-        val rawOption = rawPixels(
+        rawPixels(
           self.normalizeRotation,
           self.normalizeScale,
           self.patchWidth,
           self.blurWidth,
           self.color)(image, keyPoint)
-
-        rawOption
-        //        for (raw <- rawOption) yield constructor(self.extractorType)(raw)
       })
 }
 
@@ -299,7 +184,7 @@ object LogPolarExtractor {
       override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
         assert(self.color == "Gray")
 
-        val rawOptions = LogPolar.rawLogPolarSeq(
+        LogPolar.rawLogPolarSeq(
           self.steerScale,
           self.minRadius,
           self.maxRadius,
@@ -307,7 +192,6 @@ object LogPolarExtractor {
           self.numAngles,
           self.blurWidth)(image, keyPoints)
 
-        rawOptions
         //        for (rawOption <- rawOptions) yield {
         //          for (raw <- rawOption) yield {
         //            val seqSeq = raw.toSeqSeq
@@ -337,44 +221,6 @@ object LogPolarExtractor {
       override def original = self
     }
 }
-
-///////////////////////////////////////////////////////////    
-
-//object BRISKExtractorType extends Enumeration {
-//  type BRISKExtractorType = Value
-//  val Raw, Order, Rank = Value
-//}
-//
-//case class BRISKExtractor(
-//  extractorType: BRISKExtractorType.BRISKExtractorType,
-//  normalizeRotation: Boolean,
-//  normalizeScale: Boolean)
-//
-//object BRISKExtractor {
-//  import Extractor._
-//  import BRISKExtractorType._
-//
-//  implicit def implicitBRISKExtractor(self: BRISKExtractor): Extractor =
-//    new SingleExtractor {
-//      override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) => {
-//        val constructor: Descriptor => Descriptor = self.extractorType match {
-//          case Raw => identity
-//          case Order => (raw: Descriptor) => {
-//            SortDescriptor.fromUnsorted(raw.values[Int])
-//          }
-//          case Rank => (raw: Descriptor) => {
-//            SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(raw.values[Int]))
-//          }
-//        }
-//
-//        val rawOption = intExtractorFromEnum(DescriptorExtractor.BRISKLUCID)(image, keyPoint)
-//
-//        for (raw <- rawOption) yield constructor(raw)
-//      }
-//
-//      override def original = self
-//    }
-//}
 
 ///////////////////////////////////////////////////////////      
 
@@ -450,9 +296,6 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
       "SIFT" -> OpenCVExtractorType.SIFT,
       "SURF" -> OpenCVExtractorType.SURF))
 
-  //  implicit val openCVExtractor =
-  //    jsonFormat1(OpenCVExtractor.apply).addClassInfo("OpenCVExtractor")
-
   /////////////////////////////////////////////////////////
 
   implicit val patchExtractor =
@@ -462,18 +305,6 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
 
   implicit val logPolarExtractor =
     jsonFormat7(LogPolarExtractor.apply).addClassInfo("LogPolarExtractor")
-
-  /////////////////////////////////////////////////////////
-
-  //  implicit val briskExtractorType = enumeration(
-  //    "BRISKExtractorType",
-  //    Map(
-  //      "Raw" -> BRISKExtractorType.Raw,
-  //      "Order" -> BRISKExtractorType.Order,
-  //      "Rank" -> BRISKExtractorType.Rank))
-
-  //  implicit val briskExtractor =
-  //    jsonFormat3(BRISKExtractor.apply).addClassInfo("BRISKExtractor")
 
   /////////////////////////////////////////////////////////
 
@@ -512,25 +343,18 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
       case original: OpenCVExtractorType.ORB.type => original.toJson
     }
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      //      case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
       case _ => throw new DeserializationException("Extractor expected")
     }
   }
 
   implicit object ExtractorJsonFormatIndexedSeqInt extends RootJsonFormat[Extractor[IndexedSeq[Int]]] {
     override def write(self: Extractor[IndexedSeq[Int]]) = self.original match {
-      //      case original: OpenCVExtractor => original.toJson
       case original: PatchExtractor => original.toJson
       case original: LogPolarExtractor => original.toJson
-      //      case original: BRISKExtractor => original.toJson
       case original: ELUCIDExtractor => original.toJson
     }
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      //      case JsString("OpenCVExtractor") => value.convertTo[OpenCVExtractor]
       case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
-      //      case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
-      //      case JsString("BRISKExtractor") => value.convertTo[BRISKExtractor]
-      //      case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
       case _ => throw new DeserializationException("Extractor expected")
     }
   }
