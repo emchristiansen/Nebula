@@ -42,8 +42,6 @@ case class WideBaselineExperiment[A](
   otherImage: Int,
   detector: PairDetector,
   extractor: Extractor[A],
-//  extractorNormalizer: Normalizer[A, B],
-//  matcherNormalizer: Normalizer[B, C],
   matcher: Matcher[A])
 
 object WideBaselineExperiment {
@@ -62,13 +60,6 @@ object WideBaselineExperiment {
 
   implicit def implicitExperiment(self: WideBaselineExperiment): Experiment =
     new Experiment {
-//      override def name = "WideBaselineExperiment"
-//      override def parameters = Seq(
-//        ("IC", self.imageClass.toString),
-//        ("OI", self.otherImage.toString),
-//        ("D", JSONUtil.abbreviate(self.detector)),
-//        ("E", JSONUtil.abbreviate(self.extractor)),
-//        ("M", JSONUtil.abbreviate(self.matcher)))
       override def original = self
 
       override def getResults(implicit runtime: RuntimeConfig) =
@@ -167,23 +158,6 @@ object WideBaselineExperimentResults extends Logging {
       }
     }
 }
-
-///////////////////////////////////////////////////////////
-
-//object WideBaselineExperimentSummary {
-//  implicit def implicitWideBaselineExperimentResults(
-//    self: WideBaselineExperimentResults)(
-//      implicit runtime: RuntimeConfig) = new {
-//    def toSummary = new ExperimentSummary {
-//      def original = self
-//      def results = self
-//      def summaryNumbers = Map(
-//        "recognitionRate" -> Memoize(() => SummaryUtil.recognitionRate(self.dmatches)))
-//      def summaryImages = Map(
-//        "histogram" -> Memoize(() => Histogram(self, "").render))
-//    }
-//  }
-//}
 
 
 
