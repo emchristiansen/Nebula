@@ -22,7 +22,7 @@ import SortDescriptor._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Extractor[A] extends HasOriginal {
+trait Extractor[A] extends HasOriginal {
   def extract: Extractor.ExtractorAction[A]
 
   def extractSingle: Extractor.ExtractorActionSingle[A]

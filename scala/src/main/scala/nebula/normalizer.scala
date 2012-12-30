@@ -81,10 +81,18 @@ object PatchExtractorType extends Enumeration {
 
 ///////////////////////////////////////////////////////////
 
+import java.awt.image.BufferedImage
+import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
+
 case class NormalizedExtractor[A, B](extractor: Extractor[A], normalizer: Normalizer[A, B])
 
 object NormalizedExtractor {
-  
+  implicit class ToExtractor[A, B](normalizedExtractor: NormalizedExtractor[A, B]) extends Extractor[B] {
+    override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
+      val unnormalized = normalizedExtractor.extractor.extract(image, keyPoints)
+      unnormalized.map(_.map(normalizedExtractor.normalizer.normalize))
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////
