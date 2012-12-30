@@ -53,8 +53,8 @@ case class Histogram(
 }
 
 object Histogram {
-  def apply(
-      results: WideBaselineExperimentResults, 
+  def apply[A](
+      results: WideBaselineExperimentResults[A], 
       title: String)(
       implicit runtime: RuntimeConfig): Histogram = {
     val (same, different) = results.dmatches.partition(dmatch => dmatch.queryIdx == dmatch.trainIdx)

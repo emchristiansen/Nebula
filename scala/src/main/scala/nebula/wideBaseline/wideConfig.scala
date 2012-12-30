@@ -58,7 +58,7 @@ object WideBaselineExperiment {
       }
     }
 
-  implicit def implicitExperiment(self: WideBaselineExperiment): Experiment =
+  implicit def implicitExperiment[A](self: WideBaselineExperiment[A]): Experiment =
     new Experiment {
       override def original = self
 
@@ -66,8 +66,8 @@ object WideBaselineExperiment {
         WideBaselineExperimentResults(self)
     }
 
-  implicit def implicitImagePairLike(
-    self: WideBaselineExperiment)(
+  implicit def implicitImagePairLike[A](
+    self: WideBaselineExperiment[A])(
       implicit runtime: RuntimeConfig): HasImagePair =
     new HasImagePair {
       override def leftImage = {
@@ -88,27 +88,27 @@ object WideBaselineExperiment {
 
 ///////////////////////////////////////////////////////////
 
-case class WideBaselineExperimentResults(
-  experiment: WideBaselineExperiment,
+case class WideBaselineExperimentResults[A](
+  experiment: WideBaselineExperiment[A],
   dmatches: Seq[DMatch])
 
 object WideBaselineExperimentResults extends Logging {
-  def apply(
-    experiment: WideBaselineExperiment)(
-      implicit runtime: RuntimeConfig): WideBaselineExperimentResults = {
+  def apply[A](
+    experiment: WideBaselineExperiment[A])(
+      implicit runtime: RuntimeConfig): WideBaselineExperimentResults[A] = {
     // TODO: Code is duplicated
     val noResults = WideBaselineExperimentResults(experiment, null)
     if (noResults.alreadyRun && runtime.skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
       val jsonString = org.apache.commons.io.FileUtils.readFileToString(file)
-      jsonString.asJson.convertTo[WideBaselineExperimentResults]
+      jsonString.asJson.convertTo[WideBaselineExperimentResults[A]]
     } else run(experiment)
   }
 
-  private def run(
-    self: WideBaselineExperiment)(
-      implicit runtime: RuntimeConfig): WideBaselineExperimentResults = {
+  private def run[A](
+    self: WideBaselineExperiment[A])(
+      implicit runtime: RuntimeConfig): WideBaselineExperimentResults[A] = {
     println("Running %s".format(self))
 
     val leftImage = self.leftImage
@@ -137,7 +137,7 @@ object WideBaselineExperimentResults extends Logging {
     results
   }
 
-  implicit def implicitExperimentResults(self: WideBaselineExperimentResults): ExperimentResults =
+  implicit def implicitExperimentResults[A](self: WideBaselineExperimentResults[A]): ExperimentResults =
     new ExperimentResults {
       override def experiment = self.experiment
       override def save(implicit runtime: RuntimeConfig) = {
