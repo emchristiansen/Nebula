@@ -167,12 +167,14 @@ object LogPolar {
 //    (seqSeq ++ seqSeq.init).toMatrix
 //  }
 
-  def getResponseMap[A, B](
+  import scala.reflect._
+  
+  def getResponseMap[A: ClassTag, B](
     normalizer: Normalizer[DenseMatrix[A], DenseMatrix[B]],
     normalizeByOverlap: Boolean,
-    distance: Matcher.DescriptorDistance[B],
+    distance: Matcher.DescriptorDistance[DenseMatrix[B]],
     base: DenseMatrix[A],
-    kernel: DenseMatrix[B],
+    kernel: DenseMatrix[A],
     angleIndices: Range,
     scaleIndices: Range): DenseMatrix[Double] = {
     require(2 * kernel.rows - 1 == base.rows)
@@ -182,16 +184,16 @@ object LogPolar {
     require(scaleIndices.min >= -kernel.cols + 1)
     require(scaleIndices.max < kernel.cols)
 
-    // If |normalization| isn't raw, we do match-time normalization
-    // of the part of the log-polar patterns that overlap.
-    def normalize(patch: DenseMatrix[Double]): IndexedSeq[Double] = {
-      if (normalization == PatchExtractorType.Raw) 
-        patch.toSeqSeq.flatten
-      else {
-        val extractor = PatchExtractor.constructorDouble(normalization)
-        extractor(patch.toSeqSeq.flatten).values[Double]
-      }
-    }
+//    // If |normalization| isn't raw, we do match-time normalization
+//    // of the part of the log-polar patterns that overlap.
+//    def normalize(patch: DenseMatrix[Double]): IndexedSeq[Double] = {
+//      if (normalization == PatchExtractorType.Raw) 
+//        patch.toSeqSeq.flatten
+//      else {
+//        val extractor = PatchExtractor.constructorDouble(normalization)
+//        extractor(patch.toSeqSeq.flatten).values[Double]
+//      }
+//    }
     
     val response = DenseMatrix.fill(angleIndices.size, scaleIndices.size)(0.0)
     for (angleIndex <- angleIndices; scaleIndex <- scaleIndices) {
@@ -200,19 +202,18 @@ object LogPolar {
       val kernelScaleRange =
         math.max(0, -scaleIndex) until math.min(base.cols, base.cols - scaleIndex)
 
-      val baseMatrix = copy(base(
+      val baseMatrixUnnormalized = copy(base(
         angleIndex until angleIndex + kernel.rows,
         baseScaleRange))
-      val kernelMatrix = copy(kernel(
+      val kernelMatrixUnnormalized = copy(kernel(
         ::,
         kernelScaleRange))
         
-      val baseVector = normalize(baseMatrix)
-      val kernelVector = normalize(kernelMatrix)
-      assert(baseVector.size == kernelVector.size)
+      val baseMatrix = normalizer.normalize(baseMatrixUnnormalized)
+      val kernelMatrix = normalizer.normalize(kernelMatrixUnnormalized)
       
       val scaleOffset = scaleIndex - scaleIndices.min
-      val unnormalized = distance(baseVector, kernelVector)
+      val unnormalized = distance(baseMatrix, kernelMatrix)
       response(angleIndex, scaleOffset) = if (normalizeByOverlap) {
         val denominator = kernel.cols - scaleIndex.abs
         unnormalized / denominator
@@ -220,90 +221,4 @@ object LogPolar {
     }
     response
   }
-
-  //  def getResponseMap(
-  //    normalizeByOverlap: Boolean,
-  //    distance: (IndexedSeq[Double], IndexedSeq[Double]) => Double,
-  //    base: DenseMatrix[Double],
-  //    kernel: DenseMatrix[Double],
-  //    angleIndices: Range,
-  //    scaleIndices: Range): DenseMatrix[Double] = {
-  //    require(2 * kernel.rows - 1 == base.rows)
-  //    require(3 * kernel.cols - 2 == base.cols)
-  //    require(angleIndices.min >= 0)
-  //    require(angleIndices.max < kernel.rows)
-  //    require(scaleIndices.min >= -kernel.cols + 1)
-  //    require(scaleIndices.max < kernel.cols)
-  //
-  //    val response = DenseMatrix.fill(angleIndices.size, scaleIndices.size)(0.0)
-  //    for (angleIndex <- angleIndices; scaleIndex <- scaleIndices) {
-  //      val scaleOffset = scaleIndex + kernel.cols - 1
-  ////      println(scaleIndices, scaleOffset)
-  //      val baseVector = copy(base(
-  //        angleIndex until angleIndex + kernel.rows,
-  //        scaleOffset until scaleOffset + kernel.cols)).data.toIndexedSeq
-  //      val kernelVector = kernel.data.toIndexedSeq
-  //      assert(baseVector.size == kernelVector.size)
-  //      response(angleIndex, scaleOffset) = distance(baseVector, kernelVector)
-  //    }
-  //    response
-  //  }
-
-//  def getDistance(matcherType: MatcherType.MatcherType) = {
-//    matcherType match {
-//      case MatcherType.L1 => Matcher.l1[Double] _
-//      case MatcherType.L2 => Matcher.l2[Double] _
-//      case _ => sys.error("Not using supported distance")
-//    }
-//  }
 }
-//
-//    try {
-//      // TODO: Make parameter
-//      val oversampleFactor = 8
-//      val numOversampledAngles = oversampleFactor * numAngles
-//      val numOversampledScales = oversampleFactor * numScales
-//
-//      def pixelOffset(scaleIndex: Int, angleIndex: Int): DenseVector[Double] = {
-//        assert(scaleIndex < numOversampledScales)
-//        assert(angleIndex < numOversampledAngles)
-//
-//        val angle = 2 * math.Pi * angleIndex.toDouble / numOversampledAngles
-//        val scale = {
-//          val base = math.exp(
-//            math.log(maxRadius / minRadius) / (numOversampledScales - 1))
-//          val scale = minRadius * math.pow(base, scaleIndex)
-//          assert(scale >= minRadius, "scale, minRadius: %s, %s".format(scale, minRadius))
-//          assert(scale <= maxRadius + .0001, "scale, maxRadius: %s, %s".format(scale, maxRadius))
-//          if (scaleIndex == 0) assert(scale == minRadius)
-//          if (scaleIndex == numOversampledScales - 1) assertNear(0.0001, scale, maxRadius)
-//          scale
-//        }
-//        DenseVector(scale * math.sin(angle), scale * math.cos(angle))
-//      }
-//
-//      val oversampled = {
-//        val image = new BufferedImage(
-//          numOversampledScales,
-//          numOversampledAngles,
-//          BufferedImage.TYPE_BYTE_GRAY)
-//        for (
-//          angleIndex <- 0 until numOversampledAngles;
-//          scaleIndex <- 0 until numOversampledScales
-//        ) {
-//          image.setPixel(
-//            scaleIndex,
-//            angleIndex,
-//            pixel(pixelOffset(scaleIndex, angleIndex)))
-//        }
-//        image
-//      }
-//
-//      val scaledImage = ImageUtil.scale(1.0 / oversampleFactor, oversampled)
-//      assert(scaledImage.getWidth == numScales)
-//      assert(scaledImage.getHeight == numAngles)
-//      Some(scaledImage.toMatrix)
-//    } catch {
-//      case _: NoSuchElementException => None
-//    }
-//  }
