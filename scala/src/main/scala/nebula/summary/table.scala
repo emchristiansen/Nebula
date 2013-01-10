@@ -22,9 +22,8 @@ import grizzled.math._
 import DetectorJsonProtocol._
 import ExtractorJsonProtocol._
 import MatcherJsonProtocol._
-import ExperimentJsonProtocol._
-import ExperimentResultsJsonProtocol._
 import spray.json._
+import reflect._
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -62,12 +61,12 @@ object Table {
       "summary/%s_%s.csv".format(self.unixEpoch, self.title))
   }
 
-  def title(experiments: Seq[Experiment]): String = {
+  def title[E: JsonFormat](experiments: Seq[E]): String = {
     val maps = experiments.map(_.toJson).map(JSONUtil.getParametersFromJson).toSet
     summarizeStructure(maps)
   }
 
-  def entryTitles(experiments: Seq[Experiment]): IndexedSeq[String] = {
+  def entryTitles[E: JsonFormat](experiments: Seq[E]): IndexedSeq[String] = {
     val experimentMaps = experiments.map(_.toJson).map(JSONUtil.getParametersFromJson)
     val union = mapUnion(experimentMaps.toSet)
     val variableKeys = union.filter(_._2.size > 1).keys.toSet
@@ -80,7 +79,7 @@ object Table {
     experimentMaps.map(entryTitle).toIndexedSeq
   }  
   
-  def apply(experiments: IndexedSeq[IndexedSeq[Experiment]]): Table[Experiment] = {
+  def apply[E: JsonFormat : ClassTag](experiments: IndexedSeq[IndexedSeq[E]]): Table[E] = {
     // TODO: Replace with |everywhere| from shapeless when Scala 2.10 comes out.
     val experimentsFirstRow = experiments.head
     val experimentsFirstColumn = experiments.map(_.head)

@@ -15,7 +15,7 @@ object SortDescriptor {
     SortDescriptor(permutation.toIndexedSeq)
   }
 
-  implicit def implicitIndexedSeq(self: SortDescriptor) = self.values
+  implicit def implicitIndexedSeq(self: SortDescriptor): IndexedSeq[Int] = self.values
 
   implicit def sortDescriptor(self: SortDescriptor) =
     new PermutationLike[SortDescriptor] {

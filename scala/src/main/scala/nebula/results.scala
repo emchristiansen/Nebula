@@ -3,26 +3,44 @@ package nebula
 import java.io.File
 import nebula.summary._
 
-import nebula.smallBaseline.SmallBaselineExperimentResults.implicitExperimentResults
-import nebula.wideBaseline.WideBaselineExperimentResults.implicitExperimentResults
-import smallBaseline.{ SmallBaselineExperiment, SmallBaselineExperimentResults }
+
 import wideBaseline.{ WideBaselineExperiment, WideBaselineExperimentResults }
 
 import spray.json._
 import util.JSONUtil._
 import util._
 
-import ExperimentJsonProtocol._
+
 import DMatchJsonProtocol._
 import smallBaseline.FlowFieldJsonProtocol._
 
 ///////////////////////////////////////////////////////////
 
-trait ExperimentResults extends HasOriginal {
-  def experiment: Experiment
+trait ExperimentRunner[R] {
+  def run: R
+}
+
+trait StorageInfo[R] {
+  def currentPath: File
+  def mostRecentPath: Option[File]
+  def save: Unit
+  def load: Option[R]
+}
+
+/*
+
+trait ExperimentResults {
+  type Original
+  type OriginalResults
+  
+  implicit val originalToExperimentResults: Original => ExperimentResults
+  implicit val originalToExperimentResults: Original => ExperimentResults
+  implicit val jsonFormat: JsonFormat[Original]
+  
+  def experiment: Original
   def save(implicit runtime: RuntimeConfig): Unit
 
-  def toSummary(implicit runtime: RuntimeConfig): ExperimentSummary
+//  def toSummary(implicit runtime: RuntimeConfig): ExperimentSummary
   
   def experimentStringNoTime = {
     val fullString = JSONUtil.flattenJson(experiment.toJson)
@@ -52,7 +70,7 @@ trait ExperimentResults extends HasOriginal {
 
   def alreadyRun(implicit runtime: RuntimeConfig): Boolean = !existingResultsFile.isEmpty
 }
-
+*/
 //object ExperimentResults {
 //  def apply(experiment: Experiment): ExperimentResults = experiment.original match {
 //    case original: WideBaselineExperiment => WideBaselineExperimentResults(original)
@@ -62,29 +80,29 @@ trait ExperimentResults extends HasOriginal {
 
 ///////////////////////////////////////////////////////////
 
-object ExperimentResultsJsonProtocol extends DefaultJsonProtocol {
-  implicit val smallBaselineExperimentResults: RootJsonFormat[SmallBaselineExperimentResults] =
-    jsonFormat3(SmallBaselineExperimentResults.apply).addClassInfo(
-      "SmallBaselineExperimentResults")  
-  
-  implicit val wideBaselineExperimentResults =
-    jsonFormat2(WideBaselineExperimentResults.apply).addClassInfo(
-      "WideBaselineExperimentResults")
-
-//  implicit object ExperimentResultsJsonProtocol extends RootJsonFormat[ExperimentResults] {
-//    override def write(self: ExperimentResults) = self.original match {
-//      case original: WideBaselineExperimentResults => original.toJson
-//      case original: SmallBaselineExperimentResults => original.toJson
-//    }
-//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-//      case JsString("WideBaselineExperimentResults") =>
-//        value.convertTo[WideBaselineExperimentResults]
-//      case JsString("SmallBaselineExperimentResults") =>
-//        value.convertTo[SmallBaselineExperimentResults]
-//      case _ => throw new DeserializationException("ExperimentResults expected")
-//    }
-//  }
-}
+//object ExperimentResultsJsonProtocol extends DefaultJsonProtocol {
+////  implicit val smallBaselineExperimentResults: RootJsonFormat[SmallBaselineExperimentResults] =
+////    jsonFormat3(SmallBaselineExperimentResults.apply).addClassInfo(
+////      "SmallBaselineExperimentResults")  
+////  
+////  implicit val wideBaselineExperimentResults =
+////    jsonFormat2(WideBaselineExperimentResults.apply).addClassInfo(
+////      "WideBaselineExperimentResults")
+//
+////  implicit object ExperimentResultsJsonProtocol extends RootJsonFormat[ExperimentResults] {
+////    override def write(self: ExperimentResults) = self.original match {
+////      case original: WideBaselineExperimentResults => original.toJson
+////      case original: SmallBaselineExperimentResults => original.toJson
+////    }
+////    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+////      case JsString("WideBaselineExperimentResults") =>
+////        value.convertTo[WideBaselineExperimentResults]
+////      case JsString("SmallBaselineExperimentResults") =>
+////        value.convertTo[SmallBaselineExperimentResults]
+////      case _ => throw new DeserializationException("ExperimentResults expected")
+////    }
+////  }
+//}
 
 
 

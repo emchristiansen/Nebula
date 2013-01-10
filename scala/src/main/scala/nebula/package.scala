@@ -6,18 +6,18 @@ import scala.tools.reflect.ToolBox
 
 ///////////////////////////////////////////////////////////
 
-case class Epsilon(value: Double)
-
-object Epsilon {
-  implicit def toDouble(self: Epsilon): Double = self.value
-}
-
 package object nebula {
   implicit class IntTimes(int: Int) {
     def times[A](function: => A): IndexedSeq[A] =
       (0 until int).map(_ => function)
   }
-  
+
+  case class Epsilon(value: Double)
+
+  object Epsilon {
+    implicit def toDouble(self: Epsilon): Double = self.value
+  }
+
   implicit val epsilon = Epsilon(0.0001)
 
   def TODO = sys.error("TODO")

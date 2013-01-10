@@ -12,7 +12,7 @@ import nebula.util.imageProcessing.RichImage.bufferedImage
 ///////////////////////////////////////////////////////////
 
 object LogPolar {
-  val epsilon = 0.00001
+//  implicit val epsilon = nebula.Epsilon(0.00001)
 
   // Get the minimum, maximum, and exponential base of the scaling
   // factors. These are used to create the image pyramid from
@@ -54,8 +54,8 @@ object LogPolar {
       val scaleFactor = maxScalingFactor * math.pow(base, scaleIndex)
       assert(scaleFactor >= minScalingFactor - epsilon)
       assert(scaleFactor <= maxScalingFactor + epsilon)
-      if (scaleIndex == 0) assertNear2(scaleFactor, maxScalingFactor)
-      if (scaleIndex == numScales - 1) assertNear2(scaleFactor, minScalingFactor)
+      if (scaleIndex == 0) assertNear(scaleFactor, maxScalingFactor)
+      if (scaleIndex == numScales - 1) assertNear(scaleFactor, minScalingFactor)
       scaleFactor
     }
 

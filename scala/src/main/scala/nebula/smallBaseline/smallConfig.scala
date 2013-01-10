@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage
 import scala.Option.option2Iterable
 import org.opencv.features2d.{ DMatch, KeyPoint }
 import breeze.linalg.DenseMatrix
-import nebula.{ Experiment, ExperimentResults, Extractor, HasEstimate, HasGroundTruth, HasImagePair, Matcher, RuntimeConfig }
+
 
 import nebula.util.{ ExperimentIO, IO, JSONUtil }
 import nebula._
@@ -15,19 +15,21 @@ import nebula.summary.ExperimentSummary
 import DetectorJsonProtocol._
 import ExtractorJsonProtocol._
 import MatcherJsonProtocol._
-import ExperimentJsonProtocol._
-import ExperimentResultsJsonProtocol._
+
+
 
 import nebula.util._
 
 import DetectorJsonProtocol._
 import ExtractorJsonProtocol._
 import MatcherJsonProtocol._
-import ExperimentJsonProtocol._
+
 
 import spray.json._
 
 ///////////////////////////////////////////////////////////
+
+/* TODO
 
 case class SmallBaselineExperiment(
   searchRadius: Int,
@@ -223,6 +225,15 @@ object SmallBaselineExperimentResults {
 
 ///////////////////////////////////////////////////////////
 
+object SmallBaselineJsonProtocol extends DefaultJsonProtocol {
+  implicit val smallBaselineExperiment =
+    jsonFormat4(SmallBaselineExperiment.apply).addClassInfo("SmallBaselineExperiment")
+    
+  implicit val smallBaselineExperimentResults: RootJsonFormat[SmallBaselineExperimentResults] =
+    jsonFormat3(SmallBaselineExperimentResults.apply).addClassInfo(
+      "SmallBaselineExperimentResults")      
+}
+
 //object SmallBaselineExperimentSummary {
 //  implicit def implicitSmallBaselineExperimentResults(self: SmallBaselineExperimentResults)(
 //    implicit runtime: RuntimeConfig) = new {
@@ -235,3 +246,5 @@ object SmallBaselineExperimentResults {
 //    }
 //  }
 //}
+
+*/

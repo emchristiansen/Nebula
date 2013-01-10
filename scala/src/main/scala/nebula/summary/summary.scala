@@ -20,7 +20,7 @@ import org.opencv.features2d.DMatch
 ///////////////////////////////////////////////////////////////////////////////
 
 trait ExperimentSummary {
-  def results: ExperimentResults
+//  def results: ExperimentResults
 
   def summaryNumbers: Map[String, () => Double]
   def summaryImages: Map[String, () => BufferedImage]

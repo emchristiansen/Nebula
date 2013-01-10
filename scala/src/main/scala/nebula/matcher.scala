@@ -41,10 +41,10 @@ object Matcher {
       }
     }
 
-  def apply[F](original: Any, distance: DescriptorDistance[F]): Matcher[F] = new Matcher[F] {
+  def apply[F](original: Any, descriptorDistance: DescriptorDistance[F]): Matcher[F] = new Matcher[F] {
     override def doMatch = applyIndividual(distance)
 
-    override def distance = distance
+    override def distance = descriptorDistance
   }
 
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
@@ -70,11 +70,17 @@ object Matcher {
 
 ///////////////////////////////////////////////////////////
 
-object MatcherType extends Enumeration {
+sealed trait MatcherType
+
+object MatcherType {
   import Matcher._
 
-  type MatcherType = Value
-  val L0, L1, L2, KendallTau = Value
+//  type MatcherType = Value
+  object L0 extends MatcherType
+  object L1 extends MatcherType
+  object L2 extends MatcherType
+  object KendallTau extends MatcherType
+//  val L0, L1, L2, KendallTau = Value
 
   // Turn a distance on IndexedSeq[Int] into a distance on SortDescriptor.
   private def lift: DescriptorDistance[IndexedSeq[Int]] => DescriptorDistance[SortDescriptor] =
@@ -163,22 +169,22 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////      
 
-  implicit def matcherJsonFormat[F] = new RootJsonFormat[Matcher[F]] {
-    override def write(self: Matcher[F]) = self.original match {
-      case original: MatcherType.MatcherType => original.toJson
-      case original: LogPolarMatcher => original.toJson
-    }
-    override def read(value: JsValue) = {
-      value match {
-        case JsString(_) => value.convertTo[MatcherType.MatcherType]
-        case _ => value.asJsObject.fields("scalaClass") match {
-          case JsString("LogPolarMatcher") => {
-            value.convertTo[LogPolarMatcher]
-          }
-          case _ => throw new DeserializationException("Matcher expected")
-        }
-      }
-    }
-
-  }
+//  implicit def matcherJsonFormat[F] = new RootJsonFormat[Matcher[F]] {
+//    override def write(self: Matcher[F]) = self.original match {
+//      case original: MatcherType.MatcherType => original.toJson
+//      case original: LogPolarMatcher => original.toJson
+//    }
+//    override def read(value: JsValue) = {
+//      value match {
+//        case JsString(_) => value.convertTo[MatcherType.MatcherType]
+//        case _ => value.asJsObject.fields("scalaClass") match {
+//          case JsString("LogPolarMatcher") => {
+//            value.convertTo[LogPolarMatcher]
+//          }
+//          case _ => throw new DeserializationException("Matcher expected")
+//        }
+//      }
+//    }
+//
+//  }
 }

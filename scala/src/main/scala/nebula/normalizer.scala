@@ -3,10 +3,11 @@ package nebula
 import grizzled.math.stats
 import spray.json._
 import nebula.util._
+import SortDescriptor._
 
 ///////////////////////////////////////////////////////////    
 
-trait Normalizer[A, B] extends HasOriginal {
+trait Normalizer[A, B] {
   def normalize: A => B
 }
 
@@ -58,10 +59,11 @@ object PatchNormalizerType extends Enumeration {
     override def normalize: IndexedSeq[A] => SortDescriptor = data => SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(data))
   }
 
-  implicit class UniformRankNormalize[A: Ordering](self: UniformRank.type) extends Normalizer[IndexedSeq[A], SortDescriptor] {
+  implicit class UniformRankNormalize[A: Ordering](self: UniformRank.type) extends Normalizer[IndexedSeq[A], IndexedSeq[Int]] {
     override def normalize: IndexedSeq[A] => IndexedSeq[Int] = data => {
       val distinctPixelValues = data.toSet.toList
-      val rank = Rank.normalize(data)
+      // TODO: Fix this
+      val rank = RankNormalize(Rank).normalize(data).toArray
       for (value <- distinctPixelValues) {
         val indices = data.zipWithIndex.filter(_._1 == value).map(_._2)
         val meanRank = (indices.map(rank.apply).sum.toDouble / indices.size).round.toInt
@@ -95,19 +97,19 @@ object NormalizerJsonProtocol extends DefaultJsonProtocol {
       
      /////////////////////////////////////////////////////////      
       
-  implicit object NormalizerJsonFormatIndexedSeqDoubleIndexedSeqDouble extends RootJsonFormat[Normalizer[IndexedSeq[Double], IndexedSeq[Double]]] {
-    override def write(self: Normalizer[IndexedSeq[Double], IndexedSeq[Double]]) = self.original match {
-      case original: NormalizeRange.type => original.toJson
-      case original: NCC.type => original.toJson
-    }
-  }
-      
-  implicit def normalizerJsonFormat[A, B] = new RootJsonFormat[Normalizer[A, B]] {
-    override def write(self: Normalizer[A, B]) = self.original match {
-      case original: PatchNormalizerType.PatchNormalizerType => original.toJson
-    }
-    override def read(value: JsValue) = value match {
-      case JsString(_) => value.convertTo[PatchNormalizerType.PatchNormalizerType]
-    }
-  }
+//  implicit object NormalizerJsonFormatIndexedSeqDoubleIndexedSeqDouble extends RootJsonFormat[Normalizer[IndexedSeq[Double], IndexedSeq[Double]]] {
+//    override def write(self: Normalizer[IndexedSeq[Double], IndexedSeq[Double]]) = self.original match {
+//      case original: NormalizeRange.type => original.toJson
+//      case original: NCC.type => original.toJson
+//    }
+//  }
+//      
+//  implicit def normalizerJsonFormat[A, B] = new RootJsonFormat[Normalizer[A, B]] {
+//    override def write(self: Normalizer[A, B]) = self.original match {
+//      case original: PatchNormalizerType.PatchNormalizerType => original.toJson
+//    }
+//    override def read(value: JsValue) = value match {
+//      case JsString(_) => value.convertTo[PatchNormalizerType.PatchNormalizerType]
+//    }
+//  }
 }
