@@ -13,7 +13,7 @@ import util._
 
 ///////////////////////////////////////////////////////////
 
-trait Detector extends HasOriginal {
+trait Detector {
   def detect: Detector.DetectorAction
 }
 
@@ -56,8 +56,6 @@ object OpenCVDetector {
           sorted.take(self.maxKeyPointsOption.get)
         else sorted
       }
-
-      override def original = self
     }
 }
 
@@ -100,8 +98,6 @@ object OpenCVPairDetector {
           allPairs.take(self.maxKeyPointsOption.get)
         else allPairs
       }
-
-      override def original = self
     }
 }
 
@@ -122,15 +118,15 @@ object DetectorJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////
 
-  implicit object DetectorJsonFormat extends RootJsonFormat[Detector] {
-    override def write(self: Detector) = self.original match {
-      case original: OpenCVDetector => original.toJson
-    }
-    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case JsString("OpenCVDetector") => value.convertTo[OpenCVDetector]
-      case _ => throw new DeserializationException("Detector expected")
-    }
-  }
+//  implicit object DetectorJsonFormat extends RootJsonFormat[Detector] {
+//    override def write(self: Detector) = self.original match {
+//      case original: OpenCVDetector => original.toJson
+//    }
+//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//      case JsString("OpenCVDetector") => value.convertTo[OpenCVDetector]
+//      case _ => throw new DeserializationException("Detector expected")
+//    }
+//  }
 }
 
 ///////////////////////////////////////////////////////////
@@ -143,13 +139,13 @@ object PairDetectorJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////    
 
-  implicit object PairDetectorJsonFormat extends RootJsonFormat[PairDetector] {
-    override def write(self: PairDetector) = self.original match {
-      case original: OpenCVPairDetector => original.toJson
-    }
-    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case JsString("OpenCVPairDetector") => value.convertTo[OpenCVPairDetector]
-      case _ => throw new DeserializationException("PairDetector expected")
-    }
-  }
+//  implicit object PairDetectorJsonFormat extends RootJsonFormat[PairDetector] {
+//    override def write(self: PairDetector) = self.original match {
+//      case original: OpenCVPairDetector => original.toJson
+//    }
+//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//      case JsString("OpenCVPairDetector") => value.convertTo[OpenCVPairDetector]
+//      case _ => throw new DeserializationException("PairDetector expected")
+//    }
+//  }
 }

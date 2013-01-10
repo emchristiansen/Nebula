@@ -31,7 +31,7 @@ trait HasEstimate[A] {
 
 ///////////////////////////////////////////////////////////
 
-trait Experiment extends HasOriginal {
+trait Experiment {
 //  def name: String
 //
 //  // Parameter names and values
@@ -59,16 +59,16 @@ object ExperimentJsonProtocol extends DefaultJsonProtocol {
   implicit val smallBaselineExperiment =
     jsonFormat4(SmallBaselineExperiment.apply).addClassInfo("SmallBaselineExperiment")
     
-  implicit object ExperimentJsonFormat extends RootJsonFormat[Experiment] {
-    override def write(self: Experiment) = self.original match {
-      case original: WideBaselineExperiment => original.toJson
-      case original: SmallBaselineExperiment => original.toJson
-    }
-    
-    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case JsString("WideBaselineExperiment") => value.convertTo[WideBaselineExperiment]
-      case JsString("SmallBaselineExperiment") => value.convertTo[SmallBaselineExperiment]
-      case _ => throw new DeserializationException("Experiment expected")
-    }
-  }
+//  implicit object ExperimentJsonFormat extends RootJsonFormat[Experiment] {
+//    override def write(self: Experiment) = self.original match {
+//      case original: WideBaselineExperiment => original.toJson
+//      case original: SmallBaselineExperiment => original.toJson
+//    }
+//    
+//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//      case JsString("WideBaselineExperiment") => value.convertTo[WideBaselineExperiment]
+//      case JsString("SmallBaselineExperiment") => value.convertTo[SmallBaselineExperiment]
+//      case _ => throw new DeserializationException("Experiment expected")
+//    }
+//  }
 }

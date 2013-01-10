@@ -13,17 +13,17 @@ import ExtractorJsonProtocol._
 
 ///////////////////////////////////////////////////////////
 
-sealed trait Matcher[A] extends HasOriginal {
-  def doMatch: Matcher.MatcherAction[A]
+sealed trait Matcher[F] {
+  def doMatch: Matcher.MatcherAction[F]
 
-  def distance: Matcher.DescriptorDistance[A]
+  def distance: Matcher.DescriptorDistance[F]
 }
 
 object Matcher {
-  type MatcherAction[A] = (Boolean, Seq[A], Seq[A]) => Seq[DMatch]
-  type DescriptorDistance[A] = (A, A) => Double
+  type MatcherAction[F] = (Boolean, Seq[F], Seq[F]) => Seq[DMatch]
+  type DescriptorDistance[F] = (F, F) => Double
 
-  def applyIndividual[A](distanceMethod: DescriptorDistance[A]): MatcherAction[A] =
+  def applyIndividual[F](distanceMethod: DescriptorDistance[F]): MatcherAction[F] =
     (allPairs, leftDescriptors, rightDescriptors) => {
       if (allPairs) {
         for (
@@ -41,12 +41,10 @@ object Matcher {
       }
     }
 
-  def apply[A](original: Any, distance: DescriptorDistance[A]): Matcher[A] = new Matcher[A] {
+  def apply[F](original: Any, distance: DescriptorDistance[F]): Matcher[F] = new Matcher[F] {
     override def doMatch = applyIndividual(distance)
 
     override def distance = distance
-
-    override def original = original
   }
 
   def l0(left: IndexedSeq[Any], right: IndexedSeq[Any]): Int =
@@ -165,8 +163,8 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////      
 
-  implicit def matcherJsonFormat[A] = new RootJsonFormat[Matcher[A]] {
-    override def write(self: Matcher[A]) = self.original match {
+  implicit def matcherJsonFormat[F] = new RootJsonFormat[Matcher[F]] {
+    override def write(self: Matcher[F]) = self.original match {
       case original: MatcherType.MatcherType => original.toJson
       case original: LogPolarMatcher => original.toJson
     }

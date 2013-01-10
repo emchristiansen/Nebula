@@ -24,30 +24,26 @@ import scala.reflect.runtime.universe._
 
 ///////////////////////////////////////////////////////////
 
-trait Extractor[A] extends HasOriginal {
-  def typeA: TypeTag[A]
-  
-  def extract: Extractor.ExtractorAction[A]
+trait Extractor[F] { 
+  def extract: Extractor.ExtractorAction[F]
 
-  def extractSingle: Extractor.ExtractorActionSingle[A]
+  def extractSingle: Extractor.ExtractorActionSingle[F]
 }
 
 ///////////////////////////////////////////////////////////
 
 object Extractor {
-  type ExtractorAction[A] = (BufferedImage, Seq[KeyPoint]) => Seq[Option[A]]
-  type ExtractorActionSingle[A] = (BufferedImage, KeyPoint) => Option[A]
+  type ExtractorAction[F] = (BufferedImage, Seq[KeyPoint]) => Seq[Option[F]]
+  type ExtractorActionSingle[F] = (BufferedImage, KeyPoint) => Option[F]
 
-  def applySeveral[A](extractSingle: ExtractorActionSingle[A]): ExtractorAction[A] =
+  def applySeveral[F](extractSingle: ExtractorActionSingle[F]): ExtractorAction[F] =
     (image: BufferedImage, keyPoints: Seq[KeyPoint]) =>
       keyPoints.map(k => extractSingle(image, k))
 
-  def apply[A](original: Any, single: ExtractorActionSingle[A]): Extractor[A] = new Extractor[A] {
+  def apply[F](original: Any, single: ExtractorActionSingle[F]): Extractor[F] = new Extractor[F] {
     override def extract = applySeveral(extractSingle)
 
     override def extractSingle = single
-
-    override def original = original
   }
 
   // TODO: These should be enums, not strings.
@@ -294,7 +290,7 @@ import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
 
 import NormalizerJsonProtocol._
 
-case class NormalizedExtractor[A, B](extractor: Extractor[A], normalizer: Normalizer[A, B])
+case class NormalizedExtractor[A, B](extractor: Extractor[F], normalizer: Normalizer[A, B])
 
 object NormalizedExtractor {
   implicit class ToExtractor[A, B](normalizedExtractor: NormalizedExtractor[A, B]) extends Extractor[B] {
@@ -334,65 +330,50 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
     jsonFormat7(ELUCIDExtractor.apply).addClassInfo("ELUCIDExtractor")
 
   /////////////////////////////////////////////////////////    
-
-  // TODO
-//  implicit def normalizedExtractor[A, B](implicit a: JsonFormat[Extractor[A]], b: JsonFormat[Normalizer[A, B]]) = 
-//    jsonFormat2(NormalizedExtractor.apply[A, B]).addClassInfo("NormalizedExtractor")
     
   /////////////////////////////////////////////////////////
     
-  implicit object ExtractorJsonFormatSortDescriptor extends RootJsonFormat[Extractor[SortDescriptor]] {
-    override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
-      case original: ELUCIDExtractor => original.toJson
-//      case original: NormalizedExtractor[_, _] => {
-//        def cast[A] = original.asInstanceOf[NormalizedExtractor[A, SortDescriptor]]
-//        
-//        val t1 = typeOf[String]
-//        val t2 = typeOf[Int]
-//        t1 =:= t2
-//        
-//        original.extractor.typeA match {
-//          case t if t == typeOf[SortDescriptor] => cast[SortDescriptor].toJson
-//        }
-//      } 
-    }
-    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
-      case _ => throw new DeserializationException("Extractor expected")
-    }
-  }
-
-  implicit object ExtractorJsonFormatDenseMatrixInt extends RootJsonFormat[Extractor[DenseMatrix[Int]]] {
-    override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
-      case original: LogPolarExtractor => original.toJson
-    }
-    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
-      case _ => throw new DeserializationException("Extractor expected")
-    }
-  }
-
-  implicit object ExtractorJsonFormatIndexedSeqBoolean extends RootJsonFormat[Extractor[IndexedSeq[Boolean]]] {
-    override def write(self: Extractor[IndexedSeq[Boolean]]) = self.original match {
-      case original: OpenCVExtractorType.BRISK.type => original.toJson
-      case original: OpenCVExtractorType.FREAK.type => original.toJson
-      case original: OpenCVExtractorType.BRIEF.type => original.toJson
-      case original: OpenCVExtractorType.ORB.type => original.toJson
-    }
-    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case _ => throw new DeserializationException("Extractor expected")
-    }
-  }
-
-  implicit object ExtractorJsonFormatIndexedSeqInt extends RootJsonFormat[Extractor[IndexedSeq[Int]]] {
-    override def write(self: Extractor[IndexedSeq[Int]]) = self.original match {
-      case original: PatchExtractor => original.toJson
-      case original: LogPolarExtractor => original.toJson
-      case original: ELUCIDExtractor => original.toJson
-    }
-    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
-      case _ => throw new DeserializationException("Extractor expected")
-    }
-  }
+//  implicit object ExtractorJsonFormatSortDescriptor extends RootJsonFormat[Extractor[SortDescriptor]] {
+//    override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
+//      case original: ELUCIDExtractor => original.toJson
+//    }
+//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//      case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
+//      case _ => throw new DeserializationException("Extractor expected")
+//    }
+//  }
+//
+//  implicit object ExtractorJsonFormatDenseMatrixInt extends RootJsonFormat[Extractor[DenseMatrix[Int]]] {
+//    override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
+//      case original: LogPolarExtractor => original.toJson
+//    }
+//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//      case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
+//      case _ => throw new DeserializationException("Extractor expected")
+//    }
+//  }
+//
+//  implicit object ExtractorJsonFormatIndexedSeqBoolean extends RootJsonFormat[Extractor[IndexedSeq[Boolean]]] {
+//    override def write(self: Extractor[IndexedSeq[Boolean]]) = self.original match {
+//      case original: OpenCVExtractorType.BRISK.type => original.toJson
+//      case original: OpenCVExtractorType.FREAK.type => original.toJson
+//      case original: OpenCVExtractorType.BRIEF.type => original.toJson
+//      case original: OpenCVExtractorType.ORB.type => original.toJson
+//    }
+//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//      case _ => throw new DeserializationException("Extractor expected")
+//    }
+//  }
+//
+//  implicit object ExtractorJsonFormatIndexedSeqInt extends RootJsonFormat[Extractor[IndexedSeq[Int]]] {
+//    override def write(self: Extractor[IndexedSeq[Int]]) = self.original match {
+//      case original: PatchExtractor => original.toJson
+//      case original: LogPolarExtractor => original.toJson
+//      case original: ELUCIDExtractor => original.toJson
+//    }
+//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//      case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
+//      case _ => throw new DeserializationException("Extractor expected")
+//    }
+//  }
 }

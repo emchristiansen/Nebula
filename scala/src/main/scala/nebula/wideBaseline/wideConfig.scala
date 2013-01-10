@@ -37,16 +37,19 @@ import nebula.summary._
 
 ///////////////////////////////////////////////////////////
 
-case class WideBaselineExperiment[A](
+case class WideBaselineExperiment[D, E, M, F](
   imageClass: String,
   otherImage: Int,
-  detector: PairDetector,
-  extractor: Extractor[A],
-  matcher: Matcher[A])
+  detector: D,
+  extractor: E,
+  matcher: M)(
+    implicit evPairDetector: D => PairDetector,
+    evExtractor: E => Extractor[F],
+    evMatcher: M => Matcher[F])
 
 object WideBaselineExperiment {
-  implicit def implicitHasGroundTruth[A](
-    self: WideBaselineExperiment[A])(
+  implicit def implicitHasGroundTruth(
+    self: WideBaselineExperiment[_, _, _, _])(
       implicit runtime: RuntimeConfig): HasGroundTruth[Homography] =
     new HasGroundTruth[Homography] {
       override def groundTruth = {
@@ -58,16 +61,14 @@ object WideBaselineExperiment {
       }
     }
 
-  implicit def implicitExperiment[A](self: WideBaselineExperiment[A]): Experiment =
+  implicit def implicitExperiment[D, E, M, F](self: WideBaselineExperiment[D, E, M, F]): Experiment =
     new Experiment {
-      override def original = self
-
       override def getResults(implicit runtime: RuntimeConfig) =
         WideBaselineExperimentResults(self)
     }
 
-  implicit def implicitImagePairLike[A](
-    self: WideBaselineExperiment[A])(
+  implicit def implicitImagePairLike(
+    self: WideBaselineExperiment[_, _, _, _])(
       implicit runtime: RuntimeConfig): HasImagePair =
     new HasImagePair {
       override def leftImage = {
@@ -88,36 +89,42 @@ object WideBaselineExperiment {
 
 ///////////////////////////////////////////////////////////
 
-case class WideBaselineExperimentResults[A](
-  experiment: WideBaselineExperiment[A],
+case class WideBaselineExperimentResults[D, E, M, F](
+  experiment: WideBaselineExperiment[D, E, M, F],
   dmatches: Seq[DMatch])
 
 object WideBaselineExperimentResults extends Logging {
-  def apply[A](
-    experiment: WideBaselineExperiment[A])(
-      implicit runtime: RuntimeConfig): WideBaselineExperimentResults[A] = {
+  def apply[D, E, M, F](
+    experiment: WideBaselineExperiment[D, E, M, F])(
+      implicit runtime: RuntimeConfig,
+      evPairDetector: D => PairDetector,
+      evExtractor: E => Extractor[F],
+      evMatcher: M => Matcher[F]): WideBaselineExperimentResults[D, E, M, F] = {
     // TODO: Code is duplicated
     val noResults = WideBaselineExperimentResults(experiment, null)
     if (noResults.alreadyRun && runtime.skipCompletedExperiments) {
       val Some(file) = noResults.existingResultsFile
       println("Reading %s".format(file))
       val jsonString = org.apache.commons.io.FileUtils.readFileToString(file)
-      jsonString.asJson.convertTo[WideBaselineExperimentResults[A]]
+      jsonString.asJson.convertTo[WideBaselineExperimentResults[D, E, M, F]]
     } else run(experiment)
   }
 
-  private def run[A](
-    self: WideBaselineExperiment[A])(
-      implicit runtime: RuntimeConfig): WideBaselineExperimentResults[A] = {
+  private def run[D, E, M, F](
+    self: WideBaselineExperiment[D, E, M, F])(
+      implicit runtime: RuntimeConfig,
+      evPairDetector: D => PairDetector,
+      evExtractor: E => Extractor[F],
+      evMatcher: M => Matcher[F]): WideBaselineExperimentResults[D, E, M, F] = {
     println("Running %s".format(self))
 
     val leftImage = self.leftImage
     val rightImage = self.rightImage
 
     val (leftKeyPoints, rightKeyPoints) = self.detector.detectPair(
-        self.groundTruth, 
-        leftImage, 
-        rightImage) unzip
+      self.groundTruth,
+      leftImage,
+      rightImage) unzip
 
     println("Number of KeyPoints: %s".format(leftKeyPoints.size))
 
@@ -137,7 +144,7 @@ object WideBaselineExperimentResults extends Logging {
     results
   }
 
-  implicit def implicitExperimentResults[A](self: WideBaselineExperimentResults[A]): ExperimentResults =
+  implicit def implicitExperimentResults[D, E, M, F](self: WideBaselineExperimentResults[D, E, M, F]): ExperimentResults =
     new ExperimentResults {
       override def experiment = self.experiment
       override def save(implicit runtime: RuntimeConfig) = {

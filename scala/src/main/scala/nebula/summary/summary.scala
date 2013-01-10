@@ -19,7 +19,7 @@ import org.opencv.features2d.DMatch
 
 ///////////////////////////////////////////////////////////////////////////////
 
-trait ExperimentSummary extends HasOriginal {
+trait ExperimentSummary {
   def results: ExperimentResults
 
   def summaryNumbers: Map[String, () => Double]
@@ -50,10 +50,10 @@ object SummaryUtil {
   }
 
   // TODO: More general than WideBaseline
-  def experimentTable(
-    baseExperiment: WideBaselineExperiment,
-    rowMutations: Seq[WideBaselineExperiment => WideBaselineExperiment],
-    columnMutations: Seq[WideBaselineExperiment => WideBaselineExperiment]): Seq[Seq[WideBaselineExperiment]] = {
+  def experimentTable[D, E, M, F](
+    baseExperiment: WideBaselineExperiment[D, E, M, F],
+    rowMutations: Seq[WideBaselineExperiment[D, E, M, F] => WideBaselineExperiment[D, E, M, F]],
+    columnMutations: Seq[WideBaselineExperiment[D, E, M, F] => WideBaselineExperiment[D, E, M, F]]): Seq[Seq[WideBaselineExperiment[D, E, M, F]]] = {
     for (row <- rowMutations) yield {
       for (column <- columnMutations) yield {
         column(row(baseExperiment))

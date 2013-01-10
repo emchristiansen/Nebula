@@ -71,19 +71,19 @@ object ExperimentResultsJsonProtocol extends DefaultJsonProtocol {
     jsonFormat2(WideBaselineExperimentResults.apply).addClassInfo(
       "WideBaselineExperimentResults")
 
-  implicit object ExperimentResultsJsonProtocol extends RootJsonFormat[ExperimentResults] {
-    override def write(self: ExperimentResults) = self.original match {
-      case original: WideBaselineExperimentResults => original.toJson
-      case original: SmallBaselineExperimentResults => original.toJson
-    }
-    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-      case JsString("WideBaselineExperimentResults") =>
-        value.convertTo[WideBaselineExperimentResults]
-      case JsString("SmallBaselineExperimentResults") =>
-        value.convertTo[SmallBaselineExperimentResults]
-      case _ => throw new DeserializationException("ExperimentResults expected")
-    }
-  }
+//  implicit object ExperimentResultsJsonProtocol extends RootJsonFormat[ExperimentResults] {
+//    override def write(self: ExperimentResults) = self.original match {
+//      case original: WideBaselineExperimentResults => original.toJson
+//      case original: SmallBaselineExperimentResults => original.toJson
+//    }
+//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//      case JsString("WideBaselineExperimentResults") =>
+//        value.convertTo[WideBaselineExperimentResults]
+//      case JsString("SmallBaselineExperimentResults") =>
+//        value.convertTo[SmallBaselineExperimentResults]
+//      case _ => throw new DeserializationException("ExperimentResults expected")
+//    }
+//  }
 }
 
 
