@@ -304,7 +304,8 @@ import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
 import NormalizerJsonProtocol._
 
 case class NormalizedExtractor[E, N, F1, F2](
-  extractor: E, normalizer: N)(
+  extractor: E,
+  normalizer: N)(
     implicit evExtractor: E => Extractor[F1],
     evNormalizer: N => Normalizer[F1, F2])
 
@@ -347,6 +348,13 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
     jsonFormat7(ELUCIDExtractor.apply).addClassInfo("ELUCIDExtractor")
 
   /////////////////////////////////////////////////////////    
+
+  implicit def normalizedExtractor[E, N, F1, F2](
+    implicit evExtractor: E => Extractor[F1],
+    evNormalizer: N => Normalizer[F1, F2],
+    evEJson: JsonFormat[E],
+    evNJson: JsonFormat[N]) =
+    jsonFormat2(NormalizedExtractor.apply[E, N, F1, F2])
 
   /////////////////////////////////////////////////////////
 
