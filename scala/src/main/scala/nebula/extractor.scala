@@ -14,15 +14,19 @@ import nebula.SortDescriptor.implicitIndexedSeq
 import nebula.util.DenseMatrixUtil._
 import nebula.util.JSONUtil._
 import nebula.util.imageProcessing.RichImage.bufferedImage
-import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny }
+import spray.json._
 import util.{ OpenCVUtil, Util }
 import util.JSONUtil.enumeration
 import util.imageProcessing.{ ImageUtil, Pixel }
 import SortDescriptor._
 
+import scala.reflect.runtime.universe._
+
 ///////////////////////////////////////////////////////////
 
 trait Extractor[A] extends HasOriginal {
+  def typeA: TypeTag[A]
+  
   def extract: Extractor.ExtractorAction[A]
 
   def extractSingle: Extractor.ExtractorActionSingle[A]
@@ -285,6 +289,24 @@ object ELUCIDExtractor {
 
 ///////////////////////////////////////////////////////////
 
+import java.awt.image.BufferedImage
+import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
+
+import NormalizerJsonProtocol._
+
+case class NormalizedExtractor[A, B](extractor: Extractor[A], normalizer: Normalizer[A, B])
+
+object NormalizedExtractor {
+  implicit class ToExtractor[A, B](normalizedExtractor: NormalizedExtractor[A, B]) extends Extractor[B] {
+    override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
+      val unnormalized = normalizedExtractor.extractor.extract(image, keyPoints)
+      unnormalized.map(_.map(normalizedExtractor.normalizer.normalize))
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////
+
 object ExtractorJsonProtocol extends DefaultJsonProtocol {
   implicit val openCVExtractorType = enumeration(
     "OpenCVExtractorType",
@@ -313,11 +335,26 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
 
   /////////////////////////////////////////////////////////    
 
-  //  implicit def 
-
+  // TODO
+//  implicit def normalizedExtractor[A, B](implicit a: JsonFormat[Extractor[A]], b: JsonFormat[Normalizer[A, B]]) = 
+//    jsonFormat2(NormalizedExtractor.apply[A, B]).addClassInfo("NormalizedExtractor")
+    
+  /////////////////////////////////////////////////////////
+    
   implicit object ExtractorJsonFormatSortDescriptor extends RootJsonFormat[Extractor[SortDescriptor]] {
     override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
       case original: ELUCIDExtractor => original.toJson
+//      case original: NormalizedExtractor[_, _] => {
+//        def cast[A] = original.asInstanceOf[NormalizedExtractor[A, SortDescriptor]]
+//        
+//        val t1 = typeOf[String]
+//        val t2 = typeOf[Int]
+//        t1 =:= t2
+//        
+//        original.extractor.typeA match {
+//          case t if t == typeOf[SortDescriptor] => cast[SortDescriptor].toJson
+//        }
+//      } 
     }
     override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
       case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]

@@ -1,18 +1,17 @@
 package nebula
 
 import grizzled.math.stats
-import spray.json.DefaultJsonProtocol
+import spray.json._
 import nebula.util._
 
 ///////////////////////////////////////////////////////////    
 
-trait Normalizer[A, B] {
+trait Normalizer[A, B] extends HasOriginal {
   def normalize: A => B
 }
 
-// TODO: Rename PatchNormalizerType
-object PatchExtractorType extends Enumeration {
-  type PatchExtractorType = Value
+object PatchNormalizerType extends Enumeration {
+  type PatchNormalizerType = Value
   val Raw, NormalizeRange, NCC, Order, Rank, UniformRank = Value
 
   implicit class RawNormalize[A](self: Raw.type) extends Normalizer[A, A] {
@@ -76,35 +75,39 @@ object PatchExtractorType extends Enumeration {
     override def normalize: IndexedSeq[Int] => A = data => fromDouble.normalize(data.map(_.toDouble))
   }
   
-  def matrixNormalizer(normalizerType: PatchExtractorType, normalizeRowsSeparately: Boolean) = sys.error("TODO")
-}
-
-///////////////////////////////////////////////////////////
-
-import java.awt.image.BufferedImage
-import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
-
-case class NormalizedExtractor[A, B](extractor: Extractor[A], normalizer: Normalizer[A, B])
-
-object NormalizedExtractor {
-  implicit class ToExtractor[A, B](normalizedExtractor: NormalizedExtractor[A, B]) extends Extractor[B] {
-    override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
-      val unnormalized = normalizedExtractor.extractor.extract(image, keyPoints)
-      unnormalized.map(_.map(normalizedExtractor.normalizer.normalize))
-    }
-  }
+  def matrixNormalizer(normalizerType: PatchNormalizerType, normalizeRowsSeparately: Boolean) = sys.error("TODO")
 }
 
 ///////////////////////////////////////////////////////////
 
 object NormalizerJsonProtocol extends DefaultJsonProtocol {
-  implicit val patchExtractorType = JSONUtil.enumeration(
-    "PatchExtractorType",
+  import PatchNormalizerType._
+  
+  implicit val patchNormalizerType = JSONUtil.enumeration(
+    "PatchNormalizerType",
     Map(
-      "Raw" -> PatchExtractorType.Raw,
-      "NormalizeRange" -> PatchExtractorType.NormalizeRange,
-      "NCC" -> PatchExtractorType.NCC,
-      "Order" -> PatchExtractorType.Order,
-      "Rank" -> PatchExtractorType.Rank,
-      "UniformRank" -> PatchExtractorType.UniformRank))
+      "Raw" -> PatchNormalizerType.Raw,
+      "NormalizeRange" -> PatchNormalizerType.NormalizeRange,
+      "NCC" -> PatchNormalizerType.NCC,
+      "Order" -> PatchNormalizerType.Order,
+      "Rank" -> PatchNormalizerType.Rank,
+      "UniformRank" -> PatchNormalizerType.UniformRank))
+      
+     /////////////////////////////////////////////////////////      
+      
+  implicit object NormalizerJsonFormatIndexedSeqDoubleIndexedSeqDouble extends RootJsonFormat[Normalizer[IndexedSeq[Double], IndexedSeq[Double]]] {
+    override def write(self: Normalizer[IndexedSeq[Double], IndexedSeq[Double]]) = self.original match {
+      case original: NormalizeRange.type => original.toJson
+      case original: NCC.type => original.toJson
+    }
+  }
+      
+  implicit def normalizerJsonFormat[A, B] = new RootJsonFormat[Normalizer[A, B]] {
+    override def write(self: Normalizer[A, B]) = self.original match {
+      case original: PatchNormalizerType.PatchNormalizerType => original.toJson
+    }
+    override def read(value: JsValue) = value match {
+      case JsString(_) => value.convertTo[PatchNormalizerType.PatchNormalizerType]
+    }
+  }
 }

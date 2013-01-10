@@ -1,14 +1,12 @@
 package nebula
 
-import scala.collection.{ IndexedSeq, Map, Seq }
-
 import org.opencv.features2d.DMatch
 
 import breeze.linalg.DenseMatrix
 import graveyard.EpsilonL1Match
 import nebula.SortDescriptor.{ implicitIndexedSeq, sortDescriptor }
 import nebula.util.JSONUtil._
-import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny }
+import spray.json._
 import util.JSONUtil.enumeration
 import util.Util
 import ExtractorJsonProtocol._
@@ -156,17 +154,19 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
       "L0" -> MatcherType.L0,
       "L1" -> MatcherType.L1,
       "L2" -> MatcherType.L2,
-      "KendallTau" -> MatcherType.KendallTau).toMap)
+      "KendallTau" -> MatcherType.KendallTau))
 
   /////////////////////////////////////////////////////////
-
-  implicit val logPolarMatcher =
-    jsonFormat5(LogPolarMatcher.apply).addClassInfo("LogPolarMatcher")
+      
+  implicit def logPolarMatcher[A, B](
+      implicit a: JsonFormat[Normalizer[DenseMatrix[A], DenseMatrix[B]]],
+      b: JsonFormat[Matcher[DenseMatrix[B]]]) =
+    jsonFormat5(LogPolarMatcher.apply[A, B]).addClassInfo("LogPolarMatcher")
 
   /////////////////////////////////////////////////////////      
 
-  implicit object MatcherJsonFormat extends RootJsonFormat[Matcher] {
-    override def write(self: Matcher) = self.original match {
+  implicit def matcherJsonFormat[A] = new RootJsonFormat[Matcher[A]] {
+    override def write(self: Matcher[A]) = self.original match {
       case original: MatcherType.MatcherType => original.toJson
       case original: LogPolarMatcher => original.toJson
     }
