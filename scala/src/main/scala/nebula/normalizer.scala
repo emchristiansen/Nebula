@@ -11,9 +11,15 @@ trait Normalizer[A, B] {
   def normalize: A => B
 }
 
-object PatchNormalizerType extends Enumeration {
-  type PatchNormalizerType = Value
-  val Raw, NormalizeRange, NCC, Order, Rank, UniformRank = Value
+sealed trait PatchNormalizerType
+
+object PatchNormalizerType {
+  object Raw extends PatchNormalizerType
+  object NormalizeRange extends PatchNormalizerType
+  object NCC extends PatchNormalizerType
+  object Order extends PatchNormalizerType
+  object Rank extends PatchNormalizerType
+  object UniformRank extends PatchNormalizerType
 
   implicit class RawNormalize[A](self: Raw.type) extends Normalizer[A, A] {
     override def normalize: A => A = identity

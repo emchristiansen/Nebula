@@ -137,9 +137,6 @@ object OpenCVExtractorType {
   object ORB extends OpenCVExtractorType
   object SIFT extends OpenCVExtractorType
   object SURF extends OpenCVExtractorType
-  
-//  type OpenCVExtractorType = Value
-//  val BRISK, FREAK, BRIEF, ORB, SIFT, SURF = Value
 
   import Extractor._
 
@@ -306,10 +303,15 @@ import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
 
 import NormalizerJsonProtocol._
 
-case class NormalizedExtractor[A, B](extractor: Extractor[A], normalizer: Normalizer[A, B])
+case class NormalizedExtractor[E, N, F1, F2](
+  extractor: E, normalizer: N)(
+    implicit evExtractor: E => Extractor[F1],
+    evNormalizer: N => Normalizer[F1, F2])
 
 object NormalizedExtractor {
-  implicit def toExtractor[A, B](normalizedExtractor: NormalizedExtractor[A, B]): Extractor[B] = Extractor.fromAction(
+  implicit def toExtractor[E, N, F1, F2](normalizedExtractor: NormalizedExtractor[E, N, F1, F2])(
+    implicit evExtractor: E => Extractor[F1],
+    evNormalizer: N => Normalizer[F1, F2]): Extractor[F2] = Extractor.fromAction(
     (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
       val unnormalized = normalizedExtractor.extractor.extract(image, keyPoints)
       unnormalized.map(_.map(normalizedExtractor.normalizer.normalize))
