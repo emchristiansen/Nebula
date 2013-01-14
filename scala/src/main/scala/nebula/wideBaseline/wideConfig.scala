@@ -50,7 +50,7 @@ object WideBaselineExperiment {
       }
     }
 
-  implicit class ImplicitExperimentRunner[D, E, M, F](
+  implicit class ImplicitExperimentRunnerWithRuntime[D, E, M, F](
     self: WideBaselineExperiment[D, E, M, F])(
       implicit runtimeConfig: RuntimeConfig,
       evPairDetector: D => PairDetector,
@@ -59,7 +59,17 @@ object WideBaselineExperiment {
     override def run = WideBaselineExperimentResults(self)
   }
 
-  implicit class ImplicitStorageInfo[D, E, M, F](
+  implicit def implicitExperimentRunner[D, E, M, F](
+    self: WideBaselineExperiment[D, E, M, F])(
+      implicit evPairDetector: D => PairDetector,
+      evExtractor: E => Extractor[F],
+      evMatcher: M => Matcher[F]): RuntimeConfig => ExperimentRunner[WideBaselineExperimentResults[D, E, M, F]] =
+    runtime => {
+      implicit val implicitRuntime = runtime
+      self
+    }
+
+  implicit class ImplicitStorageInfoWithRuntime[D, E, M, F](
     self: WideBaselineExperiment[D, E, M, F])(
       implicit runtime: RuntimeConfig,
       evPairDetector: D => PairDetector,
@@ -109,6 +119,19 @@ object WideBaselineExperiment {
       matchingPaths.sortBy(identity).reverse.map(path => new File(path))
     }
   }
+
+  implicit def implicitStorageInfo[D, E, M, F](
+    self: WideBaselineExperiment[D, E, M, F])(
+      implicit evPairDetector: D => PairDetector,
+      evExtractor: E => Extractor[F],
+      evMatcher: M => Matcher[F],
+      evDJson: JsonFormat[D],
+      evEJson: JsonFormat[E],
+      evMJson: JsonFormat[M]): RuntimeConfig => StorageInfo[WideBaselineExperimentResults[D, E, M, F]] =
+    runtime => {
+      implicit val implicitRuntime = runtime
+      self
+    }
 
   implicit class ImplicitImagePairLike(
     self: WideBaselineExperiment[_, _, _, _])(
@@ -174,7 +197,7 @@ object WideBaselineExperimentResults extends Logging {
     WideBaselineExperimentResults(self, dmatches)
   }
 
-  implicit class ImplicitExperimentSummary[D, E, M, F](
+  implicit class ImplicitExperimentSummaryWithConfig[D, E, M, F](
     self: WideBaselineExperimentResults[D, E, M, F])(
       implicit runtimeConfig: RuntimeConfig) extends ExperimentSummary {
     override def summaryNumbers = Map(
@@ -182,6 +205,12 @@ object WideBaselineExperimentResults extends Logging {
     override def summaryImages = Map(
       "histogram" -> Memoize(() => Histogram(self, "").render))
   }
+  
+  implicit def implicitExperimentSummary[D, E, M, F](
+    self: WideBaselineExperimentResults[D, E, M, F]): RuntimeConfig => ExperimentSummary = runtime => {
+      implicit val implicitRuntime = runtime
+      self
+    }
 }
 
 

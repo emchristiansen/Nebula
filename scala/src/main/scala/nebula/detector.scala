@@ -105,11 +105,11 @@ object BoundedPairDetector {
 ///////////////////////////////////////////////////////////
 
 object DetectorJsonProtocol extends DefaultJsonProtocol {
-  implicit val dense = singletonObject(OpenCVDetectorType.DENSE)
-  implicit val fast = singletonObject(OpenCVDetectorType.FAST)
-  implicit val brisk = singletonObject(OpenCVDetectorType.BRISK)
-  implicit val sift = singletonObject(OpenCVDetectorType.SIFT)
-  implicit val surf = singletonObject(OpenCVDetectorType.SURF)
+  implicit val openCVDetectorTypeDense = singletonObject(OpenCVDetectorType.DENSE)
+  implicit val openCVDetectorTypeFast = singletonObject(OpenCVDetectorType.FAST)
+  implicit val openCVDetectorTypeBrisk = singletonObject(OpenCVDetectorType.BRISK)
+  implicit val openCVDetectorTypeSift = singletonObject(OpenCVDetectorType.SIFT)
+  implicit val openCVDetectorTypeSurf = singletonObject(OpenCVDetectorType.SURF)
 
   /////////////////////////////////////////////////////////
   

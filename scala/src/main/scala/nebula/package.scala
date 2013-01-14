@@ -3,10 +3,11 @@ import scala.reflect.runtime._
 import scala.reflect.runtime
 import scala.reflect._
 import scala.tools.reflect.ToolBox
+import scala.reflect.runtime.universe._
 
 ///////////////////////////////////////////////////////////
 
-package object nebula {
+package object nebula {  
   implicit class IntTimes(int: Int) {
     def times[A](function: => A): IndexedSeq[A] =
       (0 until int).map(_ => function)
@@ -27,18 +28,19 @@ package object nebula {
   val cm = universe.runtimeMirror(getClass.getClassLoader)
   val toolbox = cm.mkToolBox()
 
-  def eval[A: ClassTag](expression: String): A = {
-    val classString = classTag[A]
+  def eval[A: TypeTag](expression: String): A = {
+    val typeString = typeTag[A].tpe.toString
 
-    val source = """
-      import nebula._;
-      import nebula.smallBaseline._;
-      import nebula.wideBaseline._;
-      import spark.SparkContext;
-      import SparkContext._;
+    val source = s"""
+import nebula._;
+import nebula.smallBaseline._;
+import nebula.wideBaseline._;
+import spark.SparkContext;
+import SparkContext._;
       
-      val value: %s = { %s };
-      value""".format(classTag, expression)
+val value: ${typeString} = { ${expression} };
+value
+"""
 
     toolbox.eval(toolbox.parse(source)).asInstanceOf[A]
   }
