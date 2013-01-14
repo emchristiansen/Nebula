@@ -128,15 +128,15 @@ object Extractor {
 
 ///////////////////////////////////////////////////////////
 
-sealed trait OpenCVExtractorType
+//sealed trait OpenCVExtractorType
 
 object OpenCVExtractorType {
-  object BRISK extends OpenCVExtractorType
-  object FREAK extends OpenCVExtractorType
-  object BRIEF extends OpenCVExtractorType
-  object ORB extends OpenCVExtractorType
-  object SIFT extends OpenCVExtractorType
-  object SURF extends OpenCVExtractorType
+  object BRISK// extends OpenCVExtractorType
+  object FREAK// extends OpenCVExtractorType
+  object BRIEF// extends OpenCVExtractorType
+  object ORB// extends OpenCVExtractorType
+  object SIFT// extends OpenCVExtractorType
+  object SURF// extends OpenCVExtractorType
 
   import Extractor._
 
@@ -322,24 +322,24 @@ object NormalizedExtractor {
 ///////////////////////////////////////////////////////////
 
 object ExtractorJsonProtocol extends DefaultJsonProtocol {
-//  import OpenCVExtractorType._
-//
-//  implicit val brisk = singletonObject(BRISK)
-//  implicit val freak = singletonObject(FREAK)
-//  implicit val brief = singletonObject(BRIEF)
-//  implicit val orb = singletonObject(ORB)
-//  implicit val sift = singletonObject(SIFT)
-//  implicit val surf = singletonObject(SURF)
+  import OpenCVExtractorType._
 
-  implicit val openCVExtractorType = enumeration(
-    "OpenCVExtractorType",
-    Map(
-      "BRISK" -> OpenCVExtractorType.BRISK,
-      "FREAK" -> OpenCVExtractorType.FREAK,
-      "BRIEF" -> OpenCVExtractorType.BRIEF,
-      "ORB" -> OpenCVExtractorType.ORB,
-      "SIFT" -> OpenCVExtractorType.SIFT,
-      "SURF" -> OpenCVExtractorType.SURF))
+  implicit val brisk = singletonObject(BRISK)
+  implicit val freak = singletonObject(FREAK)
+  implicit val brief = singletonObject(BRIEF)
+  implicit val orb = singletonObject(ORB)
+  implicit val sift = singletonObject(SIFT)
+  implicit val surf = singletonObject(SURF)
+
+//  implicit val openCVExtractorType = enumeration(
+//    "OpenCVExtractorType",
+//    Map(
+//      "BRISK" -> OpenCVExtractorType.BRISK,
+//      "FREAK" -> OpenCVExtractorType.FREAK,
+//      "BRIEF" -> OpenCVExtractorType.BRIEF,
+//      "ORB" -> OpenCVExtractorType.ORB,
+//      "SIFT" -> OpenCVExtractorType.SIFT,
+//      "SURF" -> OpenCVExtractorType.SURF))
 
   /////////////////////////////////////////////////////////
 

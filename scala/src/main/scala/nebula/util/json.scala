@@ -15,7 +15,7 @@ import scala.reflect.runtime.universe._
 
 
 object JSONUtil extends Logging {
-  // TODO: These two functions should be implemented with macros.
+  // TODO: This function should be implemented with macros.
   def enumeration[A](scalaClass: String, deserializeMapping: Map[String, A]): RootJsonFormat[A] =
     new RootJsonFormat[A] {
       override def write(e: A) = JsString(e.toString)

@@ -70,16 +70,16 @@ object Matcher {
 
 ///////////////////////////////////////////////////////////
 
-sealed trait MatcherType
+//sealed trait MatcherType
 
 object MatcherType {
   import Matcher._
 
   //  type MatcherType = Value
-  object L0 extends MatcherType
-  object L1 extends MatcherType
-  object L2 extends MatcherType
-  object KendallTau extends MatcherType
+  object L0// extends MatcherType
+  object L1// extends MatcherType
+  object L2// extends MatcherType
+  object KendallTau// extends MatcherType
   //  val L0, L1, L2, KendallTau = Value
 
   // Turn a distance on IndexedSeq[Int] into a distance on SortDescriptor.
@@ -171,13 +171,20 @@ object LogPolarMatcher {
 ///////////////////////////////////////////////////////////
 
 object MatcherJsonProtocol extends DefaultJsonProtocol {
-  implicit val matcherType = enumeration(
-    "MatcherType",
-    Map(
-      "L0" -> MatcherType.L0,
-      "L1" -> MatcherType.L1,
-      "L2" -> MatcherType.L2,
-      "KendallTau" -> MatcherType.KendallTau))
+  import MatcherType._
+
+  implicit val l0 = singletonObject(L0)
+  implicit val l1 = singletonObject(L1)
+  implicit val l2 = singletonObject(L2)
+  implicit val kendallTau = singletonObject(KendallTau)  
+  
+//  implicit val matcherType = enumeration(
+//    "MatcherType",
+//    Map(
+//      "L0" -> MatcherType.L0,
+//      "L1" -> MatcherType.L1,
+//      "L2" -> MatcherType.L2,
+//      "KendallTau" -> MatcherType.KendallTau))
 
   /////////////////////////////////////////////////////////
 
