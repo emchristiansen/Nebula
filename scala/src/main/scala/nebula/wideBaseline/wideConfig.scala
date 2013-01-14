@@ -1,38 +1,30 @@
 package nebula.wideBaseline
 
-import javax.imageio.ImageIO
-import org.opencv.features2d.DMatch
-import nebula.util.Util
-import nebula.util.Homography
-import nebula.HasGroundTruth
-import nebula.RuntimeConfig
-import nebula.HasImagePair
-
-import nebula.Detector
-import nebula.Extractor
-
-import nebula.util.IO
-import nebula.Matcher
-import nebula.util.ExperimentIO
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.util.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
-
-import DetectorJsonProtocol._
-import ExtractorJsonProtocol._
-import MatcherJsonProtocol._
-
-import spray.json._
-import nebula.summary._
-
 import java.io.File
 
-import nebula.util.JSONUtil._
+import org.opencv.features2d.DMatch
+
+import WideBaselineJsonProtocol.wideBaselineExperiment
+import WideBaselineJsonProtocol.wideBaselineExperimentResults
+import javax.imageio.ImageIO
+import nebula.ExperimentRunner
+import nebula.Extractor
+import nebula.HasGroundTruth
+import nebula.HasImagePair
+import nebula.Matcher
+import nebula.PairDetector
+import nebula.RuntimeConfig
+import nebula.StorageInfo
+import nebula.summary.ExperimentSummary
+import nebula.summary.Histogram
+import nebula.summary.SummaryUtil
+import nebula.util.Homography
+import nebula.util.JSONUtil
+import nebula.util.Logging
+import nebula.util.Memoize
+import spray.json.JsonFormat
+import spray.json.pimpAny
+import spray.json.pimpString
 
 ///////////////////////////////////////////////////////////
 
@@ -47,8 +39,6 @@ case class WideBaselineExperiment[D, E, M, F](
     evMatcher: M => Matcher[F])
 
 object WideBaselineExperiment {
-  import WideBaselineJsonProtocol._
-
   implicit def implicitHasGroundTruth(
     self: WideBaselineExperiment[_, _, _, _])(
       implicit runtime: RuntimeConfig): HasGroundTruth[Homography] =
@@ -59,19 +49,6 @@ object WideBaselineExperiment {
         Homography.fromFile(homographyFile)
       }
     }
-
-  //  implicit def implicitExperiment[D, E, M, F](self: WideBaselineExperiment[D, E, M, F])(
-  //    implicit runtime: RuntimeConfig,
-  //      evPairDetector: D => PairDetector,
-  //      evExtractor: E => Extractor[F],
-  //      evMatcher: M => Matcher[F],
-  //      evDJson: JsonFormat[D],
-  //      evEJson: JsonFormat[E],
-  //      evMJson: JsonFormat[M]): Experiment =
-  //    new Experiment {
-  //      override def getResults(implicit runtime: RuntimeConfig) =
-  //        WideBaselineExperimentResults(self)
-  //    }
 
   implicit class ImplicitExperimentRunner[D, E, M, F](
     self: WideBaselineExperiment[D, E, M, F])(
@@ -156,8 +133,6 @@ case class WideBaselineExperimentResults[D, E, M, F](
   dmatches: Seq[DMatch])
 
 object WideBaselineExperimentResults extends Logging {
-  import WideBaselineJsonProtocol._
-
   def apply[D, E, M, F](
     experiment: WideBaselineExperiment[D, E, M, F])(
       implicit runtimeConfig: RuntimeConfig,
@@ -209,28 +184,7 @@ object WideBaselineExperimentResults extends Logging {
   }
 }
 
-import nebula.util.DMatchJsonProtocol._
 
-object WideBaselineJsonProtocol extends DefaultJsonProtocol {
-  implicit def wideBaselineExperiment[D, E, M, F](
-    implicit evPairDetector: D => PairDetector,
-    evExtractor: E => Extractor[F],
-    evMatcher: M => Matcher[F],
-    evDJson: JsonFormat[D],
-    evEJson: JsonFormat[E],
-    evMJson: JsonFormat[M]): RootJsonFormat[WideBaselineExperiment[D, E, M, F]] =
-    jsonFormat5(WideBaselineExperiment.apply[D, E, M, F]).addClassInfo("WideBaselineExperiment")
-
-  implicit def wideBaselineExperimentResults[D, E, M, F](
-    implicit evPairDetector: D => PairDetector,
-    evExtractor: E => Extractor[F],
-    evMatcher: M => Matcher[F],
-    evDJson: JsonFormat[D],
-    evEJson: JsonFormat[E],
-    evMJson: JsonFormat[M]): RootJsonFormat[WideBaselineExperimentResults[D, E, M, F]] =
-    jsonFormat2(WideBaselineExperimentResults.apply[D, E, M, F]).addClassInfo(
-      "WideBaselineExperimentResults")
-}
 
 
 

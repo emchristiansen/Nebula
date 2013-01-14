@@ -4,15 +4,16 @@ import java.awt.image.BufferedImage
 
 import org.opencv.features2d.KeyPoint
 
-import breeze.linalg.{DenseMatrix, DenseVector, copy}
+import breeze.linalg.{ DenseMatrix, DenseVector, copy }
 import nebula.util.DenseMatrixUtil._
 import nebula.util.imageProcessing.ImageUtil
 import nebula.util.imageProcessing.RichImage.bufferedImage
+import scala.reflect._
 
 ///////////////////////////////////////////////////////////
 
 object LogPolar {
-//  implicit val epsilon = nebula.Epsilon(0.00001)
+  //  implicit val epsilon = nebula.Epsilon(0.00001)
 
   // Get the minimum, maximum, and exponential base of the scaling
   // factors. These are used to create the image pyramid from
@@ -148,27 +149,25 @@ object LogPolar {
         Seq(keyPoint)).head
   }
 
-//  // Pad with |cols| - 1 columns of zeros on either side, and replicate
-//  // once vertically, dropping the last row.
-//  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
-//    val seqSeq = matrix.toSeqSeq
-//
-//    val zeroPadding = IndexedSeq.fill(matrix.cols - 1)(0.0)
-//    val padded = seqSeq.map(zeroPadding ++ _ ++ zeroPadding)
-//
-//    val replicated = (padded ++ padded.init).toMatrix
-//    assert(replicated.cols == 3 * matrix.cols - 2)
-//    assert(replicated.rows == 2 * matrix.rows - 1)
-//    replicated
-//  }
+  //  // Pad with |cols| - 1 columns of zeros on either side, and replicate
+  //  // once vertically, dropping the last row.
+  //  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
+  //    val seqSeq = matrix.toSeqSeq
+  //
+  //    val zeroPadding = IndexedSeq.fill(matrix.cols - 1)(0.0)
+  //    val padded = seqSeq.map(zeroPadding ++ _ ++ zeroPadding)
+  //
+  //    val replicated = (padded ++ padded.init).toMatrix
+  //    assert(replicated.cols == 3 * matrix.cols - 2)
+  //    assert(replicated.rows == 2 * matrix.rows - 1)
+  //    replicated
+  //  }
 
-//  def stackVertical(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
-//    val seqSeq = matrix.toSeqSeq
-//    (seqSeq ++ seqSeq.init).toMatrix
-//  }
+  //  def stackVertical(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
+  //    val seqSeq = matrix.toSeqSeq
+  //    (seqSeq ++ seqSeq.init).toMatrix
+  //  }
 
-  import scala.reflect._
-  
   def getResponseMap[A: ClassTag, B](
     normalizer: Normalizer[DenseMatrix[A], DenseMatrix[B]],
     normalizeByOverlap: Boolean,
@@ -184,17 +183,17 @@ object LogPolar {
     require(scaleIndices.min >= -kernel.cols + 1)
     require(scaleIndices.max < kernel.cols)
 
-//    // If |normalization| isn't raw, we do match-time normalization
-//    // of the part of the log-polar patterns that overlap.
-//    def normalize(patch: DenseMatrix[Double]): IndexedSeq[Double] = {
-//      if (normalization == PatchExtractorType.Raw) 
-//        patch.toSeqSeq.flatten
-//      else {
-//        val extractor = PatchExtractor.constructorDouble(normalization)
-//        extractor(patch.toSeqSeq.flatten).values[Double]
-//      }
-//    }
-    
+    //    // If |normalization| isn't raw, we do match-time normalization
+    //    // of the part of the log-polar patterns that overlap.
+    //    def normalize(patch: DenseMatrix[Double]): IndexedSeq[Double] = {
+    //      if (normalization == PatchExtractorType.Raw) 
+    //        patch.toSeqSeq.flatten
+    //      else {
+    //        val extractor = PatchExtractor.constructorDouble(normalization)
+    //        extractor(patch.toSeqSeq.flatten).values[Double]
+    //      }
+    //    }
+
     val response = DenseMatrix.fill(angleIndices.size, scaleIndices.size)(0.0)
     for (angleIndex <- angleIndices; scaleIndex <- scaleIndices) {
       val baseScaleRange =
@@ -208,10 +207,10 @@ object LogPolar {
       val kernelMatrixUnnormalized = copy(kernel(
         ::,
         kernelScaleRange))
-        
+
       val baseMatrix = normalizer.normalize(baseMatrixUnnormalized)
       val kernelMatrix = normalizer.normalize(kernelMatrixUnnormalized)
-      
+
       val scaleOffset = scaleIndex - scaleIndices.min
       val unnormalized = distance(baseMatrix, kernelMatrix)
       response(angleIndex, scaleOffset) = if (normalizeByOverlap) {

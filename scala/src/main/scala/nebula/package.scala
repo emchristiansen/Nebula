@@ -20,6 +20,7 @@ package object nebula {
 
   implicit val epsilon = Epsilon(0.0001)
 
+  // TODO: Replace with ???
   def TODO = sys.error("TODO")
 
   // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609

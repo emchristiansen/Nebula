@@ -146,56 +146,39 @@ object OpenCVUtil {
   }
 }
 
-/////////////////////////////////////////////////////////////
-//
-//class DMatchSerializer extends Serializer[DMatch] {
-//  private val DMatchClass = classOf[DMatch]
-//
-//  def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), DMatch] = {
-//    case (TypeInfo(DMatchClass, _), json) => json match {
-//      case JObject(
-//        JField("jsonClass", JString("DMatch")) ::
-//          JField("queryIdx", JInt(queryIdx)) ::
-//          JField("trainIdx", JInt(trainIdx)) ::
-//          JField("distance", JDouble(distance)) :: Nil) =>
-//        new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
-//      case x => throw new MappingException("Can't convert " + x + " to DMatch")
-//    }
-//  }
-//
-//  def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
-//    case x: DMatch =>
-//      JObject(
-//        JField("jsonClass", JString("DMatch")) ::
-//          JField("queryIdx", JInt(x.queryIdx)) ::
-//          JField("trainIdx", JInt(x.trainIdx)) ::
-//          JField("distance", JDouble(x.distance)) :: Nil)
-//  }
-//}
-
 ///////////////////////////////////////////////////////////
 
 object DMatchJsonProtocol extends DefaultJsonProtocol {
-  implicit object DMatchJsonProtocol extends RootJsonFormat[DMatch] {
-    override def write(self: DMatch) = JsObject(
-      "queryIdx" -> JsNumber(self.queryIdx),
-      "trainIdx" -> JsNumber(self.trainIdx),
-      "distance" -> JsNumber(self.distance),
-      "scalaClass" -> JsString("DMatch"))
-    override def read(value: JsValue) =
-      value.asJsObject.getFields("queryIdx", "trainIdx", "distance", "scalaClass") match {
-        case Seq(JsNumber(queryIdx), JsNumber(trainIdx), JsNumber(distance), JsString(scalaClass)) =>
-          new DMatch(queryIdx.toInt, trainIdx.toInt, distance.toFloat)
+  // This is a do-nothing wrapper, existing only so we can use the automatic
+  // JsonFormat generator for case classes, rather that having to write our
+  // own.
+  private case class DMatchWrapper(queryIdx: Int, trainIdx: Int, distance: Float)
+  
+  private implicit def jsonDMatchWrapper = jsonFormat3(DMatchWrapper.apply)
+  
+  implicit def dmatchJsonProtocol: RootJsonFormat[DMatch] = {
+    object NoScalaClass extends RootJsonFormat[DMatch] {
+      override def write(self: DMatch) = DMatchWrapper(
+          self.queryIdx, 
+          self.trainIdx,
+          self.distance).toJson
+      override def read(value: JsValue) = {
+        val wrapper = value.convertTo[DMatchWrapper]
+        new DMatch(wrapper.queryIdx, wrapper.trainIdx, wrapper.distance)
       }
+    }
+    
+    NoScalaClass.addClassInfo("DMatch")
   }
   
-  // TODO: This object should be unnecessary. Try removing it when spray-json
-  // is updated (currently 1.2.3).
-  implicit object SeqDMatchJsonProtocol extends RootJsonFormat[Seq[DMatch]] {
-    override def write(self: Seq[DMatch]) = self.map(_.toJson).toJson
-    override def read(value: JsValue) = value match {
-      case JsArray(elements) => elements.map(_.convertTo[DMatch])
-      case _ => sys.error("Expected JsArray")
-    }
-  }
+//  
+//  // TODO: This object should be unnecessary. Try removing it when spray-json
+//  // is updated (currently 1.2.3).
+//  implicit object SeqDMatchJsonProtocol extends RootJsonFormat[Seq[DMatch]] {
+//    override def write(self: Seq[DMatch]) = self.map(_.toJson).toJson
+//    override def read(value: JsValue) = value match {
+//      case JsArray(elements) => elements.map(_.convertTo[DMatch])
+//      case _ => sys.error("Expected JsArray")
+//    }
+//  }
 }

@@ -87,13 +87,11 @@ object PairDetector {
   }
   
   // This enumeration is necessary because Scala doesn't do deep searches for implicits.
-  import OpenCVDetectorType._
-  
-  implicit def detector(self: DENSE.type) = self.to[Detector].to[PairDetector]
-  implicit def detector(self: FAST.type) = self.to[Detector].to[PairDetector]
-  implicit def detector(self: BRISK.type) = self.to[Detector].to[PairDetector]
-  implicit def detector(self: SIFT.type) = self.to[Detector].to[PairDetector]
-  implicit def detector(self: SURF.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetectorType.DENSE.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetectorType.FAST.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetectorType.BRISK.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetectorType.SIFT.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetectorType.SURF.type) = self.to[Detector].to[PairDetector]
 }
 
 case class BoundedPairDetector[D <% PairDetector](pairDetector: D, maxKeyPoints: Int)

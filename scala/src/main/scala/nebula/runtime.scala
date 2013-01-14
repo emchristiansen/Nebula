@@ -2,26 +2,6 @@ package nebula
 
 import java.io.File
 
-import scala.util.Random
-
-import util.IO
-
-///////////////////////////////////////////////////////////
-
-//object Global {
-//  val random = new Random(0)
-//  val homeDirectory = new File(System.getProperty("user.home"))
-//  var runVar: Option[RuntimeConfigTrait] = None
-//  // TODO: This asInstanceOf stuff has bad code smell.
-//  def run[R <: RuntimeConfigTrait](implicit manifest: Manifest[R]): R = runVar match {
-//    case Some(config) => {
-//      assert(manifest.erasure.isInstance(config))
-//      config.asInstanceOf[R]
-//    }
-//    case None => throw new Exception("Global.run not initialized")
-//  }
-//}
-
 ///////////////////////////////////////////////////////////
 
 trait RuntimeConfigTrait {
@@ -65,14 +45,6 @@ case class RuntimeConfig(
 object RuntimeConfig {
   // TODO: Put this somewhere more appropriate.
   System.loadLibrary("opencv_java")
-
-//  def apply(runtimeConfigFile: File): Tuple2[RuntimeConfig, SparkContext] = {
-//    val (runtimeConfig, sparkContext) = IO.interpretFile[Tuple2[RuntimeConfig, SparkContext]](runtimeConfigFile)
-////    Global.runVar = Some(runtimeConfig)
-//    println(runtimeConfig)
-//    println(sparkContext)
-//    (runtimeConfig, sparkContext)
-//  }
 }
 
 
