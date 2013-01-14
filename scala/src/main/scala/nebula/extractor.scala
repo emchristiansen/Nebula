@@ -9,7 +9,6 @@ import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
 
 import breeze.linalg._
 import grizzled.math.stats
-//import nebula.Descriptor.implicitIndexedSeq
 import nebula.SortDescriptor.implicitIndexedSeq
 import nebula.util.DenseMatrixUtil._
 import nebula.util.JSONUtil._
@@ -135,20 +134,18 @@ object OpenCVExtractorType {
   object SIFT
   object SURF
 
-  import Extractor._
-
   implicit def implicitExtractor(self: BRISK.type) =
-    Extractor(booleanExtractorFromEnum(DescriptorExtractor.BRISK))
+    Extractor(Extractor.booleanExtractorFromEnum(DescriptorExtractor.BRISK))
   implicit def implicitExtractor(self: FREAK.type) =
-    Extractor(booleanExtractorFromEnum(DescriptorExtractor.FREAK))
+    Extractor(Extractor.booleanExtractorFromEnum(DescriptorExtractor.FREAK))
   implicit def implicitExtractor(self: BRIEF.type) =
-    Extractor(booleanExtractorFromEnum(DescriptorExtractor.BRIEF))
+    Extractor(Extractor.booleanExtractorFromEnum(DescriptorExtractor.BRIEF))
   implicit def implicitExtractor(self: ORB.type) =
-    Extractor(booleanExtractorFromEnum(DescriptorExtractor.ORB))
+    Extractor(Extractor.booleanExtractorFromEnum(DescriptorExtractor.ORB))
   implicit def implicitExtractor(self: SIFT.type) =
-    Extractor(doubleExtractorFromEnum(DescriptorExtractor.SIFT))
+    Extractor(Extractor.doubleExtractorFromEnum(DescriptorExtractor.SIFT))
   implicit def implicitExtractor(self: SURF.type) =
-    Extractor(doubleExtractorFromEnum(DescriptorExtractor.SURF))
+    Extractor(Extractor.doubleExtractorFromEnum(DescriptorExtractor.SURF))
 }
 
 case class PatchExtractor(
@@ -159,12 +156,10 @@ case class PatchExtractor(
   color: String)
 
 object PatchExtractor {
-  import Extractor._
-
   implicit def implicitPatchExtractor(self: PatchExtractor): Extractor[IndexedSeq[Int]] =
     Extractor(
       (image: BufferedImage, keyPoint: KeyPoint) => {
-        rawPixels(
+        Extractor.rawPixels(
           self.normalizeRotation,
           self.normalizeScale,
           self.patchWidth,
@@ -187,10 +182,6 @@ case class LogPolarExtractor(
   color: String)
 
 object LogPolarExtractor {
-  import Extractor._
-  //  import PatchExtractorType._
-  //  import DenseMatrixImplicits._
-
   implicit def implicitLogPolarExtractor(self: LogPolarExtractor): Extractor[DenseMatrix[Int]] =
     new Extractor[DenseMatrix[Int]] {
       override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
@@ -244,8 +235,6 @@ case class ELUCIDExtractor(
   color: String)
 
 object ELUCIDExtractor {
-  import Extractor._
-
   implicit def implicitELUCIDExtractor(self: ELUCIDExtractor): Extractor[SortDescriptor] =
     Extractor(
       (image: BufferedImage, keyPoint: KeyPoint) => {
@@ -286,7 +275,7 @@ object ELUCIDExtractor {
         val pointOptions = samplePoints(keyPoint).map(point => blurred.getSubPixel(point(0), point(1)))
         if (pointOptions.contains(None)) None
         else {
-          val unsorted = pointOptions.flatten.flatMap(interpretColor(self.color))
+          val unsorted = pointOptions.flatten.flatMap(Extractor.interpretColor(self.color))
           Some(SortDescriptor.fromUnsorted(unsorted))
         }
       })

@@ -8,7 +8,6 @@ import nebula.SortDescriptor.{ implicitIndexedSeq, sortDescriptor }
 import nebula.util.JSONUtil._
 import spray.json._
 import util.Util
-import ExtractorJsonProtocol._
 
 ///////////////////////////////////////////////////////////
 
