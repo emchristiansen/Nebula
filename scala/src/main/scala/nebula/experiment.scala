@@ -6,7 +6,6 @@ import nebula.util.JSONUtil._
 
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny}
 import wideBaseline.WideBaselineExperiment
-import PairDetectorJsonProtocol._
 
 ///////////////////////////////////////////////////////////
 

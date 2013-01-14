@@ -7,7 +7,6 @@ import graveyard.EpsilonL1Match
 import nebula.SortDescriptor.{ implicitIndexedSeq, sortDescriptor }
 import nebula.util.JSONUtil._
 import spray.json._
-import util.JSONUtil.enumeration
 import util.Util
 import ExtractorJsonProtocol._
 

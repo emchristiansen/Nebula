@@ -6,8 +6,7 @@ import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
 
 import nebula.util.JSONUtil._
-import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat, pimpAny }
-import util.JSONUtil.enumeration
+import spray.json._
 import util.OpenCVUtil
 import util._
 
@@ -23,41 +22,72 @@ object Detector {
 
 ///////////////////////////////////////////////////////////
 
-object OpenCVDetectorType extends Enumeration {
-  type OpenCVDetectorType = Value
-  val Dense, FAST, BRISK, SIFT, SURF = Value
-}
+object OpenCVDetectorType {
+  object DENSE
+  object FAST
+  object BRISK
+  object SIFT
+  object SURF
 
-// TODO: This doesn't need to be OpenCV-specific.
-case class OpenCVDetector(
-  detectorType: OpenCVDetectorType.OpenCVDetectorType,
-  maxKeyPointsOption: Option[Int])
-
-object OpenCVDetector {
-  import OpenCVDetectorType._
-
-  implicit def implicitOpenCVDetector(self: OpenCVDetector): Detector =
-    new Detector {
-      override def detect = (image: BufferedImage) => {
-        val detectorType = self.detectorType match {
-          case Dense => FeatureDetector.DENSE
-          case FAST => FeatureDetector.FAST
-          case BRISK => FeatureDetector.BRISK
-          case SIFT => FeatureDetector.SIFT
-          case SURF => FeatureDetector.SURF
-        }
-
-        val matImage = OpenCVUtil.bufferedImageToMat(image)
-        val keyPoints = new MatOfKeyPoint
-        FeatureDetector.create(detectorType).detect(matImage, keyPoints)
-        val sorted = keyPoints.toArray.sortBy(_.response).reverse
-
-        if (self.maxKeyPointsOption.isDefined)
-          sorted.take(self.maxKeyPointsOption.get)
-        else sorted
-      }
+  def detectorFromEnum(detectorType: Int): Detector = new Detector {
+    override def detect = image => {
+      val matImage = OpenCVUtil.bufferedImageToMat(image)
+      val keyPoints = new MatOfKeyPoint
+      FeatureDetector.create(detectorType).detect(matImage, keyPoints)
+      keyPoints.toArray.sortBy(_.response).reverse
     }
+  }
+
+  implicit def detector(self: DENSE.type) =
+    detectorFromEnum(FeatureDetector.DENSE)
+  implicit def detector(self: FAST.type) =
+    detectorFromEnum(FeatureDetector.FAST)
+  implicit def detector(self: BRISK.type) =
+    detectorFromEnum(FeatureDetector.BRISK)
+  implicit def detector(self: SIFT.type) =
+    detectorFromEnum(FeatureDetector.SIFT)
+  implicit def detector(self: SURF.type) =
+    detectorFromEnum(FeatureDetector.SURF)
 }
+
+case class BoundedDetector[D <% Detector](detector: D, maxKeyPoints: Int)
+
+object BoundedDetector {
+  implicit class ToDetector[D <% Detector](self: BoundedDetector[D]) extends Detector {
+    override def detect = image => self.detector.detect(image).take(self.maxKeyPoints)
+  }
+}
+
+//// TODO: This doesn't need to be OpenCV-specific.
+//case class OpenCVDetector(
+//  detectorType: OpenCVDetectorType.OpenCVDetectorType,
+//  maxKeyPointsOption: Option[Int])
+//
+//object OpenCVDetector {
+//  import OpenCVDetectorType._
+//
+//  implicit def implicitOpenCVDetector(self: OpenCVDetector): Detector =
+//    new Detector {
+//      override def detect = (image: BufferedImage) => {
+//        val detectorType = self.detectorType match {
+//          case Dense => FeatureDetector.DENSE
+//          case FAST => FeatureDetector.FAST
+//          case BRISK => FeatureDetector.BRISK
+//          case SIFT => FeatureDetector.SIFT
+//          case SURF => FeatureDetector.SURF
+//        }
+//
+//        val matImage = OpenCVUtil.bufferedImageToMat(image)
+//        val keyPoints = new MatOfKeyPoint
+//        FeatureDetector.create(detectorType).detect(matImage, keyPoints)
+//        val sorted = keyPoints.toArray.sortBy(_.response).reverse
+//
+//        if (self.maxKeyPointsOption.isDefined)
+//          sorted.take(self.maxKeyPointsOption.get)
+//        else sorted
+//      }
+//    }
+//}
 
 ///////////////////////////////////////////////////////////
 
@@ -67,86 +97,121 @@ trait PairDetector extends Detector {
 
 object PairDetector {
   type PairDetectorAction = (Homography, BufferedImage, BufferedImage) => Seq[Tuple2[KeyPoint, KeyPoint]]
+
+  implicit class ToPairDetector[D <% Detector](self: D) extends PairDetector {
+    override def detect = self.detect
+
+    override def detectPair = (homography: Homography, leftImage: BufferedImage, rightImage: BufferedImage) => {
+      val left = detect(leftImage)
+      val right = detect(rightImage)
+
+      // Euclidean distance in pixels.
+      // TODO: Make parameter
+      val threshold = 2
+
+      Util.nearestUnderWarpRemoveDuplicates(
+        threshold,
+        homography,
+        left,
+        right).sortBy(KeyPointUtil.pairQuality).reverse
+    }
+  }
+  
+  // This enumeration is necessary because Scala doesn't do deep searches for implicits.
+  import OpenCVDetectorType._
+  
+  implicit def detector(self: DENSE.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: FAST.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: BRISK.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: SIFT.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: SURF.type) = self.to[Detector].to[PairDetector]
+}
+
+case class BoundedPairDetector[D <% PairDetector](pairDetector: D, maxKeyPoints: Int)
+
+object BoundedPairDetector {
+//  def apply[D <% Detector](detector: D, maxKeyPoints: Int): BoundedPairDetector[D] = {
+//    val first = implicitly[D => Detector]
+//    val second = implicitly[Detector => PairDetector]
+//    implicit val composition = second compose first 
+//    TODO
+////    BoundedPairDetector.apply(detector, maxKeyPoints)
+//  }
+  
+  implicit class ToPairDetector[D <% PairDetector](self: BoundedPairDetector[D]) extends Detector {
+    override def detect = image => self.pairDetector.detect(image).take(self.maxKeyPoints)
+  }
+  
+//  // This is necessary because Scala doesn't do deep searches for implicits
+//  implicit class ToPairDetector[D <% Detector](self: BoundedPairDetector[D]) extends Detector {
+//    override def detect = image => self.pairDetector.detect(image).take(self.maxKeyPoints)
+//  }  
 }
 
 ///////////////////////////////////////////////////////////
 
-// TODO: Remove "OpenCV"
-case class OpenCVPairDetector(
-  detector: OpenCVDetector,
-  maxKeyPointsOption: Option[Int])
-
-object OpenCVPairDetector {
-  implicit def implicitOpenCVPairDetector(self: OpenCVPairDetector): PairDetector =
-    new PairDetector {
-      override def detect = self.detector.detect
-
-      override def detectPair = (homography: Homography, leftImage: BufferedImage, rightImage: BufferedImage) => {
-        val left = detect(leftImage)
-        val right = detect(rightImage)
-
-        // Euclidean distance in pixels.
-        // TODO: Make parameter
-        val threshold = 2
-
-        val allPairs = Util.nearestUnderWarpRemoveDuplicates(
-          threshold,
-          homography,
-          left,
-          right).sortBy(KeyPointUtil.pairQuality).reverse
-
-        if (self.maxKeyPointsOption.isDefined)
-          allPairs.take(self.maxKeyPointsOption.get)
-        else allPairs
-      }
-    }
-}
+//// TODO: Remove "OpenCV"
+//case class PairDetector[D <% Detector](detector: D)
 
 ///////////////////////////////////////////////////////////
 
 object DetectorJsonProtocol extends DefaultJsonProtocol {
-  implicit val openCVDetectorType = enumeration(
-    "OpenCVDetectorType",
-    Map(
-      "Dense" -> OpenCVDetectorType.Dense,
-      "FAST" -> OpenCVDetectorType.FAST,
-      "BRISK" -> OpenCVDetectorType.BRISK,
-      "SIFT" -> OpenCVDetectorType.SIFT,
-      "SURF" -> OpenCVDetectorType.SURF))
+  implicit val dense = singletonObject(OpenCVDetectorType.DENSE)
+  implicit val fast = singletonObject(OpenCVDetectorType.FAST)
+  implicit val brisk = singletonObject(OpenCVDetectorType.BRISK)
+  implicit val sift = singletonObject(OpenCVDetectorType.SIFT)
+  implicit val surf = singletonObject(OpenCVDetectorType.SURF)
 
-  implicit val openCVDetector =
-    jsonFormat2(OpenCVDetector.apply).addClassInfo("OpenCVDetector")
+  /////////////////////////////////////////////////////////
+  
+  implicit def boundedDetector[D <% Detector : JsonFormat] = jsonFormat2(BoundedDetector.apply[D])
+
+  /////////////////////////////////////////////////////////  
+  
+  implicit def boundedPairDetector[D <% PairDetector : JsonFormat] = jsonFormat2(BoundedPairDetector.apply[D])
+  
+  //  implicit val openCVDetectorType = enumeration(
+  //    "OpenCVDetectorType",
+  //    Map(
+  //      "Dense" -> OpenCVDetectorType.Dense,
+  //      "FAST" -> OpenCVDetectorType.FAST,
+  //      "BRISK" -> OpenCVDetectorType.BRISK,
+  //      "SIFT" -> OpenCVDetectorType.SIFT,
+  //      "SURF" -> OpenCVDetectorType.SURF))
+  //
+  //  implicit val openCVDetector =
+  //    jsonFormat2(OpenCVDetector.apply).addClassInfo("OpenCVDetector")
 
   /////////////////////////////////////////////////////////
 
-//  implicit object DetectorJsonFormat extends RootJsonFormat[Detector] {
-//    override def write(self: Detector) = self.original match {
-//      case original: OpenCVDetector => original.toJson
-//    }
-//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-//      case JsString("OpenCVDetector") => value.convertTo[OpenCVDetector]
-//      case _ => throw new DeserializationException("Detector expected")
-//    }
-//  }
+  //  implicit object DetectorJsonFormat extends RootJsonFormat[Detector] {
+  //    override def write(self: Detector) = self.original match {
+  //      case original: OpenCVDetector => original.toJson
+  //    }
+  //    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+  //      case JsString("OpenCVDetector") => value.convertTo[OpenCVDetector]
+  //      case _ => throw new DeserializationException("Detector expected")
+  //    }
+  //  }
 }
 
 ///////////////////////////////////////////////////////////
 
-object PairDetectorJsonProtocol extends DefaultJsonProtocol {
-  import DetectorJsonProtocol._
-
-  implicit val openCVPairDetector =
-    jsonFormat2(OpenCVPairDetector.apply).addClassInfo("OpenCVPairDetector")
-
-  /////////////////////////////////////////////////////////    
-
-//  implicit object PairDetectorJsonFormat extends RootJsonFormat[PairDetector] {
-//    override def write(self: PairDetector) = self.original match {
-//      case original: OpenCVPairDetector => original.toJson
-//    }
-//    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-//      case JsString("OpenCVPairDetector") => value.convertTo[OpenCVPairDetector]
-//      case _ => throw new DeserializationException("PairDetector expected")
-//    }
-//  }
-}
+//object PairDetectorJsonProtocol extends DefaultJsonProtocol {
+//  import DetectorJsonProtocol._
+//
+//  implicit val openCVPairDetector =
+//    jsonFormat2(OpenCVPairDetector.apply).addClassInfo("OpenCVPairDetector")
+//
+//  /////////////////////////////////////////////////////////    
+//
+//  //  implicit object PairDetectorJsonFormat extends RootJsonFormat[PairDetector] {
+//  //    override def write(self: PairDetector) = self.original match {
+//  //      case original: OpenCVPairDetector => original.toJson
+//  //    }
+//  //    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
+//  //      case JsString("OpenCVPairDetector") => value.convertTo[OpenCVPairDetector]
+//  //      case _ => throw new DeserializationException("PairDetector expected")
+//  //    }
+//  //  }
+//}

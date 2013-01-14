@@ -27,8 +27,6 @@ import DetectorJsonProtocol._
 import ExtractorJsonProtocol._
 import MatcherJsonProtocol._
 
-import PairDetectorJsonProtocol._
-
 import spray.json._
 import nebula.summary._
 

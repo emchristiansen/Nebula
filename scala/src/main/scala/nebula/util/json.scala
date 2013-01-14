@@ -16,28 +16,32 @@ import scala.reflect.runtime.universe._
 
 object JSONUtil extends Logging {
   // TODO: This function should be implemented with macros.
-  def enumeration[A](scalaClass: String, deserializeMapping: Map[String, A]): RootJsonFormat[A] =
-    new RootJsonFormat[A] {
-      override def write(e: A) = JsString(e.toString)
-
-      // TODO: Duplication
-      override def read(value: JsValue) = {
-        value match {
-          case JsString(string) => deserializeMapping.get(string) match {
-            case Some(x) => x
-            case None => throw new DeserializationException("%s expected".format(scalaClass))
-          }
-          case _ => throw new DeserializationException("%s expected".format(scalaClass))
-        }
-      }
-    }
+//  def enumeration[A](scalaClass: String, deserializeMapping: Map[String, A]): RootJsonFormat[A] =
+//    new RootJsonFormat[A] {
+//      override def write(e: A) = JsString(e.toString)
+//
+//      // TODO: Duplication
+//      override def read(value: JsValue) = {
+//        value match {
+//          case JsString(string) => deserializeMapping.get(string) match {
+//            case Some(x) => x
+//            case None => throw new DeserializationException("%s expected".format(scalaClass))
+//          }
+//          case _ => throw new DeserializationException("%s expected".format(scalaClass))
+//        }
+//      }
+//    }
 
   // Provides a RootJsonFormat for singleton objects.
   def singletonObject[A: TypeTag](a: A): RootJsonFormat[A] = {
     val typeName = typeTag[A].tpe.toString
     val objectName = {
       assert(typeName.endsWith(".type"))
-      typeName.take(typeName.size - 5)
+      // Remove the ".type" from the end of the object type.
+      val noType = typeName.take(typeName.size - 5)
+      // Remove the "nebula." from the beginning of the object type.
+      assert(noType.startsWith("nebula."))
+      noType.drop(7)
     }
     
     val noTypeName = new RootJsonFormat[A] {
@@ -51,7 +55,8 @@ object JSONUtil extends Logging {
       }
     }
     
-    noTypeName.addClassInfo(typeName)
+    noTypeName
+//    noTypeName.addClassInfo(typeName)
   }
   
  

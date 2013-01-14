@@ -16,7 +16,6 @@ import nebula.util.JSONUtil._
 import nebula.util.imageProcessing.RichImage.bufferedImage
 import spray.json._
 import util.{ OpenCVUtil, Util }
-import util.JSONUtil.enumeration
 import util.imageProcessing.{ ImageUtil, Pixel }
 import SortDescriptor._
 
@@ -298,11 +297,6 @@ object ELUCIDExtractor {
 
 ///////////////////////////////////////////////////////////
 
-import java.awt.image.BufferedImage
-import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
-
-import NormalizerJsonProtocol._
-
 case class NormalizedExtractor[E, N, F1, F2](
   extractor: E,
   normalizer: N)(
@@ -322,14 +316,12 @@ object NormalizedExtractor {
 ///////////////////////////////////////////////////////////
 
 object ExtractorJsonProtocol extends DefaultJsonProtocol {
-  import OpenCVExtractorType._
-
-  implicit val brisk = singletonObject(BRISK)
-  implicit val freak = singletonObject(FREAK)
-  implicit val brief = singletonObject(BRIEF)
-  implicit val orb = singletonObject(ORB)
-  implicit val sift = singletonObject(SIFT)
-  implicit val surf = singletonObject(SURF)
+  implicit val brisk = singletonObject(OpenCVExtractorType.BRISK)
+  implicit val freak = singletonObject(OpenCVExtractorType.FREAK)
+  implicit val brief = singletonObject(OpenCVExtractorType.BRIEF)
+  implicit val orb = singletonObject(OpenCVExtractorType.ORB)
+  implicit val sift = singletonObject(OpenCVExtractorType.SIFT)
+  implicit val surf = singletonObject(OpenCVExtractorType.SURF)
 
 //  implicit val openCVExtractorType = enumeration(
 //    "OpenCVExtractorType",
