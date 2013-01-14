@@ -9,14 +9,13 @@ import spray.json.JsValue
 
 import spray.json._
 import scala.util.matching.Regex
+import scala.reflect.runtime.universe._
 
 ///////////////////////////////////////////////////////////
 
-//trait JSONSerializable {
-//  def json: JValue
-//}
 
 object JSONUtil extends Logging {
+  // TODO: These two functions should be implemented with macros.
   def enumeration[A](scalaClass: String, deserializeMapping: Map[String, A]): RootJsonFormat[A] =
     new RootJsonFormat[A] {
       override def write(e: A) = JsString(e.toString)
@@ -33,25 +32,27 @@ object JSONUtil extends Logging {
       }
     }
 
-  //      new RootJsonFormat[A] {
-  //      override def write(e: A) = JsObject(
-  //        "matcherType" -> JsString(e.toString),
-  //        "scalaClass" -> JsString(scalaClass))
-  //
-  //      // TODO: Duplication
-  //      override def read(value: JsValue) = {
-  //        if (value.asJsObject.fields("scalaClass") != scalaClass)
-  //          throw new DeserializationException("%s expected".format(scalaClass))
-  //        else {
-  //          value.asJsObject.fields("matcherType") match {
-  //            case JsString(string) => deserializeMapping.getOrElse(
-  //              string,
-  //              throw new DeserializationException("%s expected".format(scalaClass)))
-  //            case _ => throw new DeserializationException("%s expected".format(scalaClass))
-  //          }
-  //        }
-  //      }
-  //    }
+  // Provides a RootJsonFormat for singleton objects.
+  def singletonObject[A: TypeTag](a: A): RootJsonFormat[A] = {
+    val typeName = typeTag[A].tpe.toString
+    val objectName = {
+      assert(typeName.endsWith(".type"))
+      typeName.take(typeName.size - 5)
+    }
+    
+    val noTypeName = new RootJsonFormat[A] {
+      override def write(e: A) = {
+        assert(e == a)
+        JsString(objectName)
+      }
+      
+      override def read(value: JsValue) = value match {
+        case JsString(string) if string == objectName => a
+      }
+    }
+    
+    noTypeName.addClassInfo(typeName)
+  }
   
  
   implicit class AddClassName[A](self: RootJsonFormat[A]) {

@@ -322,6 +322,15 @@ object NormalizedExtractor {
 ///////////////////////////////////////////////////////////
 
 object ExtractorJsonProtocol extends DefaultJsonProtocol {
+//  import OpenCVExtractorType._
+//
+//  implicit val brisk = singletonObject(BRISK)
+//  implicit val freak = singletonObject(FREAK)
+//  implicit val brief = singletonObject(BRIEF)
+//  implicit val orb = singletonObject(ORB)
+//  implicit val sift = singletonObject(SIFT)
+//  implicit val surf = singletonObject(SURF)
+
   implicit val openCVExtractorType = enumeration(
     "OpenCVExtractorType",
     Map(

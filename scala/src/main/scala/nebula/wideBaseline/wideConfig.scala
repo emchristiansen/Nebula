@@ -49,17 +49,15 @@ case class WideBaselineExperiment[D, E, M, F](
     evMatcher: M => Matcher[F])
 
 object WideBaselineExperiment {
-  import WideBaselineJsonProtocol._  
-  
+  import WideBaselineJsonProtocol._
+
   implicit def implicitHasGroundTruth(
     self: WideBaselineExperiment[_, _, _, _])(
       implicit runtime: RuntimeConfig): HasGroundTruth[Homography] =
     new HasGroundTruth[Homography] {
       override def groundTruth = {
         val homographyFile = runtime.projectChildPath(
-          "data/oxfordImages/%s/homographies/H1to%sp".format(
-            self.imageClass,
-            self.otherImage))
+          s"data/oxfordImages/${self.imageClass}/homographies/H1to${self.otherImage}p")
         Homography.fromFile(homographyFile)
       }
     }
@@ -79,13 +77,13 @@ object WideBaselineExperiment {
 
   implicit class ImplicitExperimentRunner[D, E, M, F](
     self: WideBaselineExperiment[D, E, M, F])(
-      implicit runtimeConfig: RuntimeConfig, 
+      implicit runtimeConfig: RuntimeConfig,
       evPairDetector: D => PairDetector,
       evExtractor: E => Extractor[F],
       evMatcher: M => Matcher[F]) extends ExperimentRunner[WideBaselineExperimentResults[D, E, M, F]] {
     override def run = WideBaselineExperimentResults(self)
   }
-  
+
   implicit class ImplicitStorageInfo[D, E, M, F](
     self: WideBaselineExperiment[D, E, M, F])(
       implicit runtime: RuntimeConfig,
@@ -99,31 +97,31 @@ object WideBaselineExperiment {
 
     override def mostRecentPath: Option[File] = existingResultsFiles.headOption
 
-    override def save = {
-      println("Saving to %s".format(currentPath))
-      val json = self.toJson
+    override def save = results => {
+      println(s"Saving to ${currentPath}")
+      val json = results.toJson
       org.apache.commons.io.FileUtils.writeStringToFile(currentPath, json.prettyPrint)
     }
 
     override def load = mostRecentPath map { file =>
-      println("Loading %s".format(file))
+      println(s"Loading ${file}")
       val jsonString = org.apache.commons.io.FileUtils.readFileToString(file)
       jsonString.asJson.convertTo[WideBaselineExperimentResults[D, E, M, F]]
     }
+
+    override def name = unixEpoch + "_" + nameNoTime
 
     ///////////////////////////////////////////////////////
 
     val unixEpoch = System.currentTimeMillis / 1000L
 
-    def experimentStringNoTime: String = {
+    def nameNoTime: String = {
       val fullString = JSONUtil.flattenJson(self.toJson)
       // Unfortunately, this string is too long to be part of a filename.
       fullString.take(100) + "_" + fullString.hashCode
     }
 
-    def experimentString = unixEpoch + "_" + experimentStringNoTime
-
-    def filenameNoTime: String = experimentStringNoTime + ".json"
+    def filenameNoTime: String = nameNoTime + ".json"
 
     def filename: String = unixEpoch + "_" + filenameNoTime
 
@@ -140,20 +138,17 @@ object WideBaselineExperiment {
   implicit class ImplicitImagePairLike(
     self: WideBaselineExperiment[_, _, _, _])(
       implicit runtime: RuntimeConfig) extends HasImagePair {
-      override def leftImage = {
-        val file = runtime.projectChildPath(
-          "data/oxfordImages/%s/images/img1.bmp".format(
-            self.imageClass))
-        ImageIO.read(file)
-      }
-      override def rightImage = {
-        val file = runtime.projectChildPath(
-          "data/oxfordImages/%s/images/img%s.bmp".format(
-            self.imageClass,
-            self.otherImage))
-        ImageIO.read(file)
-      }
+    override def leftImage = {
+      val file = runtime.projectChildPath(
+        s"data/oxfordImages/${self.imageClass}/images/img1.bmp")
+      ImageIO.read(file)
     }
+    override def rightImage = {
+      val file = runtime.projectChildPath(
+        s"data/oxfordImages/${self.imageClass}/images/img${self.otherImage}.bmp")
+      ImageIO.read(file)
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////
@@ -167,7 +162,7 @@ object WideBaselineExperimentResults extends Logging {
 
   def apply[D, E, M, F](
     experiment: WideBaselineExperiment[D, E, M, F])(
-      implicit runtimeConfig: RuntimeConfig, 
+      implicit runtimeConfig: RuntimeConfig,
       evPairDetector: D => PairDetector,
       evExtractor: E => Extractor[F],
       evMatcher: M => Matcher[F]): WideBaselineExperimentResults[D, E, M, F] = {
@@ -176,11 +171,11 @@ object WideBaselineExperimentResults extends Logging {
 
   private def run[D, E, M, F](
     self: WideBaselineExperiment[D, E, M, F])(
-      implicit runtimeConfig: RuntimeConfig, 
+      implicit runtimeConfig: RuntimeConfig,
       evPairDetector: D => PairDetector,
       evExtractor: E => Extractor[F],
       evMatcher: M => Matcher[F]): WideBaselineExperimentResults[D, E, M, F] = {
-    println("Running %s".format(self))
+    println(s"Running ${self}")
 
     val leftImage = self.leftImage
     val rightImage = self.rightImage
@@ -190,7 +185,7 @@ object WideBaselineExperimentResults extends Logging {
       leftImage,
       rightImage) unzip
 
-    println("Number of KeyPoints: %s".format(leftKeyPoints.size))
+    println(s"Number of KeyPoints: ${leftKeyPoints.size}")
 
     val (leftDescriptors, rightDescriptors) = {
       val leftDescriptors = self.extractor.extract(leftImage, leftKeyPoints)
@@ -199,7 +194,7 @@ object WideBaselineExperimentResults extends Logging {
       for ((Some(left), Some(right)) <- leftDescriptors.zip(rightDescriptors)) yield (left, right)
     } unzip
 
-    println("Number of surviving KeyPoints: %s".format(leftDescriptors.size))
+    println(s"Number of surviving KeyPoints: ${leftDescriptors.size}")
 
     val dmatches = self.matcher.doMatch(true, leftDescriptors, rightDescriptors)
 

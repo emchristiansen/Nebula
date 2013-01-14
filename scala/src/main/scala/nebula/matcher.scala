@@ -41,7 +41,7 @@ object Matcher {
       }
     }
 
-  def apply[F](original: Any, descriptorDistance: DescriptorDistance[F]): Matcher[F] = new Matcher[F] {
+  def apply[F](descriptorDistance: DescriptorDistance[F]): Matcher[F] = new Matcher[F] {
     override def doMatch = applyIndividual(distance)
 
     override def distance = descriptorDistance
@@ -75,32 +75,52 @@ sealed trait MatcherType
 object MatcherType {
   import Matcher._
 
-//  type MatcherType = Value
+  //  type MatcherType = Value
   object L0 extends MatcherType
   object L1 extends MatcherType
   object L2 extends MatcherType
   object KendallTau extends MatcherType
-//  val L0, L1, L2, KendallTau = Value
+  //  val L0, L1, L2, KendallTau = Value
 
   // Turn a distance on IndexedSeq[Int] into a distance on SortDescriptor.
   private def lift: DescriptorDistance[IndexedSeq[Int]] => DescriptorDistance[SortDescriptor] =
     distance =>
       (left, right) => distance(left.toIndexedSeq, right.toIndexedSeq)
 
-  implicit def implicitMatcher(self: L0.type) =
-    Matcher[IndexedSeq[Any]](self, l0)
+  // TODO: Why doesn't this work?
+//  implicit def implicitMatcher[A](self: L0.type) =
+//    Matcher[IndexedSeq[A]](l0)
+  implicit def implicitMatcherBoolean(self: L0.type) =
+    Matcher[IndexedSeq[Boolean]](l0)
+  implicit def implicitMatcherInt(self: L0.type) =
+    Matcher[IndexedSeq[Int]](l0)
+  implicit def implicitMatcherDouble(self: L0.type) =
+    Matcher[IndexedSeq[Double]](l0)     
   implicit def implicitMatcherSort(self: L0.type) =
-    Matcher[SortDescriptor](self, lift(l0))
-  implicit def implicitMatcher[A <% Double](self: L1.type) =
-    Matcher[IndexedSeq[A]](self, l1)
+    Matcher[SortDescriptor](lift(l0))
+    
+  // TODO: Why doesn't this work?    
+  //  implicit def implicitMatcher[A <% Double](self: L1.type) =
+  //    Matcher[IndexedSeq[A]](l1)
+  implicit def implicitMatcherInt(self: L1.type) =
+    Matcher[IndexedSeq[Int]](l1)
+  implicit def implicitMatcherDouble(self: L1.type) =
+    Matcher[IndexedSeq[Double]](l1)    
   implicit def implicitMatcherSort(self: L1.type) =
-    Matcher[SortDescriptor](self, lift(l1))
-  implicit def implicitMatcher[A <% Double](self: L2.type) =
-    Matcher[IndexedSeq[A]](self, l2)
+    Matcher[SortDescriptor](lift(l1))
+    
+  // TODO: Why doesn't this work?
+  //  implicit def implicitMatcher[A <% Double](self: L2.type): Matcher[IndexedSeq[A]] =
+  //    Matcher[IndexedSeq[A]](l2)
+  implicit def implicitMatcherInt(self: L2.type) =
+    Matcher[IndexedSeq[Int]](l2)    
+  implicit def implicitMatcherDouble(self: L2.type) =
+    Matcher[IndexedSeq[Double]](l2)
   implicit def implicitMatcherSort(self: L2.type) =
-    Matcher[SortDescriptor](self, lift(l2))
+    Matcher[SortDescriptor](lift(l2))
+    
   implicit def implictMatcher(self: KendallTau.type) =
-    Matcher[SortDescriptor](self, kendallTau)
+    Matcher[SortDescriptor](kendallTau)
 }
 
 ///////////////////////////////////////////////////////////
@@ -121,7 +141,6 @@ object LogPolarMatcher {
 
   implicit def implicitMatcher[A: ClassTag, B](self: LogPolarMatcher[A, B]): Matcher[DenseMatrix[A]] =
     Matcher(
-      self,
       (left: DenseMatrix[A], right: DenseMatrix[A]) => {
         require(left.rows == right.rows)
         require(left.cols == right.cols)
@@ -161,30 +180,30 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
       "KendallTau" -> MatcherType.KendallTau))
 
   /////////////////////////////////////////////////////////
-      
+
   implicit def logPolarMatcher[A, B](
-      implicit a: JsonFormat[Normalizer[DenseMatrix[A], DenseMatrix[B]]],
-      b: JsonFormat[Matcher[DenseMatrix[B]]]) =
+    implicit a: JsonFormat[Normalizer[DenseMatrix[A], DenseMatrix[B]]],
+    b: JsonFormat[Matcher[DenseMatrix[B]]]) =
     jsonFormat5(LogPolarMatcher.apply[A, B]).addClassInfo("LogPolarMatcher")
 
   /////////////////////////////////////////////////////////      
 
-//  implicit def matcherJsonFormat[F] = new RootJsonFormat[Matcher[F]] {
-//    override def write(self: Matcher[F]) = self.original match {
-//      case original: MatcherType.MatcherType => original.toJson
-//      case original: LogPolarMatcher => original.toJson
-//    }
-//    override def read(value: JsValue) = {
-//      value match {
-//        case JsString(_) => value.convertTo[MatcherType.MatcherType]
-//        case _ => value.asJsObject.fields("scalaClass") match {
-//          case JsString("LogPolarMatcher") => {
-//            value.convertTo[LogPolarMatcher]
-//          }
-//          case _ => throw new DeserializationException("Matcher expected")
-//        }
-//      }
-//    }
-//
-//  }
+  //  implicit def matcherJsonFormat[F] = new RootJsonFormat[Matcher[F]] {
+  //    override def write(self: Matcher[F]) = self.original match {
+  //      case original: MatcherType.MatcherType => original.toJson
+  //      case original: LogPolarMatcher => original.toJson
+  //    }
+  //    override def read(value: JsValue) = {
+  //      value match {
+  //        case JsString(_) => value.convertTo[MatcherType.MatcherType]
+  //        case _ => value.asJsObject.fields("scalaClass") match {
+  //          case JsString("LogPolarMatcher") => {
+  //            value.convertTo[LogPolarMatcher]
+  //          }
+  //          case _ => throw new DeserializationException("Matcher expected")
+  //        }
+  //      }
+  //    }
+  //
+  //  }
 }

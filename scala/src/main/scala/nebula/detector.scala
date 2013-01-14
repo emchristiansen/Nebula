@@ -71,6 +71,7 @@ object PairDetector {
 
 ///////////////////////////////////////////////////////////
 
+// TODO: Remove "OpenCV"
 case class OpenCVPairDetector(
   detector: OpenCVDetector,
   maxKeyPointsOption: Option[Int])

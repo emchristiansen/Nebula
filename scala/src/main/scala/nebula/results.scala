@@ -23,8 +23,9 @@ trait ExperimentRunner[R] {
 trait StorageInfo[R] {
   def currentPath: File
   def mostRecentPath: Option[File]
-  def save: Unit
+  def save: R => Unit
   def load: Option[R]
+  def name: String
 }
 
 /*
