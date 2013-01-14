@@ -58,37 +58,6 @@ object BoundedDetector {
   }
 }
 
-//// TODO: This doesn't need to be OpenCV-specific.
-//case class OpenCVDetector(
-//  detectorType: OpenCVDetectorType.OpenCVDetectorType,
-//  maxKeyPointsOption: Option[Int])
-//
-//object OpenCVDetector {
-//  import OpenCVDetectorType._
-//
-//  implicit def implicitOpenCVDetector(self: OpenCVDetector): Detector =
-//    new Detector {
-//      override def detect = (image: BufferedImage) => {
-//        val detectorType = self.detectorType match {
-//          case Dense => FeatureDetector.DENSE
-//          case FAST => FeatureDetector.FAST
-//          case BRISK => FeatureDetector.BRISK
-//          case SIFT => FeatureDetector.SIFT
-//          case SURF => FeatureDetector.SURF
-//        }
-//
-//        val matImage = OpenCVUtil.bufferedImageToMat(image)
-//        val keyPoints = new MatOfKeyPoint
-//        FeatureDetector.create(detectorType).detect(matImage, keyPoints)
-//        val sorted = keyPoints.toArray.sortBy(_.response).reverse
-//
-//        if (self.maxKeyPointsOption.isDefined)
-//          sorted.take(self.maxKeyPointsOption.get)
-//        else sorted
-//      }
-//    }
-//}
-
 ///////////////////////////////////////////////////////////
 
 trait PairDetector extends Detector {
@@ -129,29 +98,11 @@ object PairDetector {
 
 case class BoundedPairDetector[D <% PairDetector](pairDetector: D, maxKeyPoints: Int)
 
-object BoundedPairDetector {
-//  def apply[D <% Detector](detector: D, maxKeyPoints: Int): BoundedPairDetector[D] = {
-//    val first = implicitly[D => Detector]
-//    val second = implicitly[Detector => PairDetector]
-//    implicit val composition = second compose first 
-//    TODO
-////    BoundedPairDetector.apply(detector, maxKeyPoints)
-//  }
-  
+object BoundedPairDetector { 
   implicit class ToPairDetector[D <% PairDetector](self: BoundedPairDetector[D]) extends Detector {
     override def detect = image => self.pairDetector.detect(image).take(self.maxKeyPoints)
   }
-  
-//  // This is necessary because Scala doesn't do deep searches for implicits
-//  implicit class ToPairDetector[D <% Detector](self: BoundedPairDetector[D]) extends Detector {
-//    override def detect = image => self.pairDetector.detect(image).take(self.maxKeyPoints)
-//  }  
 }
-
-///////////////////////////////////////////////////////////
-
-//// TODO: Remove "OpenCV"
-//case class PairDetector[D <% Detector](detector: D)
 
 ///////////////////////////////////////////////////////////
 
@@ -169,49 +120,4 @@ object DetectorJsonProtocol extends DefaultJsonProtocol {
   /////////////////////////////////////////////////////////  
   
   implicit def boundedPairDetector[D <% PairDetector : JsonFormat] = jsonFormat2(BoundedPairDetector.apply[D])
-  
-  //  implicit val openCVDetectorType = enumeration(
-  //    "OpenCVDetectorType",
-  //    Map(
-  //      "Dense" -> OpenCVDetectorType.Dense,
-  //      "FAST" -> OpenCVDetectorType.FAST,
-  //      "BRISK" -> OpenCVDetectorType.BRISK,
-  //      "SIFT" -> OpenCVDetectorType.SIFT,
-  //      "SURF" -> OpenCVDetectorType.SURF))
-  //
-  //  implicit val openCVDetector =
-  //    jsonFormat2(OpenCVDetector.apply).addClassInfo("OpenCVDetector")
-
-  /////////////////////////////////////////////////////////
-
-  //  implicit object DetectorJsonFormat extends RootJsonFormat[Detector] {
-  //    override def write(self: Detector) = self.original match {
-  //      case original: OpenCVDetector => original.toJson
-  //    }
-  //    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-  //      case JsString("OpenCVDetector") => value.convertTo[OpenCVDetector]
-  //      case _ => throw new DeserializationException("Detector expected")
-  //    }
-  //  }
 }
-
-///////////////////////////////////////////////////////////
-
-//object PairDetectorJsonProtocol extends DefaultJsonProtocol {
-//  import DetectorJsonProtocol._
-//
-//  implicit val openCVPairDetector =
-//    jsonFormat2(OpenCVPairDetector.apply).addClassInfo("OpenCVPairDetector")
-//
-//  /////////////////////////////////////////////////////////    
-//
-//  //  implicit object PairDetectorJsonFormat extends RootJsonFormat[PairDetector] {
-//  //    override def write(self: PairDetector) = self.original match {
-//  //      case original: OpenCVPairDetector => original.toJson
-//  //    }
-//  //    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-//  //      case JsString("OpenCVPairDetector") => value.convertTo[OpenCVPairDetector]
-//  //      case _ => throw new DeserializationException("PairDetector expected")
-//  //    }
-//  //  }
-//}

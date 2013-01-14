@@ -127,15 +127,13 @@ object Extractor {
 
 ///////////////////////////////////////////////////////////
 
-//sealed trait OpenCVExtractorType
-
 object OpenCVExtractorType {
-  object BRISK// extends OpenCVExtractorType
-  object FREAK// extends OpenCVExtractorType
-  object BRIEF// extends OpenCVExtractorType
-  object ORB// extends OpenCVExtractorType
-  object SIFT// extends OpenCVExtractorType
-  object SURF// extends OpenCVExtractorType
+  object BRISK
+  object FREAK
+  object BRIEF
+  object ORB
+  object SIFT
+  object SURF
 
   import Extractor._
 
@@ -154,7 +152,6 @@ object OpenCVExtractorType {
 }
 
 case class PatchExtractor(
-  //  extractorType: PatchExtractorType.PatchExtractorType,
   normalizeRotation: Boolean,
   normalizeScale: Boolean,
   patchWidth: Int,
@@ -323,16 +320,6 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
   implicit val sift = singletonObject(OpenCVExtractorType.SIFT)
   implicit val surf = singletonObject(OpenCVExtractorType.SURF)
 
-//  implicit val openCVExtractorType = enumeration(
-//    "OpenCVExtractorType",
-//    Map(
-//      "BRISK" -> OpenCVExtractorType.BRISK,
-//      "FREAK" -> OpenCVExtractorType.FREAK,
-//      "BRIEF" -> OpenCVExtractorType.BRIEF,
-//      "ORB" -> OpenCVExtractorType.ORB,
-//      "SIFT" -> OpenCVExtractorType.SIFT,
-//      "SURF" -> OpenCVExtractorType.SURF))
-
   /////////////////////////////////////////////////////////
 
   implicit val patchExtractor =
@@ -356,50 +343,4 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
     evEJson: JsonFormat[E],
     evNJson: JsonFormat[N]) =
     jsonFormat2(NormalizedExtractor.apply[E, N, F1, F2])
-
-  /////////////////////////////////////////////////////////
-
-  //  implicit object ExtractorJsonFormatSortDescriptor extends RootJsonFormat[Extractor[SortDescriptor]] {
-  //    override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
-  //      case original: ELUCIDExtractor => original.toJson
-  //    }
-  //    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-  //      case JsString("ELUCIDExtractor") => value.convertTo[ELUCIDExtractor]
-  //      case _ => throw new DeserializationException("Extractor expected")
-  //    }
-  //  }
-  //
-  //  implicit object ExtractorJsonFormatDenseMatrixInt extends RootJsonFormat[Extractor[DenseMatrix[Int]]] {
-  //    override def write(self: Extractor[DenseMatrix[Int]]) = self.original match {
-  //      case original: LogPolarExtractor => original.toJson
-  //    }
-  //    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-  //      case JsString("LogPolarExtractor") => value.convertTo[LogPolarExtractor]
-  //      case _ => throw new DeserializationException("Extractor expected")
-  //    }
-  //  }
-  //
-  //  implicit object ExtractorJsonFormatIndexedSeqBoolean extends RootJsonFormat[Extractor[IndexedSeq[Boolean]]] {
-  //    override def write(self: Extractor[IndexedSeq[Boolean]]) = self.original match {
-  //      case original: OpenCVExtractorType.BRISK.type => original.toJson
-  //      case original: OpenCVExtractorType.FREAK.type => original.toJson
-  //      case original: OpenCVExtractorType.BRIEF.type => original.toJson
-  //      case original: OpenCVExtractorType.ORB.type => original.toJson
-  //    }
-  //    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-  //      case _ => throw new DeserializationException("Extractor expected")
-  //    }
-  //  }
-  //
-  //  implicit object ExtractorJsonFormatIndexedSeqInt extends RootJsonFormat[Extractor[IndexedSeq[Int]]] {
-  //    override def write(self: Extractor[IndexedSeq[Int]]) = self.original match {
-  //      case original: PatchExtractor => original.toJson
-  //      case original: LogPolarExtractor => original.toJson
-  //      case original: ELUCIDExtractor => original.toJson
-  //    }
-  //    override def read(value: JsValue) = value.asJsObject.fields("scalaClass") match {
-  //      case JsString("PatchExtractor") => value.convertTo[PatchExtractor]
-  //      case _ => throw new DeserializationException("Extractor expected")
-  //    }
-  //  }
 }

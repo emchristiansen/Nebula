@@ -12,15 +12,13 @@ trait Normalizer[A, B] {
   def normalize: A => B
 }
 
-//sealed trait PatchNormalizerType
-
 object PatchNormalizerType {
-  object Raw // extends PatchNormalizerType
-  object NormalizeRange // extends PatchNormalizerType
-  object NCC // extends PatchNormalizerType
-  object Order // extends PatchNormalizerType
-  object Rank // extends PatchNormalizerType
-  object UniformRank // extends PatchNormalizerType
+  object Raw
+  object NormalizeRange
+  object NCC
+  object Order
+  object Rank
+  object UniformRank
 
   implicit class RawNormalize[A](self: Raw.type) extends Normalizer[A, A] {
     override def normalize: A => A = identity
@@ -83,31 +81,17 @@ object PatchNormalizerType {
   implicit class NormalizerFromDoubleToFromInt[A](fromDouble: Normalizer[IndexedSeq[Double], A]) extends Normalizer[IndexedSeq[Int], A] {
     override def normalize: IndexedSeq[Int] => A = data => fromDouble.normalize(data.map(_.toDouble))
   }
-
-
 }
 
 ///////////////////////////////////////////////////////////
 
 object NormalizerJsonProtocol extends DefaultJsonProtocol {
-  import PatchNormalizerType._
-
-  implicit val raw = singletonObject(Raw)
-  implicit val normalizeRange = singletonObject(NormalizeRange)
-  implicit val ncc = singletonObject(NCC)
-  implicit val order = singletonObject(Order)
-  implicit val rank = singletonObject(Rank)
-  implicit val uniformRank = singletonObject(UniformRank)
-
-//  implicit val patchNormalizerType = JSONUtil.enumeration(
-//    "PatchNormalizerType",
-//    Map(
-//      "Raw" -> PatchNormalizerType.Raw,
-//      "NormalizeRange" -> PatchNormalizerType.NormalizeRange,
-//      "NCC" -> PatchNormalizerType.NCC,
-//      "Order" -> PatchNormalizerType.Order,
-//      "Rank" -> PatchNormalizerType.Rank,
-//      "UniformRank" -> PatchNormalizerType.UniformRank))
+  implicit val raw = singletonObject(PatchNormalizerType.Raw)
+  implicit val normalizeRange = singletonObject(PatchNormalizerType.NormalizeRange)
+  implicit val ncc = singletonObject(PatchNormalizerType.NCC)
+  implicit val order = singletonObject(PatchNormalizerType.Order)
+  implicit val rank = singletonObject(PatchNormalizerType.Rank)
+  implicit val uniformRank = singletonObject(PatchNormalizerType.UniformRank)
 
   /////////////////////////////////////////////////////////      
 

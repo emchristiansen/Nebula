@@ -69,17 +69,13 @@ object Matcher {
 
 ///////////////////////////////////////////////////////////
 
-//sealed trait MatcherType
-
 object MatcherType {
   import Matcher._
 
-  //  type MatcherType = Value
-  object L0// extends MatcherType
-  object L1// extends MatcherType
-  object L2// extends MatcherType
-  object KendallTau// extends MatcherType
-  //  val L0, L1, L2, KendallTau = Value
+  object L0
+  object L1
+  object L2
+  object KendallTau
 
   // Turn a distance on IndexedSeq[Int] into a distance on SortDescriptor.
   private def lift: DescriptorDistance[IndexedSeq[Int]] => DescriptorDistance[SortDescriptor] =
@@ -170,20 +166,10 @@ object LogPolarMatcher {
 ///////////////////////////////////////////////////////////
 
 object MatcherJsonProtocol extends DefaultJsonProtocol {
-  import MatcherType._
-
-  implicit val l0 = singletonObject(L0)
-  implicit val l1 = singletonObject(L1)
-  implicit val l2 = singletonObject(L2)
-  implicit val kendallTau = singletonObject(KendallTau)  
-  
-//  implicit val matcherType = enumeration(
-//    "MatcherType",
-//    Map(
-//      "L0" -> MatcherType.L0,
-//      "L1" -> MatcherType.L1,
-//      "L2" -> MatcherType.L2,
-//      "KendallTau" -> MatcherType.KendallTau))
+  implicit val l0 = singletonObject(MatcherType.L0)
+  implicit val l1 = singletonObject(MatcherType.L1)
+  implicit val l2 = singletonObject(MatcherType.L2)
+  implicit val kendallTau = singletonObject(MatcherType.KendallTau)  
 
   /////////////////////////////////////////////////////////
 
@@ -191,25 +177,4 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
     implicit a: JsonFormat[Normalizer[DenseMatrix[A], DenseMatrix[B]]],
     b: JsonFormat[Matcher[DenseMatrix[B]]]) =
     jsonFormat5(LogPolarMatcher.apply[A, B]).addClassInfo("LogPolarMatcher")
-
-  /////////////////////////////////////////////////////////      
-
-  //  implicit def matcherJsonFormat[F] = new RootJsonFormat[Matcher[F]] {
-  //    override def write(self: Matcher[F]) = self.original match {
-  //      case original: MatcherType.MatcherType => original.toJson
-  //      case original: LogPolarMatcher => original.toJson
-  //    }
-  //    override def read(value: JsValue) = {
-  //      value match {
-  //        case JsString(_) => value.convertTo[MatcherType.MatcherType]
-  //        case _ => value.asJsObject.fields("scalaClass") match {
-  //          case JsString("LogPolarMatcher") => {
-  //            value.convertTo[LogPolarMatcher]
-  //          }
-  //          case _ => throw new DeserializationException("Matcher expected")
-  //        }
-  //      }
-  //    }
-  //
-  //  }
 }
