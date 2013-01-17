@@ -102,8 +102,9 @@ object WideBaselineExperiment {
 
     def nameNoTime: String = {
       val fullString = JSONUtil.flattenJson(self.toJson)
-      // Unfortunately, this string is too long to be part of a filename.
-      fullString.take(100) + "_" + fullString.hashCode
+//      // Unfortunately, this string is too long to be part of a filename.
+//      fullString.take(100) + "_" + fullString.hashCode
+      fullString
     }
 
     def filenameNoTime: String = nameNoTime + ".json"

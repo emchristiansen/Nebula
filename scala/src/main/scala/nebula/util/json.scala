@@ -61,7 +61,7 @@ object JSONUtil extends Logging {
   
  
   implicit class AddClassName[A](self: RootJsonFormat[A]) {
-    def addClassInfo(scalaClass: String): RootJsonFormat[A] = new RootJsonFormat[A] {
+    def addClassInfo(scalaClass: String) = new RootJsonFormat[A] {
       override def write(e: A) = {
         val fields = self.write(e).asJsObject.fields
         assert(!fields.contains("scalaClass"))
