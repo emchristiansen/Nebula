@@ -117,7 +117,7 @@ result
 
   //  // These are useful enough to import by default.
   //  type FileUtils = org.apache.commons.io.FileUtils
-  //  type File = java.io.File
+  //  type File = java.io.File 
 
   def generateExpression[A: JsonFormat: TypeName](a: A): String =
     s"""
