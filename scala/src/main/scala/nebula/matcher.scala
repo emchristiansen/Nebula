@@ -5,6 +5,7 @@ import org.opencv.features2d.DMatch
 import breeze.linalg.DenseMatrix
 import graveyard.EpsilonL1Match
 import nebula.SortDescriptor.{ implicitIndexedSeq, sortDescriptor }
+import nebula.util.JSONUtil
 import nebula.util.JSONUtil._
 import spray.json._
 import util.Util
@@ -64,12 +65,8 @@ object Matcher {
     }
     errors.sum
   }
-}
 
-///////////////////////////////////////////////////////////
-
-object MatcherType {
-  import Matcher._
+  ///////////////////////////////////////////////////////////  
 
   object L0
   object L1
@@ -82,37 +79,37 @@ object MatcherType {
       (left, right) => distance(left.toIndexedSeq, right.toIndexedSeq)
 
   // TODO: Why doesn't this work?
-//  implicit def implicitMatcher[A](self: L0.type) =
-//    Matcher[IndexedSeq[A]](l0)
+  //  implicit def implicitMatcher[A](self: L0.type) =
+  //    Matcher[IndexedSeq[A]](l0)
   implicit def implicitMatcherBoolean(self: L0.type) =
     Matcher[IndexedSeq[Boolean]](l0)
   implicit def implicitMatcherInt(self: L0.type) =
     Matcher[IndexedSeq[Int]](l0)
   implicit def implicitMatcherDouble(self: L0.type) =
-    Matcher[IndexedSeq[Double]](l0)     
+    Matcher[IndexedSeq[Double]](l0)
   implicit def implicitMatcherSort(self: L0.type) =
     Matcher[SortDescriptor](lift(l0))
-    
+
   // TODO: Why doesn't this work?    
   //  implicit def implicitMatcher[A <% Double](self: L1.type) =
   //    Matcher[IndexedSeq[A]](l1)
   implicit def implicitMatcherInt(self: L1.type) =
     Matcher[IndexedSeq[Int]](l1)
   implicit def implicitMatcherDouble(self: L1.type) =
-    Matcher[IndexedSeq[Double]](l1)    
+    Matcher[IndexedSeq[Double]](l1)
   implicit def implicitMatcherSort(self: L1.type) =
     Matcher[SortDescriptor](lift(l1))
-    
+
   // TODO: Why doesn't this work?
   //  implicit def implicitMatcher[A <% Double](self: L2.type): Matcher[IndexedSeq[A]] =
   //    Matcher[IndexedSeq[A]](l2)
   implicit def implicitMatcherInt(self: L2.type) =
-    Matcher[IndexedSeq[Int]](l2)    
+    Matcher[IndexedSeq[Int]](l2)
   implicit def implicitMatcherDouble(self: L2.type) =
     Matcher[IndexedSeq[Double]](l2)
   implicit def implicitMatcherSort(self: L2.type) =
     Matcher[SortDescriptor](lift(l2))
-    
+
   implicit def implictMatcher(self: KendallTau.type) =
     Matcher[SortDescriptor](kendallTau)
 }
@@ -131,7 +128,7 @@ import scala.reflect.runtime.universe._
 
 object LogPolarMatcher {
   import Matcher._
-  //  import MatcherType._
+  //  import Matcher._
 
   implicit def implicitMatcher[A: ClassTag, B](self: LogPolarMatcher[A, B]): Matcher[DenseMatrix[A]] =
     Matcher(
@@ -165,10 +162,10 @@ object LogPolarMatcher {
 ///////////////////////////////////////////////////////////
 
 object MatcherJsonProtocol extends DefaultJsonProtocol {
-  implicit val l0 = singletonObject(MatcherType.L0)
-  implicit val l1 = singletonObject(MatcherType.L1)
-  implicit val l2 = singletonObject(MatcherType.L2)
-  implicit val kendallTau = singletonObject(MatcherType.KendallTau)  
+  implicit val l0 = JSONUtil.singletonObject(Matcher.L0)
+  implicit val l1 = JSONUtil.singletonObject(Matcher.L1)
+  implicit val l2 = JSONUtil.singletonObject(Matcher.L2)
+  implicit val kendallTau = JSONUtil.singletonObject(Matcher.KendallTau)
 
   /////////////////////////////////////////////////////////
 

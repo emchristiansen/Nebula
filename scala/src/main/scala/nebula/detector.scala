@@ -22,7 +22,7 @@ object Detector {
 
 ///////////////////////////////////////////////////////////
 
-object OpenCVDetectorType {
+object OpenCVDetector {
   object DENSE
   object FAST
   object BRISK
@@ -87,11 +87,11 @@ object PairDetector {
   }
   
   // This enumeration is necessary because Scala doesn't do deep searches for implicits.
-  implicit def detector(self: OpenCVDetectorType.DENSE.type) = self.to[Detector].to[PairDetector]
-  implicit def detector(self: OpenCVDetectorType.FAST.type) = self.to[Detector].to[PairDetector]
-  implicit def detector(self: OpenCVDetectorType.BRISK.type) = self.to[Detector].to[PairDetector]
-  implicit def detector(self: OpenCVDetectorType.SIFT.type) = self.to[Detector].to[PairDetector]
-  implicit def detector(self: OpenCVDetectorType.SURF.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetector.DENSE.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetector.FAST.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetector.BRISK.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetector.SIFT.type) = self.to[Detector].to[PairDetector]
+  implicit def detector(self: OpenCVDetector.SURF.type) = self.to[Detector].to[PairDetector]
 }
 
 case class BoundedPairDetector[D <% PairDetector](pairDetector: D, maxKeyPoints: Int)
@@ -105,11 +105,11 @@ object BoundedPairDetector {
 ///////////////////////////////////////////////////////////
 
 object DetectorJsonProtocol extends DefaultJsonProtocol {
-  implicit val openCVDetectorTypeDense = singletonObject(OpenCVDetectorType.DENSE)
-  implicit val openCVDetectorTypeFast = singletonObject(OpenCVDetectorType.FAST)
-  implicit val openCVDetectorTypeBrisk = singletonObject(OpenCVDetectorType.BRISK)
-  implicit val openCVDetectorTypeSift = singletonObject(OpenCVDetectorType.SIFT)
-  implicit val openCVDetectorTypeSurf = singletonObject(OpenCVDetectorType.SURF)
+  implicit val openCVDetectorTypeDense = singletonObject(OpenCVDetector.DENSE)
+  implicit val openCVDetectorTypeFast = singletonObject(OpenCVDetector.FAST)
+  implicit val openCVDetectorTypeBrisk = singletonObject(OpenCVDetector.BRISK)
+  implicit val openCVDetectorTypeSift = singletonObject(OpenCVDetector.SIFT)
+  implicit val openCVDetectorTypeSurf = singletonObject(OpenCVDetector.SURF)
 
   /////////////////////////////////////////////////////////
   

@@ -126,7 +126,7 @@ object Extractor {
 
 ///////////////////////////////////////////////////////////
 
-object OpenCVExtractorType {
+object OpenCVExtractor {
   object BRISK
   object FREAK
   object BRIEF
@@ -302,12 +302,12 @@ object NormalizedExtractor {
 ///////////////////////////////////////////////////////////
 
 object ExtractorJsonProtocol extends DefaultJsonProtocol {
-  implicit val openCVExtractorTypeBrisk = singletonObject(OpenCVExtractorType.BRISK)
-  implicit val openCVExtractorTypeFreak = singletonObject(OpenCVExtractorType.FREAK)
-  implicit val openCVExtractorTypeBrief = singletonObject(OpenCVExtractorType.BRIEF)
-  implicit val openCVExtractorTypeOrb = singletonObject(OpenCVExtractorType.ORB)
-  implicit val openCVExtractorTypeSift = singletonObject(OpenCVExtractorType.SIFT)
-  implicit val openCVExtractorTypeSurf = singletonObject(OpenCVExtractorType.SURF)
+  implicit val openCVExtractorTypeBrisk = singletonObject(OpenCVExtractor.BRISK)
+  implicit val openCVExtractorTypeFreak = singletonObject(OpenCVExtractor.FREAK)
+  implicit val openCVExtractorTypeBrief = singletonObject(OpenCVExtractor.BRIEF)
+  implicit val openCVExtractorTypeOrb = singletonObject(OpenCVExtractor.ORB)
+  implicit val openCVExtractorTypeSift = singletonObject(OpenCVExtractor.SIFT)
+  implicit val openCVExtractorTypeSurf = singletonObject(OpenCVExtractor.SURF)
 
   /////////////////////////////////////////////////////////
 
