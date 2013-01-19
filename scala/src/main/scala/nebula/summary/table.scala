@@ -27,6 +27,45 @@ import reflect._
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// TODO: This class is a stop-gap. Lots of code duplication. Will be deleted
+// when I HList everything and compile the main function at runtime.
+case class TableTitles(
+  title: String,
+  rowLabels: IndexedSeq[String],
+  columnLabels: IndexedSeq[String])
+
+object TableTitles {
+  def title(experiments: Seq[JsValue]): String = {
+    val maps = experiments.map(JSONUtil.getParametersFromJson).toSet
+    summarizeStructure(maps)
+  }
+
+  def entryTitles(experiments: Seq[JsValue]): IndexedSeq[String] = {
+    val experimentMaps = experiments.map(JSONUtil.getParametersFromJson)
+    val union = mapUnion(experimentMaps.toSet)
+    val variableKeys = union.filter(_._2.size > 1).keys.toSet
+
+    def entryTitle(experimentMap: Map[String, String]): String = {
+      experimentMap.filterKeys(variableKeys).toSeq.map({ 
+        case (k, v) => "%s-%s".format(k, v) }).mkString("_")
+    }
+
+    experimentMaps.map(entryTitle).toIndexedSeq
+  }  
+  
+  def apply(experiments: Seq[Seq[JsValue]]): TableTitles = {
+    // TODO: Replace with |everywhere| from shapeless when Scala 2.10 comes out.
+    val experimentsFirstRow = experiments.head
+    val experimentsFirstColumn = experiments.map(_.head)
+
+    val tableTitle = title(experiments.flatten)
+    val rowLabels = entryTitles(experimentsFirstColumn)
+    val columnLabels = entryTitles(experimentsFirstRow)
+
+    TableTitles(tableTitle, rowLabels, columnLabels)
+  }
+}
+  
 case class Table[A](
   title: String,
   rowLabels: IndexedSeq[String],

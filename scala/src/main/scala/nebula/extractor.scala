@@ -302,31 +302,31 @@ object NormalizedExtractor {
 ///////////////////////////////////////////////////////////
 
 object ExtractorJsonProtocol extends DefaultJsonProtocol {
-  implicit val openCVExtractorTypeBrisk = singletonObject(OpenCVExtractor.BRISK)
-  implicit val openCVExtractorTypeFreak = singletonObject(OpenCVExtractor.FREAK)
-  implicit val openCVExtractorTypeBrief = singletonObject(OpenCVExtractor.BRIEF)
-  implicit val openCVExtractorTypeOrb = singletonObject(OpenCVExtractor.ORB)
-  implicit val openCVExtractorTypeSift = singletonObject(OpenCVExtractor.SIFT)
-  implicit val openCVExtractorTypeSurf = singletonObject(OpenCVExtractor.SURF)
+  implicit val openCVExtractorBriskJsonProtocol = singletonObject(OpenCVExtractor.BRISK)
+  implicit val openCVExtractorFreakJsonProtocol = singletonObject(OpenCVExtractor.FREAK)
+  implicit val openCVExtractorBriefJsonProtocol = singletonObject(OpenCVExtractor.BRIEF)
+  implicit val openCVExtractorOrbJsonProtocol = singletonObject(OpenCVExtractor.ORB)
+  implicit val openCVExtractorSiftJsonProtocol = singletonObject(OpenCVExtractor.SIFT)
+  implicit val openCVExtractorSurfJsonProtocol = singletonObject(OpenCVExtractor.SURF)
 
   /////////////////////////////////////////////////////////
 
-  implicit val patchExtractor =
+  implicit val patchExtractorJsonProtocol =
     jsonFormat5(PatchExtractor.apply).addClassInfo("PatchExtractor")
 
   /////////////////////////////////////////////////////////
 
-  implicit val logPolarExtractor =
+  implicit val logPolarExtractorJsonProtocol =
     jsonFormat7(LogPolarExtractor.apply).addClassInfo("LogPolarExtractor")
 
   /////////////////////////////////////////////////////////
 
-  implicit val elucidExtractor =
+  implicit val elucidExtractorJsonProtocol =
     jsonFormat7(ELUCIDExtractor.apply).addClassInfo("ELUCIDExtractor")
 
   /////////////////////////////////////////////////////////    
 
-  implicit def normalizedExtractor[E, N, F1, F2](
+  implicit def normalizedExtractorJsonProtocol[E, N, F1, F2](
     implicit evExtractor: E => Extractor[F1],
     evNormalizer: N => Normalizer[F1, F2],
     evEJson: JsonFormat[E],

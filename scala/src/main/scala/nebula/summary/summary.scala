@@ -19,24 +19,16 @@ import org.opencv.features2d.DMatch
 
 ///////////////////////////////////////////////////////////////////////////////
 
-trait ExperimentSummary {
-//  def results: ExperimentResults
+case class ExperimentSummary(
+    summaryNumbers: Map[String, () => Double],
+    summaryImages: Map[String, () => BufferedImage])
 
-  def summaryNumbers: Map[String, () => Double]
-  def summaryImages: Map[String, () => BufferedImage]
-
+object ExperimentSummary {
+  implicit class OutDirectory(self: ExperimentSummary) {
   def outDirectory(implicit runtime: RuntimeConfig) = runtime.projectChildPath(
-    "summary")
-}
-
-//object ExperimentSummary {
-//  implicit def implicitExperimentResults(self: ExperimentResults) = new {
-//    def toSummary = self.original match {
-//      case original: WideBaselineExperimentResults => original.toSummary
-//      case original: SmallBaselineExperimentResults => original.toSummary
-//    }
-//  }
-//}
+    "summary")    
+  }
+}    
 
 object SummaryUtil {
   def recognitionRate(dmatches: Seq[DMatch]): Double = {

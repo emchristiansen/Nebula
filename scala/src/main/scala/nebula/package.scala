@@ -33,6 +33,7 @@ package object nebula {
     "nebula._",
     "nebula.smallBaseline._",
     "nebula.wideBaseline._",
+    "nebula.summary._",
     "nebula.Distributed._"))
 
   val jsonImports = Imports(Set(
@@ -40,14 +41,18 @@ package object nebula {
     "nebula.util.DMatchJsonProtocol._",
     "nebula.DetectorJsonProtocol._",
     "nebula.ExtractorJsonProtocol._",
+    "nebula.NormalizerJsonProtocol._",
     "nebula.MatcherJsonProtocol._",
     "nebula.wideBaseline.WideBaselineJsonProtocol._"))
 
   val sparkImports = Imports(Set(
     "spark.SparkContext",
     "spark.SparkContext._"))
+    
+  val shapelessImports = Imports(Set(
+    "shapeless._")) 
 
-  implicit val allImports = Imports(nebulaImports ++ jsonImports ++ sparkImports)
+  implicit val allImports = Imports(nebulaImports ++ jsonImports ++ sparkImports ++ shapelessImports)
 
   // TODO: Replace with ???
   def TODO = sys.error("TODO")

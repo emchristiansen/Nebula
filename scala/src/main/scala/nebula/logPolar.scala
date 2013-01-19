@@ -168,12 +168,15 @@ object LogPolar {
   //    (seqSeq ++ seqSeq.init).toMatrix
   //  }
 
-  def getResponseMap[A: ClassTag, B](
-    normalizer: Normalizer[DenseMatrix[A], DenseMatrix[B]],
+  def getResponseMap[
+    N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], 
+    M <% Matcher[DenseMatrix[F2]], 
+    F2](
+    normalizer: N,
     normalizeByOverlap: Boolean,
-    distance: Matcher.DescriptorDistance[DenseMatrix[B]],
-    base: DenseMatrix[A],
-    kernel: DenseMatrix[A],
+    matcher: M,
+    base: DenseMatrix[Int],
+    kernel: DenseMatrix[Int],
     angleIndices: Range,
     scaleIndices: Range): DenseMatrix[Double] = {
     require(2 * kernel.rows - 1 == base.rows)
@@ -212,7 +215,7 @@ object LogPolar {
       val kernelMatrix = normalizer.normalize(kernelMatrixUnnormalized)
 
       val scaleOffset = scaleIndex - scaleIndices.min
-      val unnormalized = distance(baseMatrix, kernelMatrix)
+      val unnormalized = matcher.distance(baseMatrix, kernelMatrix)
       response(angleIndex, scaleOffset) = if (normalizeByOverlap) {
         val denominator = kernel.cols - scaleIndex.abs
         unnormalized / denominator

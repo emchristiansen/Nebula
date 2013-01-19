@@ -5,14 +5,15 @@ import spray.json._
 import nebula.util._
 import nebula.util.JSONUtil._
 import SortDescriptor._
+import breeze.linalg._
 
 ///////////////////////////////////////////////////////////    
 
-trait Normalizer[A, B] {
+trait Normalizer[-A, +B] {
   def normalize: A => B
 }
 
-object PatchNormalizerType {
+object PatchNormalizer {
   object Raw
   object NormalizeRange
   object NCC
@@ -23,7 +24,11 @@ object PatchNormalizerType {
   implicit class RawNormalize[A](self: Raw.type) extends Normalizer[A, A] {
     override def normalize: A => A = identity
   }
-
+  
+//  implicit class RawNormalizeMatrix[A](self: Raw.type) extends Normalizer[DenseMatrix[A], DenseMatrix[A]] {
+//    override def normalize: DenseMatrix[A] => DenseMatrix[A] = identity
+//  }  
+  
   implicit class RangeNormalizeDouble(self: NormalizeRange.type) extends Normalizer[IndexedSeq[Double], IndexedSeq[Double]] {
     // Sets the value range in [0, 255].
     override def normalize: IndexedSeq[Double] => IndexedSeq[Double] = data => {
@@ -86,12 +91,12 @@ object PatchNormalizerType {
 ///////////////////////////////////////////////////////////
 
 object NormalizerJsonProtocol extends DefaultJsonProtocol {
-  implicit val raw = singletonObject(PatchNormalizerType.Raw)
-  implicit val normalizeRange = singletonObject(PatchNormalizerType.NormalizeRange)
-  implicit val ncc = singletonObject(PatchNormalizerType.NCC)
-  implicit val order = singletonObject(PatchNormalizerType.Order)
-  implicit val rank = singletonObject(PatchNormalizerType.Rank)
-  implicit val uniformRank = singletonObject(PatchNormalizerType.UniformRank)
+  implicit val patchNormalizerRawJsonProtocol = singletonObject(PatchNormalizer.Raw)
+  implicit val patchNormalizerNormalizeRangeJsonProtocol = singletonObject(PatchNormalizer.NormalizeRange)
+  implicit val patchNormalizerNCCJsonProtocol = singletonObject(PatchNormalizer.NCC)
+  implicit val patchNormalizerOrderJsonProtocol = singletonObject(PatchNormalizer.Order)
+  implicit val patchNormalizerRankJsonProtocol = singletonObject(PatchNormalizer.Rank)
+  implicit val patchNormalizerUniformRankJsonProtocol = singletonObject(PatchNormalizer.UniformRank)
 
   /////////////////////////////////////////////////////////      
 

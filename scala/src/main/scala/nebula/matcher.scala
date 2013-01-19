@@ -73,41 +73,38 @@ object Matcher {
   object L2
   object KendallTau
 
-  // Turn a distance on IndexedSeq[Int] into a distance on SortDescriptor.
+  /**
+   * Turn a distance on IndexedSeq[Int] into a distance on SortDescriptor.
+   */
   private def lift: DescriptorDistance[IndexedSeq[Int]] => DescriptorDistance[SortDescriptor] =
     distance =>
       (left, right) => distance(left.toIndexedSeq, right.toIndexedSeq)
 
-  // TODO: Why doesn't this work?
-  //  implicit def implicitMatcher[A](self: L0.type) =
-  //    Matcher[IndexedSeq[A]](l0)
-  implicit def implicitMatcherBoolean(self: L0.type) =
-    Matcher[IndexedSeq[Boolean]](l0)
-  implicit def implicitMatcherInt(self: L0.type) =
-    Matcher[IndexedSeq[Int]](l0)
-  implicit def implicitMatcherDouble(self: L0.type) =
-    Matcher[IndexedSeq[Double]](l0)
-  implicit def implicitMatcherSort(self: L0.type) =
+  /**
+   * Turn a distance on IndexedSeq[A] to a distance on DenseMatrix[A].
+   */
+  def liftToMatrix[A](distance: DescriptorDistance[IndexedSeq[A]]): DescriptorDistance[DenseMatrix[A]] =
+    (left, right) => distance(left.data.toIndexedSeq, right.data.toIndexedSeq)
+
+  implicit def implicitMatcherL0[A](self: L0.type) =
+    Matcher[IndexedSeq[A]](l0)
+  implicit def implicitMatcherMatrixL0[A](self: L0.type) =
+    Matcher[DenseMatrix[A]](liftToMatrix(l0))
+  implicit def implicitMatcherSortL0(self: L0.type) =
     Matcher[SortDescriptor](lift(l0))
 
-  // TODO: Why doesn't this work?    
-  //  implicit def implicitMatcher[A <% Double](self: L1.type) =
-  //    Matcher[IndexedSeq[A]](l1)
-  implicit def implicitMatcherInt(self: L1.type) =
-    Matcher[IndexedSeq[Int]](l1)
-  implicit def implicitMatcherDouble(self: L1.type) =
-    Matcher[IndexedSeq[Double]](l1)
-  implicit def implicitMatcherSort(self: L1.type) =
+  implicit def implicitMatcherL1[A <% Double](self: L1.type) =
+    Matcher[IndexedSeq[A]](l1)
+  implicit def implicitMatcherMatrixL1[A <% Double](self: L1.type) =
+    Matcher[DenseMatrix[A]](liftToMatrix[A](l1))    
+  implicit def implicitMatcherSortL1(self: L1.type) =
     Matcher[SortDescriptor](lift(l1))
 
-  // TODO: Why doesn't this work?
-  //  implicit def implicitMatcher[A <% Double](self: L2.type): Matcher[IndexedSeq[A]] =
-  //    Matcher[IndexedSeq[A]](l2)
-  implicit def implicitMatcherInt(self: L2.type) =
-    Matcher[IndexedSeq[Int]](l2)
-  implicit def implicitMatcherDouble(self: L2.type) =
-    Matcher[IndexedSeq[Double]](l2)
-  implicit def implicitMatcherSort(self: L2.type) =
+  implicit def implicitMatcherL2[A <% Double](self: L2.type) =
+    Matcher[IndexedSeq[A]](l2)
+  implicit def implicitMatcherMatrixL2[A <% Double](self: L2.type) =
+    Matcher[DenseMatrix[A]](liftToMatrix[A](l2))    
+  implicit def implicitMatcherSortL2(self: L2.type) =
     Matcher[SortDescriptor](lift(l2))
 
   implicit def implictMatcher(self: KendallTau.type) =
@@ -116,9 +113,9 @@ object Matcher {
 
 ///////////////////////////////////////////////////////////
 
-case class LogPolarMatcher[A, B](
-  normalizer: Normalizer[DenseMatrix[A], DenseMatrix[B]],
-  matcher: Matcher[DenseMatrix[B]],
+case class LogPolarMatcher[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
+  normalizer: N,
+  matcher: M,
   normalizeByOverlap: Boolean,
   rotationInvariant: Boolean,
   scaleSearchRadius: Int)
@@ -130,14 +127,17 @@ object LogPolarMatcher {
   import Matcher._
   //  import Matcher._
 
-  implicit def implicitMatcher[A: ClassTag, B](self: LogPolarMatcher[A, B]): Matcher[DenseMatrix[A]] =
+  implicit def implicitMatcher[
+    N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], 
+    M <% Matcher[DenseMatrix[F2]], 
+    F2](self: LogPolarMatcher[N, M, F2]): Matcher[DenseMatrix[Int]] =
     Matcher(
-      (left: DenseMatrix[A], right: DenseMatrix[A]) => {
+      (left: DenseMatrix[Int], right: DenseMatrix[Int]) => {
         require(left.rows == right.rows)
         require(left.cols == right.cols)
         require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
 
-        val distance = self.matcher.distance
+//        val distance = self.matcher.distance
 
         val angleIndices = if (self.rotationInvariant) {
           0 until left.rows
@@ -149,7 +149,7 @@ object LogPolarMatcher {
         val response = LogPolar.getResponseMap(
           self.normalizer,
           self.normalizeByOverlap,
-          self.matcher.distance,
+          self.matcher,
           DenseMatrix.vertcat(left, left(0 until left.rows - 1, ::)),
           right,
           angleIndices,
@@ -162,15 +162,13 @@ object LogPolarMatcher {
 ///////////////////////////////////////////////////////////
 
 object MatcherJsonProtocol extends DefaultJsonProtocol {
-  implicit val l0 = JSONUtil.singletonObject(Matcher.L0)
-  implicit val l1 = JSONUtil.singletonObject(Matcher.L1)
-  implicit val l2 = JSONUtil.singletonObject(Matcher.L2)
-  implicit val kendallTau = JSONUtil.singletonObject(Matcher.KendallTau)
+  implicit val matcherL0JsonProtocol = JSONUtil.singletonObject(Matcher.L0)
+  implicit val matcherL1JsonProtocol = JSONUtil.singletonObject(Matcher.L1)
+  implicit val matcherL2JsonProtocol = JSONUtil.singletonObject(Matcher.L2)
+  implicit val matcherKendallTauJsonProtocol = JSONUtil.singletonObject(Matcher.KendallTau)
 
   /////////////////////////////////////////////////////////
 
-  implicit def logPolarMatcher[A, B](
-    implicit a: JsonFormat[Normalizer[DenseMatrix[A], DenseMatrix[B]]],
-    b: JsonFormat[Matcher[DenseMatrix[B]]]) =
-    jsonFormat5(LogPolarMatcher.apply[A, B]).addClassInfo("LogPolarMatcher")
+  implicit def logPolarMatcherJsonProtocol[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]] : JsonFormat, M <% Matcher[DenseMatrix[F2]] : JsonFormat, F2] =
+    jsonFormat5(LogPolarMatcher.apply[N, M, F2]).addClassInfo("LogPolarMatcher")
 }

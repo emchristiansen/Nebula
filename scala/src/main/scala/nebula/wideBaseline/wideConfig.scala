@@ -28,15 +28,12 @@ import spray.json.pimpString
 
 ///////////////////////////////////////////////////////////
 
-case class WideBaselineExperiment[D, E, M, F](
+case class WideBaselineExperiment[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F](
   imageClass: String,
   otherImage: Int,
   detector: D,
   extractor: E,
-  matcher: M)(
-    implicit evPairDetector: D => PairDetector,
-    evExtractor: E => Extractor[F],
-    evMatcher: M => Matcher[F])
+  matcher: M)
 
 object WideBaselineExperiment {
   implicit def implicitHasGroundTruth(
@@ -198,14 +195,14 @@ object WideBaselineExperimentResults extends Logging {
     WideBaselineExperimentResults(self, dmatches)
   }
 
-  implicit class ImplicitExperimentSummaryWithConfig[D, E, M, F](
+  implicit def implicitExperimentSummaryWithConfig[D, E, M, F](
     self: WideBaselineExperimentResults[D, E, M, F])(
-      implicit runtimeConfig: RuntimeConfig) extends ExperimentSummary {
-    override def summaryNumbers = Map(
-      "recognitionRate" -> Memoize(() => SummaryUtil.recognitionRate(self.dmatches)))
-    override def summaryImages = Map(
-      "histogram" -> Memoize(() => Histogram(self, "").render))
-  }
+      implicit runtimeConfig: RuntimeConfig) = new ExperimentSummary(
+    Map(
+      "recognitionRate" -> (() => SummaryUtil.recognitionRate(self.dmatches))),
+    Map(
+      "histogram" -> (() => Histogram(self, "").render))
+  )
   
   implicit def implicitExperimentSummary[D, E, M, F](
     self: WideBaselineExperimentResults[D, E, M, F]): RuntimeConfig => ExperimentSummary = runtime => {
