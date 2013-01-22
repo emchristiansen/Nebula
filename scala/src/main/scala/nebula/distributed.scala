@@ -66,7 +66,7 @@ object Distributed extends nebula.util.Logging {
     implicit val ersTypeName = typeName[E => RuntimeConfig => StorageInfo[R]]
     implicit val rrsTypeName = typeName[R => RuntimeConfig => ExperimentSummary]
 
-    val capstone: Capstone = (writeImages, runtimeConfig) => {
+    val capstone: Capstone = (writeImages, runtimeConfig) => {      
       System.loadLibrary("opencv_java")
 
       def dropMiddle[A, B, C](f: A => B => C, b: B): A => C = a => f(a)(b)

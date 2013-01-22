@@ -45,7 +45,7 @@ object SFSPipelineBuild extends Build {
 //      "com.chuusai" %% "shapeless" % "1.2.2",
 //      "play" % "play_2.9.1" % "2.0.3",
       "org.clapper" % "grizzled-scala_2.9.2" % "1.0.13",
-      "org.scalanlp" % "breeze-math_2.10" % "0.2-SNAPSHOT",
+      "org.scalanlp" %% "breeze-math" % "0.2-SNAPSHOT",
 //      "org.scalanlp" %% "breeze-learn" % "0.1",
 //      "org.scalanlp" %% "breeze-process" % "0.1",
 //      "org.scalanlp" %% "breeze-viz" % "0.1",
@@ -53,7 +53,8 @@ object SFSPipelineBuild extends Build {
       "io.spray" % "spray-json_2.10.0-RC5" % "1.2.3",
       "junit" % "junit" % "4.11" % "test",
 //      "org.spark-project" % "spark-core_2.9.2" % "0.6.1" % "provided",
-      "org.imgscalr" % "imgscalr-lib" % "4.2"
+      "org.imgscalr" % "imgscalr-lib" % "4.2",
+      "com.chuusai" % "shapeless_2.10.0-RC5" % "1.2.4-SNAPSHOT"
     )
   )
 
@@ -75,6 +76,7 @@ object SFSPipelineBuild extends Build {
       "-feature",
       "-language:implicitConversions",
       "-language:postfixOps",
+      "-language:existentials",
       "-Yinline-warnings"
     )
   )

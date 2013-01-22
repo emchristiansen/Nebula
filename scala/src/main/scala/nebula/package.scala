@@ -48,9 +48,9 @@ package object nebula {
   val sparkImports = Imports(Set(
     "spark.SparkContext",
     "spark.SparkContext._"))
-    
+
   val shapelessImports = Imports(Set(
-    "shapeless._")) 
+    "shapeless._"))
 
   implicit val allImports = Imports(nebulaImports ++ jsonImports ++ sparkImports ++ shapelessImports)
 
@@ -65,10 +65,6 @@ package object nebula {
     }
   }
 
-  // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
-  val cm = universe.runtimeMirror(getClass.getClassLoader)
-  val toolbox = cm.mkToolBox()
-
   case class TypeName[A: TypeTag](name: String) {
     assert(typeTag[A].tpe.toString == name)
     override def toString = name
@@ -82,6 +78,9 @@ package object nebula {
 
   implicit def typeTag2TypeName[A: TypeTag]: TypeName[A] = TypeName(typeTag[A].tpe.toString)
 
+  // The compiler crashes if you invoke it several times simultaneously.
+  val compilerLock: AnyRef = new Object()
+
   /**
    * Checks the type of the given expression.
    * If the type check passes, returns a closure that can be run to evaluate
@@ -94,6 +93,11 @@ result
     """
 
     println(source)
+
+    // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
+    val cm = universe.runtimeMirror(getClass.getClassLoader)
+    val toolbox = cm.mkToolBox()
+
     toolbox.compile(toolbox.parse(source)).asInstanceOf[() => A]
   }
 

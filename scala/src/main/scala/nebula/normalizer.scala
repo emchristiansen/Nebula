@@ -68,6 +68,16 @@ object PatchNormalizer {
   implicit class RankNormalize[A: Ordering](self: Rank.type) extends Normalizer[IndexedSeq[A], SortDescriptor] {
     override def normalize: IndexedSeq[A] => SortDescriptor = data => SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(data))
   }
+  
+  implicit class RankNormalizeDenseMatrix[A: Ordering](self: Rank.type) extends Normalizer[DenseMatrix[A], DenseMatrix[Int]] {
+    override def normalize = matrix => {
+      val indexedSeq: IndexedSeq[A] = matrix.data.toIndexedSeq
+      val rank = self.to[Normalizer[IndexedSeq[A], SortDescriptor]].normalize(indexedSeq)
+      val rankMatrix = new DenseMatrix(matrix.rows, rank.toArray)
+      assert(rankMatrix.data.sorted.toIndexedSeq == (0 until matrix.rows * matrix.cols))
+      rankMatrix
+    }
+  }
 
   implicit class UniformRankNormalize[A: Ordering](self: UniformRank.type) extends Normalizer[IndexedSeq[A], IndexedSeq[Int]] {
     override def normalize: IndexedSeq[A] => IndexedSeq[Int] = data => {
