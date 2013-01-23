@@ -20,7 +20,7 @@ package object nebula {
     }
   }
   
-  object JsonProtocols extends DetectorJsonProtocol with ExtractorJsonProtocol with NormalizerJsonProtocol with WideBaselineJsonProtocol
+  object JsonProtocols extends DetectorJsonProtocol with ExtractorJsonProtocol with PatchNormalizerJsonProtocol with WideBaselineJsonProtocol
 
   implicit class IntTimes(int: Int) {
     def times[A](function: => A): IndexedSeq[A] =
