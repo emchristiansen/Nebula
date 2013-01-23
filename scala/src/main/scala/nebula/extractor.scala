@@ -301,7 +301,7 @@ object NormalizedExtractor {
 
 ///////////////////////////////////////////////////////////
 
-object ExtractorJsonProtocol extends DefaultJsonProtocol {
+trait ExtractorJsonProtocol extends DefaultJsonProtocol {
   implicit val openCVExtractorBriskJsonProtocol = singletonObject(OpenCVExtractor.BRISK)
   implicit val openCVExtractorFreakJsonProtocol = singletonObject(OpenCVExtractor.FREAK)
   implicit val openCVExtractorBriefJsonProtocol = singletonObject(OpenCVExtractor.BRIEF)
@@ -333,3 +333,5 @@ object ExtractorJsonProtocol extends DefaultJsonProtocol {
     evNJson: JsonFormat[N]) =
     jsonFormat2(NormalizedExtractor.apply[E, N, F1, F2])
 }
+
+object ExtractorJsonProtocol extends ExtractorJsonProtocol 

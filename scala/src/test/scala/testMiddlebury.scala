@@ -11,18 +11,18 @@ import nebula.smallBaseline.SmallBaselinePair
 
 
 class TestMiddlebury extends FunSuite {
-  test("construct FlowField from file") {
+  ignore("construct FlowField from file") {
     val filename = "/middleburyImages/other-gt-flow/Dimetrodon/flow10.flo.txt"
     val file = new File(getClass.getResource(filename).getFile)
     FlowField(file)
   }
 
-  test("construct SmallBaselinePair from file") {
+  ignore("construct SmallBaselinePair from file") {
     val rootDirectory = new File(getClass.getResource("/middleburyImages").getFile)
     SmallBaselinePair(rootDirectory, "Dimetrodon")
   }
 
-  test("the distance from a FlowField to itself should be zero") {
+  ignore("the distance from a FlowField to itself should be zero") {
     val flow = {
       val filename = "/middleburyImages/other-gt-flow/Dimetrodon/flow10.flo.txt"
       val file = new File(getClass.getResource(filename).getFile)

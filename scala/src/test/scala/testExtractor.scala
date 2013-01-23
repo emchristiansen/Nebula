@@ -14,11 +14,11 @@ import nebula.util.OpenCVUtil
 import nebula.util.KeyPointUtil
 
 class TestExtractor extends FunSuite {
-  test("uniformRank") {
-    val pixels = IndexedSeq(2, 2, 3, 3, 3)
-    val uniformRank = Extractor.uniformRank(pixels)
-    assert(uniformRank === IndexedSeq(1, 1, 3, 3, 3))
-  }
+//  test("uniformRank") {
+//    val pixels = IndexedSeq(2, 2, 3, 3, 3)
+//    val uniformRank = Extractor.uniformRank(pixels)
+//    assert(uniformRank === IndexedSeq(1, 1, 3, 3, 3))
+//  }
 
   ignore("BRISK") {
     System.loadLibrary("opencv_java")

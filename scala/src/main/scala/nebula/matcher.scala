@@ -161,7 +161,7 @@ object LogPolarMatcher {
 
 ///////////////////////////////////////////////////////////
 
-object MatcherJsonProtocol extends DefaultJsonProtocol {
+trait MatcherJsonProtocol extends DefaultJsonProtocol {
   implicit val matcherL0JsonProtocol = JSONUtil.singletonObject(Matcher.L0)
   implicit val matcherL1JsonProtocol = JSONUtil.singletonObject(Matcher.L1)
   implicit val matcherL2JsonProtocol = JSONUtil.singletonObject(Matcher.L2)
@@ -172,3 +172,5 @@ object MatcherJsonProtocol extends DefaultJsonProtocol {
   implicit def logPolarMatcherJsonProtocol[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]] : JsonFormat, M <% Matcher[DenseMatrix[F2]] : JsonFormat, F2] =
     jsonFormat5(LogPolarMatcher.apply[N, M, F2]).addClassInfo("LogPolarMatcher")
 }
+
+object MatcherJsonProtocol extends MatcherJsonProtocol

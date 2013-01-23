@@ -71,9 +71,9 @@ class TestRichImage extends FunSuite {
     val matrix = DenseMatrix.tabulate(3, 3)((y, x) => 10 * (y * 3 + x))
     val image = matrix.toImage
 
-    val subsampled = for (y <- 0.0 until 3.0 by 0.4) yield {
-      for (x <- 0.0 until 3.0 by 0.4) yield image.getSubPixel(x, y).get.gray.head
-    }
+    val subsampled = (for (y <- 0.0 until 2.8 by 0.4) yield {
+      for (x <- 0.0 until 2.8 by 0.4) yield image.getSubPixel(x, y).get.gray.head
+    }) toMatrix
 
     val golden = Seq(
       Seq(0, 0, 3, 7, 11, 15, 19),
@@ -82,9 +82,9 @@ class TestRichImage extends FunSuite {
       Seq(21, 21, 24, 28, 32, 36, 40),
       Seq(33, 33, 36, 40, 44, 48, 52),
       Seq(45, 45, 48, 52, 56, 60, 64),
-      Seq(57, 57, 60, 64, 68, 72, 76))
+      Seq(57, 57, 60, 64, 68, 72, 76)).toMatrix
 
-    assert(subsampled == golden)
+    assert(subsampled === golden)
   }
 
   test("resizing the image with getSubPixel should be the same as resizing " +

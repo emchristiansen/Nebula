@@ -107,7 +107,7 @@ object BoundedPairDetector {
 
 ///////////////////////////////////////////////////////////
 
-object DetectorJsonProtocol extends DefaultJsonProtocol {
+trait DetectorJsonProtocol extends DefaultJsonProtocol {
   implicit val openCVDetectorDenseJsonProtocol = singletonObject(OpenCVDetector.DENSE)
   implicit val openCVDetectorFastJsonProtocol = singletonObject(OpenCVDetector.FAST)
   implicit val openCVDetectorBriskJsonProtocol = singletonObject(OpenCVDetector.BRISK)
@@ -122,3 +122,5 @@ object DetectorJsonProtocol extends DefaultJsonProtocol {
   
   implicit def boundedPairDetectorJsonProtocol[D <% PairDetector : JsonFormat] = jsonFormat2(BoundedPairDetector.apply[D])
 }
+
+object DetectorJsonProtocol extends DetectorJsonProtocol

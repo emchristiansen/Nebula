@@ -35,7 +35,7 @@ import reflect._
 ///////////////////////////////////////////////////////////
 
 object DenseMatrixUtil {
-  implicit class SeqSeqToDenseMatrix[A: ClassTag](seqSeq: IndexedSeq[IndexedSeq[A]]) {
+  implicit class SeqSeqToDenseMatrix[A: ClassTag](seqSeq: Seq[Seq[A]]) {
     def toMatrix: DenseMatrix[A] = {
       val rows = seqSeq.size
       val cols = seqSeq.head.size

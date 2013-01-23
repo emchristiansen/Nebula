@@ -32,8 +32,6 @@ import breeze.linalg._
 import DetectorJsonProtocol._
 import ExtractorJsonProtocol._
 import MatcherJsonProtocol._
-import ExperimentJsonProtocol._
-import ExperimentResultsJsonProtocol._
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

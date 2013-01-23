@@ -6,10 +6,22 @@ import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.runtime.universe.typeTag
 import scala.util._
 import spray.json._
+import nebula.wideBaseline.WideBaselineJsonProtocol
+import shapeless._
+import java.io.File
 
 ///////////////////////////////////////////////////////////
 
 package object nebula {
+  implicit class PimpFile(file: File) {
+    def mustExist: File = {
+      assert(file.exists, s"File ${file} doesn't exist")
+      file
+    }
+  }
+  
+  object JsonProtocols extends DetectorJsonProtocol with ExtractorJsonProtocol with NormalizerJsonProtocol with WideBaselineJsonProtocol
+
   implicit class IntTimes(int: Int) {
     def times[A](function: => A): IndexedSeq[A] =
       (0 until int).map(_ => function)

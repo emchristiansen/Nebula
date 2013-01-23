@@ -24,11 +24,11 @@ object PatchNormalizer {
   implicit class RawNormalize[A](self: Raw.type) extends Normalizer[A, A] {
     override def normalize: A => A = identity
   }
-  
-//  implicit class RawNormalizeMatrix[A](self: Raw.type) extends Normalizer[DenseMatrix[A], DenseMatrix[A]] {
-//    override def normalize: DenseMatrix[A] => DenseMatrix[A] = identity
-//  }  
-  
+
+  //  implicit class RawNormalizeMatrix[A](self: Raw.type) extends Normalizer[DenseMatrix[A], DenseMatrix[A]] {
+  //    override def normalize: DenseMatrix[A] => DenseMatrix[A] = identity
+  //  }  
+
   implicit class RangeNormalizeDouble(self: NormalizeRange.type) extends Normalizer[IndexedSeq[Double], IndexedSeq[Double]] {
     // Sets the value range in [0, 255].
     override def normalize: IndexedSeq[Double] => IndexedSeq[Double] = data => {
@@ -44,6 +44,7 @@ object PatchNormalizer {
     }
   }
 
+  // TODO: Make generic for all A <% Double
   implicit class NCCNormalizeDouble(self: NCC.type) extends Normalizer[IndexedSeq[Double], IndexedSeq[Double]] {
     override def normalize: IndexedSeq[Double] => IndexedSeq[Double] = data => {
       val mean = stats.mean(data: _*)
@@ -61,6 +62,16 @@ object PatchNormalizer {
     }
   }
 
+//  implicit class NCCNormalizeDenseMatrix[A: Ordering](self: Rank.type) extends Normalizer[DenseMatrix[A], DenseMatrix[Double]] {
+//    override def normalize = matrix => {
+//      val indexedSeq: IndexedSeq[A] = matrix.data.toIndexedSeq
+//      val ncc = self.to[Normalizer[IndexedSeq[A], SortDescriptor]].normalize(indexedSeq)
+//      val rankMatrix = new DenseMatrix(matrix.rows, rank.toArray)
+//      assert(rankMatrix.data.sorted.toIndexedSeq == (0 until matrix.rows * matrix.cols))
+//      rankMatrix
+//    }
+//  }
+
   implicit class OrderNormalize[A: Ordering](self: Order.type) extends Normalizer[IndexedSeq[A], SortDescriptor] {
     override def normalize: IndexedSeq[A] => SortDescriptor = data => SortDescriptor.fromUnsorted(data)
   }
@@ -68,7 +79,7 @@ object PatchNormalizer {
   implicit class RankNormalize[A: Ordering](self: Rank.type) extends Normalizer[IndexedSeq[A], SortDescriptor] {
     override def normalize: IndexedSeq[A] => SortDescriptor = data => SortDescriptor.fromUnsorted(SortDescriptor.fromUnsorted(data))
   }
-  
+
   implicit class RankNormalizeDenseMatrix[A: Ordering](self: Rank.type) extends Normalizer[DenseMatrix[A], DenseMatrix[Int]] {
     override def normalize = matrix => {
       val indexedSeq: IndexedSeq[A] = matrix.data.toIndexedSeq
@@ -100,29 +111,13 @@ object PatchNormalizer {
 
 ///////////////////////////////////////////////////////////
 
-object NormalizerJsonProtocol extends DefaultJsonProtocol {
+trait NormalizerJsonProtocol extends DefaultJsonProtocol {
   implicit val patchNormalizerRawJsonProtocol = singletonObject(PatchNormalizer.Raw)
   implicit val patchNormalizerNormalizeRangeJsonProtocol = singletonObject(PatchNormalizer.NormalizeRange)
   implicit val patchNormalizerNCCJsonProtocol = singletonObject(PatchNormalizer.NCC)
   implicit val patchNormalizerOrderJsonProtocol = singletonObject(PatchNormalizer.Order)
   implicit val patchNormalizerRankJsonProtocol = singletonObject(PatchNormalizer.Rank)
   implicit val patchNormalizerUniformRankJsonProtocol = singletonObject(PatchNormalizer.UniformRank)
-
-  /////////////////////////////////////////////////////////      
-
-  //  implicit object NormalizerJsonFormatIndexedSeqDoubleIndexedSeqDouble extends RootJsonFormat[Normalizer[IndexedSeq[Double], IndexedSeq[Double]]] {
-  //    override def write(self: Normalizer[IndexedSeq[Double], IndexedSeq[Double]]) = self.original match {
-  //      case original: NormalizeRange.type => original.toJson
-  //      case original: NCC.type => original.toJson
-  //    }
-  //  }
-  //      
-  //  implicit def normalizerJsonFormat[A, B] = new RootJsonFormat[Normalizer[A, B]] {
-  //    override def write(self: Normalizer[A, B]) = self.original match {
-  //      case original: PatchNormalizerType.PatchNormalizerType => original.toJson
-  //    }
-  //    override def read(value: JsValue) = value match {
-  //      case JsString(_) => value.convertTo[PatchNormalizerType.PatchNormalizerType]
-  //    }
-  //  }
 }
+
+object NormalizerJsonProtocol extends NormalizerJsonProtocol

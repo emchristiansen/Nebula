@@ -10,7 +10,7 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import nebula.util.imageProcessing.ImageUtil
 
-import OpenCVDetectorType._
+
 
 class TestELUCID extends FunSuite {
   test("elucid") {
@@ -23,11 +23,11 @@ class TestELUCID extends FunSuite {
     assert(extractor.extractSingle(image, new KeyPoint(5, 5, 1, 0, 1, 1, 1)).isDefined)
   }
 
-  test("bikes") {
+  ignore("bikes") {
     System.loadLibrary("opencv_java")    
     
     def drawPointsOnBikes(image: BufferedImage, file: File) {
-      val detector = OpenCVDetector(BRISK, Some(60))
+      val detector = BoundedDetector(OpenCVDetector.BRISK, 60)
       val keyPoints = detector.detect(image)
 
       val extractor = ELUCIDExtractor(

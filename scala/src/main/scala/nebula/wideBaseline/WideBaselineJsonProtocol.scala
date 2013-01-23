@@ -9,7 +9,7 @@ import nebula.Matcher
 import nebula.util.JSONUtil._
 import nebula.util.DMatchJsonProtocol._
 
-object WideBaselineJsonProtocol extends DefaultJsonProtocol {
+trait WideBaselineJsonProtocol extends DefaultJsonProtocol {
   implicit def wideBaselineExperiment[D, E, M, F](
     implicit evPairDetector: D => PairDetector,
     evExtractor: E => Extractor[F],
@@ -29,3 +29,5 @@ object WideBaselineJsonProtocol extends DefaultJsonProtocol {
     jsonFormat2(WideBaselineExperimentResults.apply[D, E, M, F]).addClassInfo(
       "WideBaselineExperimentResults")
 }
+
+object WideBaselineJsonProtocol extends WideBaselineJsonProtocol

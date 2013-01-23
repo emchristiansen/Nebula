@@ -12,9 +12,6 @@ import nebula.Matcher._
 import nebula.wideBaseline.WideBaselineExperiment
 import nebula.util.JSONUtil
 
-import OpenCVDetectorType._
-import PatchExtractorType._
-
 import nebula.util._
 import nebula.util.JSONUtil._
 
@@ -23,19 +20,8 @@ import spray.json._
 import java.awt.image.BufferedImage
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
-//import net.liftweb.json.Serializer
-//import net.liftweb.json.Formats
-//import net.liftweb.json.MappingException
 import org.opencv.features2d.DMatch
-//import net.liftweb.json.JsonAST.JObject
-//import net.liftweb.json.JsonAST.JValue
-//import net.liftweb.json.TypeInfo
-//import net.liftweb.json.JsonAST.JField
-//import net.liftweb.json.JsonAST.JDouble
-//import net.liftweb.json.JsonAST.JString
-//import net.liftweb.json.JsonAST.JInt
-//import net.liftweb.json.Serialization
-//import net.liftweb.json.ShortTypeHints
+
 import spray.json.DefaultJsonProtocol
 
 import spray.json.JsObject
@@ -127,12 +113,12 @@ object CheckMisc extends Properties("Util") {
   implicit lazy val arbitraryPermutation: Arbitrary[SortDescriptor] =
     Arbitrary(randomPermutation)
 
-  property("numTranspositionsToSort is general Cayley") = forAll {
-    s: SortDescriptor =>
-      numTranspositionsToSort(s.values) == cayley(
-        SortDescriptor(0 until s.values.size),
-        s)
-  }
+//  property("numTranspositionsToSort is general Cayley") = forAll {
+//    s: SortDescriptor =>
+//      numTranspositionsToSort(s.values) == cayley(
+//        SortDescriptor(0 until s.values.size),
+//        s)
+//  }
 
 //  property("generalized Cayley is 'covariant' with permutations") = forAll {
 //    (seed: Int, leftLong: List[Int], rightLong: List[Int]) =>
