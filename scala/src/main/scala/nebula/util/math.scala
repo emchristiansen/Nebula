@@ -2,10 +2,16 @@ package nebula.util
 
 import nebula._
 import breeze.linalg._
+import breeze.math._
+import grizzled.math.stats
 
 ///////////////////////////////////////////////////////////
 
 object MathUtil {
+  def l2Norm[A : Ring](values: Array[A]): Double = new DenseVector(values).norm(2.0)
+  
+  def mean[A : Numeric](values: Seq[A]): Double = stats.mean(values: _*)
+  
   // The correct implementation of a % b.
   implicit class AddMod(self: Double) {
     def mod(that: Double) =

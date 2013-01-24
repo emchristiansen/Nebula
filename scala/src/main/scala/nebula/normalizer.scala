@@ -1,5 +1,6 @@
 package nebula
 
+import nebula.util._
 import grizzled.math.stats
 import spray.json._
 import nebula.util._
@@ -10,23 +11,44 @@ import reflect._
 
 ///////////////////////////////////////////////////////////    
 
+/**
+ * Represents normalizations that may be applied to descriptors.
+ */
 trait Normalizer[-A, +B] {
   def normalize: A => B
 }
 
+/**
+ * Normalizations that act on 1D and 2D arrays. 
+ */
 trait PatchNormalizer {
+  /**
+   * The identity normalization.
+   */
   object Raw
+  
+  /**
+   * Rescales to zero mean and unit norm.
+   */
   object NCC
+  
+  /**
+   * Replaces an array of ordered elements with their rank permutation.
+   */
   object Rank
-  object Order
-  object NormalizeRange
-  object UniformRank
+  
+//  object Order
+//  object NormalizeRange
+//  object UniformRank
 }
 
 object PatchNormalizer extends PatchNormalizer with PatchNormalizerToNormalizer with PatchNormalizerJsonProtocol
 
 ///////////////////////////////////////////////////////////
 
+/**
+ * Implicit mappings from patch normalizers to Normalizer.
+ */
 trait PatchNormalizerToNormalizer extends PatchNormalizer {
   implicit class Raw2Normalizer[A](self: Raw.type) extends Normalizer[A, A] {
     override def normalize: A => A = identity
@@ -37,16 +59,15 @@ trait PatchNormalizerToNormalizer extends PatchNormalizer {
   implicit class NCC2NormalizerSeq[A <% Double](self: NCC.type) extends Normalizer[Seq[A], IndexedSeq[Double]] {
     override def normalize = data => {
       val doubleData = data.map(_.to[Double])
-      val mean = stats.mean(doubleData: _*)
-      val std = stats.sampleStdDev(doubleData: _*)
-      assert(std >= 0)
-      val centered = data.toIndexedSeq.map(_ - mean)
+      val mean = MathUtil.mean(doubleData)
+      val centered = data.toIndexedSeq.map(_ - mean)      
+      val norm = MathUtil.l2Norm(centered.toArray)
       // If the standard deviation is low, merely center the data.  
-      if (std < 0.001) centered
+      if (norm < 0.001) centered
       else {
-        val normalized = centered.map(_ / std)
-        assertNear(stats.mean(normalized: _*).abs, 0)
-        assertNear(stats.sampleStdDev(normalized: _*), 1)
+        val normalized = centered.map(_ / norm)
+        assertNear(MathUtil.mean(normalized), 0)
+        assertNear(MathUtil.l2Norm(normalized.toArray), 1)
         normalized
       }
     }
@@ -60,7 +81,20 @@ trait PatchNormalizerToNormalizer extends PatchNormalizer {
 
   ///////////////////////////////////////////////////////////
 
-  implicit class LiftToDenseMatrix[N <% Normalizer[Seq[A], IndexedSeq[B]], A, B: ClassTag](normalizer: N) extends Normalizer[DenseMatrix[A], DenseMatrix[B]] {
+  /**
+   * Makes any Normalizer on 1D data to 1D data a normalizer on 2D data.
+   */
+  implicit class LiftSeqToDenseMatrix[N <% Normalizer[Seq[A], IndexedSeq[B]], A, B: ClassTag](normalizer: N) extends Normalizer[DenseMatrix[A], DenseMatrix[B]] {
+    override def normalize = matrix => {
+      val normalized = normalizer.normalize(matrix.data)
+      new DenseMatrix(matrix.rows, normalized.toArray)
+    }
+  }
+  
+  /**
+   * Makes any Normalizer on 1D data to SortDescriptor a normalizer on 2D data.
+   */
+  implicit class LiftSortDescriptorToDenseMatrix[N <% Normalizer[Seq[A], SortDescriptor], A](normalizer: N) extends Normalizer[DenseMatrix[A], DenseMatrix[Int]] {
     override def normalize = matrix => {
       val normalized = normalizer.normalize(matrix.data)
       new DenseMatrix(matrix.rows, normalized.toArray)
@@ -105,11 +139,14 @@ trait PatchNormalizerToNormalizer extends PatchNormalizer {
 
 ///////////////////////////////////////////////////////////
 
+/**
+ * Implicits for JSON serialization.
+ */
 trait PatchNormalizerJsonProtocol extends DefaultJsonProtocol {
   implicit val patchNormalizerRawJsonProtocol = singletonObject(PatchNormalizer.Raw)
-  implicit val patchNormalizerNormalizeRangeJsonProtocol = singletonObject(PatchNormalizer.NormalizeRange)
   implicit val patchNormalizerNCCJsonProtocol = singletonObject(PatchNormalizer.NCC)
-  implicit val patchNormalizerOrderJsonProtocol = singletonObject(PatchNormalizer.Order)
   implicit val patchNormalizerRankJsonProtocol = singletonObject(PatchNormalizer.Rank)
-  implicit val patchNormalizerUniformRankJsonProtocol = singletonObject(PatchNormalizer.UniformRank)
+//  implicit val patchNormalizerOrderJsonProtocol = singletonObject(PatchNormalizer.Order)  
+//  implicit val patchNormalizerNormalizeRangeJsonProtocol = singletonObject(PatchNormalizer.NormalizeRange)  
+//  implicit val patchNormalizerUniformRankJsonProtocol = singletonObject(PatchNormalizer.UniformRank)
 }
