@@ -49,13 +49,7 @@ class TestExpectedDistance extends FunSuite {
   }
 
   test("NCC and L1") {
-//    val normalizer = PatchNormalizer.NCC
-//    val matcher = Matcher.L1
-//
-//    for (size <- (4 until 10) ++ (10 until 2000 by 10) ++ (2000 until 4200 by 40)) {
-//      println(s"${size} ${getAverageDistance(normalizer, matcher, size)}")
-//    }
-    pending
+    testExpectedDistance(PatchNormalizer.NCC, Matcher.L1)
   }
   
   test("NCC and L2") {

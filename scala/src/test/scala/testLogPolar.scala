@@ -376,7 +376,7 @@ class TestLogPolar extends FunSuite {
         point),
         point).get
 
-      val normalizer = PatchNormalizer.Rank
+      val normalizer = PatchNormalizer.NCC
       val matcher = LogPolarMatcher(normalizer, Matcher.L2, true, true, numScales - 1)
 
       //      dumpImage("rawLogPolarRecoverProperScale_original", scale100(original.toScaledImage))

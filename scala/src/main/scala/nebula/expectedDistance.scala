@@ -14,8 +14,14 @@ trait ExpectedDistance {
 
 object ExpectedDistance {
   implicit class NCCAndL12ExpectedDistance(self: (PatchNormalizer.NCC.type, Matcher.L1.type)) extends ExpectedDistance {
-    // Fitted using ZunZun.com (???)
-    override def expectedDistance = size => ???
+    // Fitted using ZunZun.com (Simple Equation 32 With Offset)
+    override def expectedDistance = size => {
+      val a = 7.4442627202579173E-02
+      val b = 1.1575863971718447E+00
+      val c = 4.9973591676413598E-01
+      val Offset = -2.2590415747638554E-02
+      a / size + b * math.pow(size, c) + Offset
+    }
   }
 
   implicit class NCCAndL22ExpectedDistance(self: (PatchNormalizer.NCC.type, Matcher.L2.type)) extends ExpectedDistance {

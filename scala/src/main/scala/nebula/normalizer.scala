@@ -91,6 +91,9 @@ trait PatchNormalizerToNormalizer extends PatchNormalizer {
     }
   }
   
+  // TODO: Scala bug?
+  implicit def ncc2NormalizerDenseMatrix[A <% Double](self: NCC.type) = new LiftSeq2DenseMatrix[NCC.type, A, Double](self)
+  
   /**
    * Makes any Normalizer on 1D data to SortDescriptor a normalizer on 2D data.
    */
