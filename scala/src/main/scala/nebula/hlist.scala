@@ -3,7 +3,7 @@ import shapeless._
 /**
  * From http://stackoverflow.com/questions/14447487/creating-an-hlist-of-all-pairs-from-two-hlists
  */
-object tuple extends Poly2 {
+object tuple2 extends Poly2 {
   implicit def whatever[A, B] = at[A, B] { case (a, b) => (a, b) }
 }
 
@@ -39,4 +39,6 @@ object LiftA2 {
 
 object HListUtils {
   def liftA2[HF, X <: HList, Y <: HList, Out <: HList](hf: HF)(x: X, y: Y)(implicit lift: LiftA2[HF, X, Y, Out]) = lift(x, y)
+  
+  def mkTuple2[A <: HList, B <: HList, Out <: HList](a: A, b: B)(implicit lift: LiftA2[tuple2.type,A,B,Out]) = liftA2(tuple2)(a, b)
 }

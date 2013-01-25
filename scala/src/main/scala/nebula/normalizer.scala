@@ -84,7 +84,7 @@ trait PatchNormalizerToNormalizer extends PatchNormalizer {
   /**
    * Makes any Normalizer on 1D data to 1D data a normalizer on 2D data.
    */
-  implicit class LiftSeqToDenseMatrix[N <% Normalizer[Seq[A], IndexedSeq[B]], A, B: ClassTag](normalizer: N) extends Normalizer[DenseMatrix[A], DenseMatrix[B]] {
+  implicit class LiftSeq2DenseMatrix[N <% Normalizer[Seq[A], IndexedSeq[B]], A, B: ClassTag](normalizer: N) extends Normalizer[DenseMatrix[A], DenseMatrix[B]] {
     override def normalize = matrix => {
       val normalized = normalizer.normalize(matrix.data)
       new DenseMatrix(matrix.rows, normalized.toArray)
@@ -94,7 +94,7 @@ trait PatchNormalizerToNormalizer extends PatchNormalizer {
   /**
    * Makes any Normalizer on 1D data to SortDescriptor a normalizer on 2D data.
    */
-  implicit class LiftSortDescriptorToDenseMatrix[N <% Normalizer[Seq[A], SortDescriptor], A](normalizer: N) extends Normalizer[DenseMatrix[A], DenseMatrix[Int]] {
+  implicit class LiftSortDescriptor2DenseMatrix[N <% Normalizer[Seq[A], SortDescriptor], A](normalizer: N) extends Normalizer[DenseMatrix[A], DenseMatrix[Int]] {
     override def normalize = matrix => {
       val normalized = normalizer.normalize(matrix.data)
       new DenseMatrix(matrix.rows, normalized.toArray)

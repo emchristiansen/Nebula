@@ -18,7 +18,7 @@ import javax.imageio.ImageIO
 import java.awt.{ Color, Rectangle }
 import java.awt.color.ColorSpace
 import java.awt.geom.AffineTransform
-import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
+import java.awt.image._
 
 import nebula.graveyard._
 import nebula.mpie._
@@ -49,12 +49,13 @@ import MathUtil._
 import grizzled.math.stats
 
 import org.imgscalr.Scalr
+import nebula.util.ImageGeometry._
 
 ///////////////////////////////////////////////////////////
 
 class TestLogPolar extends FunSuite {
   val image = ImageIO.read(new File(
-    getClass.getResource("/iSpy.jpg").getFile).mustExist)
+    getClass.getResource("/iSpy.png").getFile).mustExist)
 
   val random = new Random(0)
 
@@ -63,53 +64,6 @@ class TestLogPolar extends FunSuite {
     val y = random.nextFloat * (height - 2 * buffer) + buffer
     //    KeyPointUtil(x, y)
     KeyPointUtil(x.floor + 0.5.toFloat, y.floor + 0.5.toFloat)
-  }
-
-  // |theta| is in radians.
-  def rotateAboutPoint(
-    theta: Double,
-    image: BufferedImage,
-    keyPoint: KeyPoint): BufferedImage = {
-    if (theta == 0) image
-    else {
-      val rotateOp = new AffineTransformOp(
-        AffineTransform.getRotateInstance(theta, keyPoint.pt.x, keyPoint.pt.y),
-        AffineTransformOp.TYPE_BICUBIC)
-      val rotated = rotateOp.filter(image, null)
-
-      // Just make sure the point really did stay the same.
-      val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-      val pointAfter = rotated.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-      assert(pointBefore.isDefined)
-      assert(pointAfter.isDefined)
-      assert(pointBefore.get.isSimilar(5, pointAfter.get))
-
-      rotated
-    }
-  }
-
-  def scaleAboutPoint(
-    scaleFactor: Double,
-    image: BufferedImage,
-    keyPoint: KeyPoint): BufferedImage = {
-    if (scaleFactor == 1) image
-    else {
-      val translateOp = new AffineTransformOp(
-        AffineTransform.getTranslateInstance(
-          keyPoint.pt.x - scaleFactor * keyPoint.pt.x,
-          keyPoint.pt.y - scaleFactor * keyPoint.pt.y),
-        AffineTransformOp.TYPE_BICUBIC)
-      val scaled = translateOp.filter(ImageUtil.scale(scaleFactor, image)._2, null)
-
-      // Just make sure the point really did stay the same.
-      val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-      val pointAfter = scaled.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-      assert(pointBefore.isDefined)
-      assert(pointAfter.isDefined)
-      if (scaleFactor >= 1) assert(pointBefore.get.isSimilar(20, pointAfter.get))
-
-      scaled
-    }
   }
 
   test("rollVertical on small matrix") {
@@ -124,12 +78,12 @@ class TestLogPolar extends FunSuite {
 
   val normalizeScale = false
   val minRadius = 4
-  val maxRadius = 16
-  val numScales = 4
+  val maxRadius = 32
+  val numScales = 8
   val numAngles = 8
-  val blurWidth = 5
+  val blurWidth = 3
 
-  test("scaleImage should work properly") {
+  ignore("scaleImage should work properly") {
     val (scaleFactors, _, scaledImages) = LogPolar.scaleImage(
       4,
       minRadius,
@@ -144,7 +98,7 @@ class TestLogPolar extends FunSuite {
     }
   }
 
-  test("rawLogPolar should do rotation correctly") {
+  ignore("rawLogPolar should do rotation correctly") {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 100) }
 
@@ -153,22 +107,22 @@ class TestLogPolar extends FunSuite {
       val angle = 2 * math.Pi * angleIndex.toDouble / numAngles
       //      println(angleIndex, angle)
 
-      def extractor = LogPolar.rawLogPolar(
-        normalizeScale,
+      val extractor = LogPolarExtractor(
+        false,
         minRadius,
         maxRadius,
         numScales,
         numAngles,
-        blurWidth) _
+        blurWidth,
+        "Gray")
 
-      val original = extractor(image, point).get
+      val original = extractor.extractSingle(image, point).get
       val rotated = {
-        val rotatedImage = rotateAboutPoint(
+        val rotatedImage = image.rotateAboutPoint(
           angle,
-          image,
           point)
         //        dumpImage("rawLogPolarRotationRotatedImage", rotatedImage)
-        extractor(rotatedImage, point).get
+        extractor.extractSingle(rotatedImage, point).get
       }
 
       val unrotated = rotated.rollVertical(angleIndex)
@@ -192,7 +146,7 @@ class TestLogPolar extends FunSuite {
     }
   }
 
-  test("rawLogPolar should do scale correctly") {
+  ignore("rawLogPolar should do scale correctly") {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 100) }
 
@@ -204,25 +158,25 @@ class TestLogPolar extends FunSuite {
       blurWidth,
       image)._1
 
-    //    println(scaleFactors)
+    println(scaleFactors)
 
     for (point <- points; scaleIndex <- 0 until numScales) {
       val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3
       val scaleFactor = math.pow(base, scaleIndex)
 
-      def extractor = LogPolar.rawLogPolar(
-        normalizeScale,
+      val extractor = LogPolarExtractor(
+        false,
         minRadius,
         maxRadius,
         numScales,
         numAngles,
-        blurWidth) _
+        blurWidth,
+        "Gray")
 
-      val original = extractor(image, point).get
+      val original = extractor.extractSingle(image, point).get
 
-      val scaled = extractor(scaleAboutPoint(
+      val scaled = extractor.extractSingle(image.scaleAboutPoint(
         1 / scaleFactor,
-        image,
         point),
         point).get
 
@@ -234,10 +188,10 @@ class TestLogPolar extends FunSuite {
         ::,
         scaleIndex until original.cols))
 
-      //      dumpImage("rawLogPolarScaleOriginal", scale100(original.toScaledImage))
-      //      dumpImage("rawLogPolarScaleScaled", scale100(scaled.toScaledImage))
-      //      dumpImage("rawLogPolarScaleOverlapOriginal", scale100(overlapOriginal.toScaledImage))
-      //      dumpImage("rawLogPolarScaleOverlapScaled", scale100(overlapScaled.toScaledImage))
+      //            dumpImage(f"${scaleFactor}%.2f_rawLogPolarScaleOriginal", scale100(original.toScaledImage))
+      //            dumpImage(f"${scaleFactor}%.2f_rawLogPolarScaleScaled", scale100(scaled.toScaledImage))
+      //            dumpImage(f"${scaleFactor}%.2f_rawLogPolarScaleOverlapOriginal", scale100(overlapOriginal.toScaledImage))
+      //            dumpImage(f"${scaleFactor}%.2f_rawLogPolarScaleOverlapScaled", scale100(overlapScaled.toScaledImage))
       //
       //      println(scaleIndex, scaleFactor, base)
       //      println(overlapOriginal.map(_.toDouble) / overlapOriginal.sum.toDouble)
@@ -259,38 +213,38 @@ class TestLogPolar extends FunSuite {
     }
   }
 
-//  test("pixel processing should work with LogPolarExtractor") {
-//    val numPoints = 4
-//    val points = numPoints times { randomPoint(width, height, 100) }
-//
-//    for (point <- points) {
-//      val rawExtractor = LogPolarExtractor(
-//        normalizeScale,
-//        minRadius,
-//        maxRadius,
-//        numScales,
-//        numAngles,
-//        blurWidth,
-//        "Gray")
-//
-//      {
-//        val normalizer = PatchNormalizer.NCC
-//        val descriptor = normalizer.normalize(rawExtractor.extractSingle(image, point).get)
-//        val data: Array[Double] = descriptor.data
-//        assertNear(stats.mean(data: _*), 0)
-//        assertNear(stats.sampleStdDev(data: _*), 1)
-//      }
-//
-//      {
-//        val normalizer = PatchNormalizer.Rank
-//        val descriptor = normalizer.normalize(rawExtractor.extractSingle(image, point).get)
-//        val data: Array[Int] = descriptor.data
-//        assert(data.min == 0)
-//        assert(data.max == data.size - 1)
-//        assert(data.distinct.size == data.size)
-//      }
-//    }
-//  }
+  //  test("pixel processing should work with LogPolarExtractor") {
+  //    val numPoints = 4
+  //    val points = numPoints times { randomPoint(width, height, 100) }
+  //
+  //    for (point <- points) {
+  //      val rawExtractor = LogPolarExtractor(
+  //        normalizeScale,
+  //        minRadius,
+  //        maxRadius,
+  //        numScales,
+  //        numAngles,
+  //        blurWidth,
+  //        "Gray")
+  //
+  //      {
+  //        val normalizer = PatchNormalizer.NCC
+  //        val descriptor = normalizer.normalize(rawExtractor.extractSingle(image, point).get)
+  //        val data: Array[Double] = descriptor.data
+  //        assertNear(stats.mean(data: _*), 0)
+  //        assertNear(stats.sampleStdDev(data: _*), 1)
+  //      }
+  //
+  //      {
+  //        val normalizer = PatchNormalizer.Rank
+  //        val descriptor = normalizer.normalize(rawExtractor.extractSingle(image, point).get)
+  //        val data: Array[Int] = descriptor.data
+  //        assert(data.min == 0)
+  //        assert(data.max == data.size - 1)
+  //        assert(data.distinct.size == data.size)
+  //      }
+  //    }
+  //  }
   //
   //  test("per-ring normalization") {
   //    val numPoints = 1
@@ -317,95 +271,126 @@ class TestLogPolar extends FunSuite {
   //    }
   //  }
   //
-  //  ignore("recover proper angle") {
-  //    val numPoints = 1
-  //    val points = numPoints times { randomPoint(width, height, 100) }
-  //
-  //    for (point <- points; angleIndex <- 0 until numAngles) {
-  //      val angle = angleIndex.toDouble / numAngles * 2 * math.Pi
-  //
-  //      val extractor = LogPolarExtractor(
-  //        PatchExtractorType.Rank,
-  //        normalizeScale,
-  //        false,
-  //        minRadius,
-  //        maxRadius,
-  //        numScales,
-  //        numAngles,
-  //        blurWidth,
-  //        "Gray")
-  //
-  //      val original = extractor.extractSingle(image, point).get.original.asInstanceOf[DenseMatrix[Double]]
-  //      val rotated = extractor.extractSingle(rotateAboutPoint(
-  //        angle,
-  //        image,
-  //        point),
-  //        point).get.original.asInstanceOf[DenseMatrix[Double]]
-  //
-  //      def distance = LogPolar.getDistance(MatcherType.L1)
-  //
-  //      val response = LogPolar.getResponseMap(
-  //        PatchExtractorType.Raw,
-  //        false,
-  //        distance,
-  //        LogPolar.stackVertical(original),
-  //        rotated,
-  //        0 until numAngles,
-  //        0 until 1)
-  //
-  //      assert(response.argmin == (angleIndex, 0))
-  //    }
-  //  }
-  //
-  //  test("recover proper scale") {
-  //    val numPoints = 1
-  //    val points = numPoints times { randomPoint(width, height, 100) }
-  //
-  //    val scaleIndices = (-numScales + 1) until numScales
-  //    for (point <- points; scaleIndex <- scaleIndices.sortBy(_.abs)) {
-  //      val extractor = LogPolarExtractor(
-  //        PatchExtractorType.Raw,
-  //        normalizeScale,
-  //        false,
-  //        minRadius,
-  //        maxRadius,
-  //        numScales,
-  //        numAngles,
-  //        blurWidth,
-  //        "Gray")
-  //
-  //      val original = extractor.extractSingle(
-  //        image,
-  //        point).get.original.asInstanceOf[DenseMatrix[Double]]
-  //
-  //      val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3
-  //      val scaleFactor = math.pow(base, scaleIndex)
-  //
-  //      val scaled = extractor.extractSingle(scaleAboutPoint(
-  //        scaleFactor,
-  //        image,
-  //        point),
-  //        point).get.original.asInstanceOf[DenseMatrix[Double]]
-  //
-  //      def distance = LogPolar.getDistance(MatcherType.L1)
-  //
-  //      //      dumpImage("rawLogPolarRecoverProperScale_original", scale100(original.toScaledImage))
-  //      //      dumpImage("rawLogPolarRecoverProperScale_scaled", scale100(scaled.toScaledImage))
-  //
-  //      val response = LogPolar.getResponseMap(
-  //        PatchExtractorType.Raw,
-  //        true,
-  //        distance,
-  //        LogPolar.stackVertical(original),
-  //        scaled,
-  //        0 until 1,
-  //        scaleIndices)
-  //
-  //      //      println(response)
-  //      //      println(scaleIndex)
-  //      //
-  //      //      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
-  //      assert(response.argmin == (0, scaleIndex + numScales - 1))
-  //    }
-  //  }
+  ignore("recover proper angle") {
+    val numPoints = 1
+    val points = numPoints times { randomPoint(width, height, 100) }
+
+    for (point <- points; angleIndex <- 0 until numAngles) {
+      val angle = angleIndex.toDouble / numAngles * 2 * math.Pi
+
+      val extractor = LogPolarExtractor(
+        false,
+        minRadius,
+        maxRadius,
+        numScales,
+        numAngles,
+        blurWidth,
+        "Gray")
+
+      val original = extractor.extractSingle(image, point).get
+      val rotated = extractor.extractSingle(image.rotateAboutPoint(
+        angle,
+        point),
+        point).get
+
+      val normalizer = PatchNormalizer.Rank
+      val matcher = LogPolarMatcher(normalizer, Matcher.L1, true, true, 0)
+
+      val response = matcher.responseMap(original, rotated)
+
+      dumpImage(f"${angle}%.2f_recoverProperAngle", scale10(response.toScaledImage))
+
+      assert(response.argmin === (angleIndex, 0))
+    }
+  }
+
+  ignore("recover proper scale") {
+    val numPoints = 1
+    val points = numPoints times { randomPoint(width, height, 150) }
+
+    val scaleIndices = (-numScales + 3) to numScales - 3
+    for (point <- points; scaleIndex <- scaleIndices.sorted) {
+      val extractor = LogPolarExtractor(
+        false,
+        minRadius,
+        maxRadius,
+        numScales,
+        numAngles,
+        blurWidth,
+        "Gray")
+
+      val original = extractor.extractSingle(image, point).get
+
+      val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3
+      val scaleFactor = math.pow(base, scaleIndex)
+
+      val scaled = extractor.extractSingle(image.scaleAboutPoint(
+        scaleFactor,
+        point),
+        point).get
+
+      val normalizer = PatchNormalizer.Rank
+      val matcher = LogPolarMatcher(normalizer, Matcher.L2, true, false, numScales - 1)
+
+      //      dumpImage("rawLogPolarRecoverProperScale_original", scale100(original.toScaledImage))
+      //      dumpImage("rawLogPolarRecoverProperScale_scaled", scale100(scaled.toScaledImage))
+
+      val response = matcher.responseMap(original, scaled)
+
+      dumpImage(f"${scaleFactor}%.2f_recoverProperScale", scale10(response.toScaledImage))
+
+      //      println(response)
+      //      println(scaleIndex)
+      //
+      //      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
+      assert(response.argmin === (0, scaleIndex + numScales - 1))
+    }
+  }
+
+  ignore("recover proper angle and scale") {
+    val numPoints = 1
+    val points = numPoints times { randomPoint(width, height, 150) }
+
+    val scaleIndices = (-numScales + 3) to numScales - 3
+    for (point <- points; scaleIndex <- scaleIndices.sorted; angleIndex <- 0 until numAngles) {
+      val extractor = LogPolarExtractor(
+        false,
+        minRadius,
+        maxRadius,
+        numScales,
+        numAngles,
+        blurWidth,
+        "Gray")
+
+      val original = extractor.extractSingle(image, point).get
+
+      val angle = angleIndex.toDouble / numAngles * 2 * math.Pi
+      val rotated = image.rotateAboutPoint(
+        angle,
+        point)
+
+      val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3
+      val scaleFactor = math.pow(base, scaleIndex)
+      val warped = extractor.extractSingle(rotated.scaleAboutPoint(
+        scaleFactor,
+        point),
+        point).get
+
+      val normalizer = PatchNormalizer.Rank
+      val matcher = LogPolarMatcher(normalizer, Matcher.L2, true, true, numScales - 1)
+
+      //      dumpImage("rawLogPolarRecoverProperScale_original", scale100(original.toScaledImage))
+      //      dumpImage("rawLogPolarRecoverProperScale_scaled", scale100(scaled.toScaledImage))
+
+      val response = matcher.responseMap(original, warped)
+
+      dumpImage(f"${angle}%.2f_${scaleFactor}%.2f_recoverProperAngleAndScale", scale10(response.toScaledImage))
+
+      //      println(response)
+      //      println(scaleIndex)
+      //
+      //      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
+      assert(response.argmin === (angleIndex, scaleIndex + numScales - 1))
+    }
+  }
 }

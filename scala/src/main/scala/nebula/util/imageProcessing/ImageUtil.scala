@@ -103,6 +103,18 @@ object ImageUtil {
     alignedPatch.getSubimage(0, 0, width, height)
   }
 
+  def getSubimageCenteredAtPoint(
+      image: BufferedImage,
+      x: Double,
+      y: Double,
+      xRadius: Int,
+      yRadius: Int): BufferedImage = getSubimage(
+          image,
+          x - xRadius,
+          y - yRadius,
+          2 * xRadius,
+          2 * yRadius)
+  
   def extractPatch(image: BufferedImage,
                    patchWidth: Int,
                    keyPoint: KeyPoint): Option[BufferedImage] = {

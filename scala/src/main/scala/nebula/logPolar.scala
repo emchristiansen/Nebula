@@ -178,7 +178,8 @@ object LogPolar {
     base: DenseMatrix[Int],
     kernel: DenseMatrix[Int],
     angleIndices: Range,
-    scaleIndices: Range): DenseMatrix[Double] = {
+    scaleIndices: Range)(
+        implicit ed: ((N, M)) => ExpectedDistance): DenseMatrix[Double] = {
     require(2 * kernel.rows - 1 == base.rows)
     require(kernel.cols == base.cols)
     require(angleIndices.min >= 0)
@@ -217,8 +218,9 @@ object LogPolar {
       val scaleOffset = scaleIndex - scaleIndices.min
       val unnormalized = matcher.distance(baseMatrix, kernelMatrix)
       response(angleIndex, scaleOffset) = if (normalizeByOverlap) {
-        val denominator = kernel.cols - scaleIndex.abs
-        unnormalized / denominator
+        val size = baseMatrix.rows * baseMatrix.cols
+        val expectedDistance = (normalizer, matcher).to[ExpectedDistance].expectedDistance(size)
+        unnormalized / expectedDistance
       } else unnormalized
     }
     response

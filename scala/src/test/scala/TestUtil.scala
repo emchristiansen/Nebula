@@ -2,6 +2,7 @@ import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 import java.io.File
 
+import nebula.util.imageProcessing._
 import nebula.util.DenseMatrixUtil._
 import nebula._
 
@@ -19,15 +20,6 @@ object TestUtil {
     assert(ImageIO.write(image, "png", file))
   }
   
-  def scaleUp(scaleFactor: Int)(image: BufferedImage): BufferedImage = {
-    require(scaleFactor >= 1)
-    
-    val seqSeq = image.toMatrix.toSeqSeq
-    val wider = seqSeq.map(_.flatMap(x => scaleFactor times x))
-    val taller = wider.flatMap(row => scaleFactor times row)
-    taller.toMatrix.toImage
-  }
-  
-  def scale10 = scaleUp(10) _
-  def scale100 = scaleUp(100) _
+  def scale10 = (image: BufferedImage) => ImageUtil.scale(10, image)._2
+  def scale100 = (image: BufferedImage) => ImageUtil.scale(100, image)._2
 }

@@ -96,14 +96,14 @@ object Matcher {
   implicit def implicitMatcherL1[A <% Double](self: L1.type) =
     Matcher[IndexedSeq[A]](l1)
   implicit def implicitMatcherMatrixL1[A <% Double](self: L1.type) =
-    Matcher[DenseMatrix[A]](liftToMatrix[A](l1))    
+    Matcher[DenseMatrix[A]](liftToMatrix[A](l1))
   implicit def implicitMatcherSortL1(self: L1.type) =
     Matcher[SortDescriptor](lift(l1))
 
   implicit def implicitMatcherL2[A <% Double](self: L2.type) =
     Matcher[IndexedSeq[A]](l2)
   implicit def implicitMatcherMatrixL2[A <% Double](self: L2.type) =
-    Matcher[DenseMatrix[A]](liftToMatrix[A](l2))    
+    Matcher[DenseMatrix[A]](liftToMatrix[A](l2))
   implicit def implicitMatcherSortL2(self: L2.type) =
     Matcher[SortDescriptor](lift(l2))
 
@@ -127,36 +127,67 @@ object LogPolarMatcher {
   import Matcher._
   //  import Matcher._
 
+  implicit class LogPolarMatcher2ResponseMap[
+    N <% Normalizer[DenseMatrix[Int], 
+      DenseMatrix[F2]], 
+      M <% Matcher[DenseMatrix[F2]], 
+      F2](
+          self: LogPolarMatcher[N, M, F2])(
+              implicit ed: ((N, M)) => ExpectedDistance) {
+    def responseMap = (left: DenseMatrix[Int], right: DenseMatrix[Int]) => {
+      require(left.rows == right.rows)
+      require(left.cols == right.cols)
+      require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
+
+      //        val distance = self.matcher.distance
+
+      val angleIndices = if (self.rotationInvariant) {
+        0 until left.rows
+      } else 0 until 1
+
+      val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius
+
+      // TODO
+      LogPolar.getResponseMap(
+        self.normalizer,
+        self.normalizeByOverlap,
+        self.matcher,
+        DenseMatrix.vertcat(left, left(0 until left.rows - 1, ::)),
+        right,
+        angleIndices,
+        scaleIndices)
+    }
+  }
+
   implicit def implicitMatcher[
-    N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], 
-    M <% Matcher[DenseMatrix[F2]], 
-    F2](self: LogPolarMatcher[N, M, F2]): Matcher[DenseMatrix[Int]] =
+    N <% Normalizer[DenseMatrix[Int], 
+      DenseMatrix[F2]], 
+      M <% Matcher[DenseMatrix[F2]], 
+      F2](self: LogPolarMatcher[N, M, F2])(
+          implicit ed: ((N, M)) => ExpectedDistance): Matcher[DenseMatrix[Int]] =
     Matcher(
       (left: DenseMatrix[Int], right: DenseMatrix[Int]) => {
-        require(left.rows == right.rows)
-        require(left.cols == right.cols)
-        require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
-
-//        val distance = self.matcher.distance
-
-        val angleIndices = if (self.rotationInvariant) {
-          0 until left.rows
-        } else 0 until 1
-
-        val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius
-
-        // TODO
-        val response = LogPolar.getResponseMap(
-          self.normalizer,
-          self.normalizeByOverlap,
-          self.matcher,
-          DenseMatrix.vertcat(left, left(0 until left.rows - 1, ::)),
-          right,
-          angleIndices,
-          scaleIndices)
+        val response = self.responseMap(left, right)
 
         response.min
       })
+}
+
+///////////////////////////////////////////////////////////
+
+case class NormalizedMatcher[N <% Normalizer[F1, F2], M <% Matcher[F2], F1, F2](
+  normalizer: N,
+  matcher: M)
+
+object NormalizedMatcher {
+  // TODO: This implicit isn't picked up, probably a compiler bug.
+  implicit def normalizedMatcher2Matcher[N <% Normalizer[F1, F2], M <% Matcher[F2], F1, F2](self: NormalizedMatcher[N, M, F1, F2]): Matcher[F1] =
+    Matcher[F1]((left: F1, right: F1) => {
+      val leftNormalized = self.normalizer.normalize(left)
+      val rightNormalized = self.normalizer.normalize(right)
+      self.matcher.distance(leftNormalized, rightNormalized)
+    })
+
 }
 
 ///////////////////////////////////////////////////////////
@@ -167,10 +198,15 @@ trait MatcherJsonProtocol extends DefaultJsonProtocol {
   implicit val matcherL2JsonProtocol = JSONUtil.singletonObject(Matcher.L2)
   implicit val matcherKendallTauJsonProtocol = JSONUtil.singletonObject(Matcher.KendallTau)
 
-  /////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////
 
-  implicit def logPolarMatcherJsonProtocol[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]] : JsonFormat, M <% Matcher[DenseMatrix[F2]] : JsonFormat, F2] =
+  implicit def logPolarMatcherJsonProtocol[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]]: JsonFormat, M <% Matcher[DenseMatrix[F2]]: JsonFormat, F2] =
     jsonFormat5(LogPolarMatcher.apply[N, M, F2]).addClassInfo("LogPolarMatcher")
+    
+  ///////////////////////////////////////////////////////////
+    
+  implicit def normalizedMatcherJsonProtocol[N <% Normalizer[F1, F2] : JsonFormat, M <% Matcher[F2]: JsonFormat, F1, F2] =
+     jsonFormat2(NormalizedMatcher.apply[N, M, F1, F2]).addClassInfo("NormalizedMatcher")
 }
 
 object MatcherJsonProtocol extends MatcherJsonProtocol
