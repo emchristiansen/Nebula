@@ -47,24 +47,13 @@ object WideBaselineExperiment {
       }
     }
 
-  implicit class ImplicitExperimentRunnerWithRuntime[D, E, M, F](
+  implicit class WideBaselineExperiment2ExperimentRunner[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F](
     self: WideBaselineExperiment[D, E, M, F])(
-      implicit runtimeConfig: RuntimeConfig,
-      evPairDetector: D => PairDetector,
-      evExtractor: E => Extractor[F],
-      evMatcher: M => Matcher[F]) extends ExperimentRunner[WideBaselineExperimentResults[D, E, M, F]] {
+      runtimeConfig: RuntimeConfig) extends ExperimentRunner[WideBaselineExperimentResults[D, E, M, F]] {
+    private implicit val iRC = runtimeConfig
+    
     override def run = WideBaselineExperimentResults(self)
   }
-
-  implicit def implicitExperimentRunner[D, E, M, F](
-    self: WideBaselineExperiment[D, E, M, F])(
-      implicit evPairDetector: D => PairDetector,
-      evExtractor: E => Extractor[F],
-      evMatcher: M => Matcher[F]): RuntimeConfig => ExperimentRunner[WideBaselineExperimentResults[D, E, M, F]] =
-    runtime => {
-      implicit val implicitRuntime = runtime
-      self
-    }
 
   implicit class ImplicitImagePairLike(
     self: WideBaselineExperiment[_, _, _, _])(
@@ -130,21 +119,16 @@ object WideBaselineExperimentResults extends Logging {
     WideBaselineExperimentResults(self, dmatches)
   }
 
-  implicit def implicitExperimentSummaryWithConfig[D, E, M, F](
-    self: WideBaselineExperimentResults[D, E, M, F])(
-      implicit runtimeConfig: RuntimeConfig) = ExperimentSummary(
-    Map(
-      "recognitionRate" -> (() => SummaryUtil.recognitionRate(self.dmatches))),
-    Map(
-      "histogram" -> (() => Histogram(self, "").render))
-  )
-  
-  // TODO: Wrap these sorts of methods into a generic function.
   implicit def implicitExperimentSummary[D, E, M, F](
-    self: WideBaselineExperimentResults[D, E, M, F]): RuntimeConfig => ExperimentSummary = runtime => {
-      implicit val implicitRuntime = runtime
-      self
-    }
+    self: WideBaselineExperimentResults[D, E, M, F])(
+      runtimeConfig: RuntimeConfig) = {
+    implicit val iRC = runtimeConfig
+    ExperimentSummary(
+      Map(
+        "recognitionRate" -> (() => SummaryUtil.recognitionRate(self.dmatches))),
+      Map(
+        "histogram" -> (() => Histogram(self, "").render)))
+  }
 }
 
 
