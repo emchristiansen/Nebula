@@ -132,13 +132,14 @@ object WideBaselineExperimentResults extends Logging {
 
   implicit def implicitExperimentSummaryWithConfig[D, E, M, F](
     self: WideBaselineExperimentResults[D, E, M, F])(
-      implicit runtimeConfig: RuntimeConfig) = new ExperimentSummary(
+      implicit runtimeConfig: RuntimeConfig) = ExperimentSummary(
     Map(
       "recognitionRate" -> (() => SummaryUtil.recognitionRate(self.dmatches))),
     Map(
       "histogram" -> (() => Histogram(self, "").render))
   )
   
+  // TODO: Wrap these sorts of methods into a generic function.
   implicit def implicitExperimentSummary[D, E, M, F](
     self: WideBaselineExperimentResults[D, E, M, F]): RuntimeConfig => ExperimentSummary = runtime => {
       implicit val implicitRuntime = runtime

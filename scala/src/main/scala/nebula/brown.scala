@@ -6,6 +6,7 @@ import java.io.File
 import nebula.util._
 import org.apache.commons.io.FileUtils
 import javax.imageio.ImageIO
+import nebula.summary._
 
 ///////////////////////////////////////////////////////////
 
@@ -18,14 +19,10 @@ case class BrownExperiment[E <% Extractor[F], M <% Matcher[F], F](
 object BrownExperiment {
   implicit class BrownExperiment2ExperimentRunnerWithRuntime[E <% Extractor[F], M <% Matcher[F], F](
     self: BrownExperiment[E, M, F])(
-      implicit runtimeConfig: RuntimeConfig) extends ExperimentRunner[BrownExperimentResults[E, M, F]] {
-    override def run = BrownExperimentResults(self)
-  }
+      runtimeConfig: RuntimeConfig) extends ExperimentRunner[BrownExperimentResults[E, M, F]] {
+    private implicit val iRC = runtimeConfig
 
-  implicit def brownExperiment2ExperimentRunner[E <% Extractor[F], M <% Matcher[F], F](
-    self: BrownExperiment[E, M, F]): RuntimeConfig => ExperimentRunner[BrownExperimentResults[E, M, F]] = runtimeConfig => {
-    implicit val iRC = runtimeConfig
-    self
+    override def run = BrownExperimentResults(self)
   }
 }
 
@@ -53,6 +50,15 @@ object BrownExperimentResults {
     }
 
     BrownExperimentResults(experiment, dmatchOptions.flatten)
+  }
+
+  implicit def brownExperimentResults2ExperimentSummary[E, M, F](
+    self: BrownExperimentResults[E, M, F])(runtimeConfig: RuntimeConfig) = {
+    implicit val iRC = runtimeConfig
+    ExperimentSummary(
+      Map(
+        "recognitionRate" -> (() => SummaryUtil.recognitionRate(self.dmatches))),
+      Map())
   }
 }
 
