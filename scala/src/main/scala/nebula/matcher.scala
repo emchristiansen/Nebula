@@ -92,7 +92,7 @@ object Matcher {
     Matcher[DenseMatrix[A]](liftToMatrix(l0))
   implicit def implicitMatcherSortL0(self: L0.type) =
     Matcher[SortDescriptor](lift(l0))
-
+    
   implicit def implicitMatcherL1[A <% Double](self: L1.type) =
     Matcher[IndexedSeq[A]](l1)
   implicit def implicitMatcherMatrixL1[A <% Double](self: L1.type) =

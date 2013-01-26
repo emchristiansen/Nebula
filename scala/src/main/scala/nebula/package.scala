@@ -13,6 +13,8 @@ import java.io.File
 ///////////////////////////////////////////////////////////
 
 package object nebula {
+  val homeDirectory = new File(System.getProperty("user.home"))
+  
   implicit class PimpFile(file: File) {
     def mustExist: File = {
       assert(file.exists, s"File ${file} doesn't exist")
@@ -166,7 +168,6 @@ jsonString.asJson.convertTo[${typeName[A]}]
    */
   def assertRelativelyNear(maxRatio: Double)(left: Double, right: Double) {
     require(maxRatio >= 1)
-        println(left, right)
     require(left > 0)
     require(right > 0)
     

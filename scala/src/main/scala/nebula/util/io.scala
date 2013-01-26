@@ -11,14 +11,7 @@ import java.io.ObjectOutputStream
 import scala.xml.Node
 import scala.xml.XML
 import javax.imageio.ImageIO
-//import net.liftweb.json.Formats
-//import net.liftweb.json.Serialization
-//import net.liftweb.json.Serialization.read
-//import net.liftweb.json.Serialization.write
-//import net.liftweb.json.ShortTypeHints
-//import net.liftweb.json.parse
-//import net.liftweb.json.pretty
-//import net.liftweb.json.render
+
 import nebula.Detector
 import nebula.Extractor
 import nebula.Matcher

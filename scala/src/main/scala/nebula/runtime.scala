@@ -6,6 +6,7 @@ import java.io.File
 
 trait RuntimeConfigTrait {
   val projectRoot: File
+  val dataRoot: File
   val nebulaRoot: File
   val tempDirectory: Option[File]
   val deleteTemporaryFiles: Boolean
@@ -31,6 +32,7 @@ trait RuntimeConfigTrait {
 // avoid this.
 case class RuntimeConfig(
   override val projectRoot: File,
+  override val dataRoot: File,
   override val nebulaRoot: File,
   override val tempDirectory: Option[File],
   override val deleteTemporaryFiles: Boolean,

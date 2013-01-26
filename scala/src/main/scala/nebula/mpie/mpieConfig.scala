@@ -24,6 +24,7 @@ import org.apache.commons.io.FilenameUtils
 // TODO: Duplication. Grr.
 case class MPIERuntimeConfig(
   override val projectRoot: File,
+  override val dataRoot: File,
   override val nebulaRoot: File,
   override val tempDirectory: Option[File],
   override val deleteTemporaryFiles: Boolean,
