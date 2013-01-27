@@ -15,11 +15,16 @@ import java.io.File
 package object nebula {
   val homeDirectory = new File(System.getProperty("user.home"))
   
+  def getResource(path: String): File = 
+    new File(getClass.getResource(path).getFile).mustExist
+  
   implicit class PimpFile(file: File) {
     def mustExist: File = {
       assert(file.exists, s"File ${file} doesn't exist")
       file
     }
+    
+    def parentMustExist: File = new File(file.getParent).mustExist
   }
   
   object JsonProtocols extends DetectorJsonProtocol with ExtractorJsonProtocol with PatchNormalizerJsonProtocol with WideBaselineJsonProtocol

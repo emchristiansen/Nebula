@@ -25,4 +25,8 @@ class TestBrown extends FunSuite {
       TestUtil.dumpImage(s"${index}", sideBySide)
     }
   }
+  
+  test("run experiment") {
+//    val runtimeConfig = 
+  }
 }

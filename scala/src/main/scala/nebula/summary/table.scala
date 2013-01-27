@@ -96,8 +96,8 @@ object Table {
       stringsTable.map(_.mkString("\t")).mkString("\n")
     }
 
-    def path(implicit runtime: RuntimeConfig): File = runtime.projectChildPathNew(
-      "summary/%s_%s.csv".format(self.unixEpoch, self.title))
+    def path(implicit runtime: RuntimeConfig): File = 
+      new File(runtime.outputRoot, s"summary/${self.unixEpoch}_${self.title}.csv").parentMustExist 
   }
 
   def title[E: JsonFormat](experiments: Seq[E]): String = {

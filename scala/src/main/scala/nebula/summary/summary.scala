@@ -20,15 +20,15 @@ import org.opencv.features2d.DMatch
 ///////////////////////////////////////////////////////////////////////////////
 
 case class ExperimentSummary(
-    summaryNumbers: Map[String, () => Double],
-    summaryImages: Map[String, () => BufferedImage])
+  summaryNumbers: Map[String, () => Double],
+  summaryImages: Map[String, () => BufferedImage])
 
 object ExperimentSummary {
-  implicit class OutDirectory(self: ExperimentSummary) {
-  def outDirectory(implicit runtime: RuntimeConfig) = runtime.projectChildPath(
-    "summary")    
+  implicit class ExperimentSummaryOps(self: ExperimentSummary) {
+    def outDirectory(implicit runtime: RuntimeConfig) = 
+      new File(runtime.outputRoot, "summary").mustExist
   }
-}    
+}
 
 object SummaryUtil {
   def recognitionRate(dmatches: Seq[DMatch]): Double = {

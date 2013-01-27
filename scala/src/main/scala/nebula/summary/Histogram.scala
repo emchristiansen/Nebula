@@ -38,7 +38,7 @@ case class Histogram(
     org.apache.commons.io.FileUtils.writeStringToFile(tempFile, tempContents)
 
     // TODO: Fix path
-    val pythonScript = runtime.nebulaChildPath("python/distance_histogram.py")
+    val pythonScript = getResource("python/distance_histogram.py")
     val outputFile = IO.createTempFile("histogram", ".png")
     val command = "python %s %s %s".format(pythonScript, tempFile, outputFile)
     IO.runSystemCommand(command)
@@ -48,7 +48,7 @@ case class Histogram(
 
   def path: File = {
     val filename = title.replace(" ", "_") + ".png"
-    runtime.projectChildPathNew("summary/histograms/%s".format(filename))
+    new File(runtime.outputRoot, s"summary/histograms/${filename}").parentMustExist
   }
 }
 

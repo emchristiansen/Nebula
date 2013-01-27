@@ -23,20 +23,20 @@ import org.apache.commons.io.FilenameUtils
 
 // TODO: Duplication. Grr.
 case class MPIERuntimeConfig(
-  override val projectRoot: File,
-  override val dataRoot: File,
-  override val nebulaRoot: File,
-  override val tempDirectory: Option[File],
-  override val deleteTemporaryFiles: Boolean,
-  override val skipCompletedExperiments: Boolean,
-  override val maxSimultaneousExperiments: Int,
+  projectRoot: File,
+  dataRoot: File,
+  nebulaRoot: File,
+  tempDirectory: Option[File],
+  deleteTemporaryFiles: Boolean,
+  skipCompletedExperiments: Boolean,
+  maxSimultaneousExperiments: Int,
   runtimeConfig: RuntimeConfig,
   piSliceRoot: String,
   lfwRoot: String,
   backgroundRoot: String,
   scaleFactor: Double,
   numFolds: Int,
-  numIdentities: Int) extends RuntimeConfigTrait {
+  numIdentities: Int) {
   val random = new scala.util.Random(0)
 }
 

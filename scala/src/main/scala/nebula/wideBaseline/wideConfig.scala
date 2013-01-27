@@ -12,7 +12,7 @@ import nebula.Extractor
 import nebula.HasGroundTruth
 import nebula.HasImagePair
 import nebula.Matcher
-import nebula.PairDetector
+import nebula._
 import nebula.RuntimeConfig
 import nebula.StorageInfo
 import nebula.summary.ExperimentSummary
@@ -41,8 +41,9 @@ object WideBaselineExperiment {
       implicit runtime: RuntimeConfig): HasGroundTruth[Homography] =
     new HasGroundTruth[Homography] {
       override def groundTruth = {
-        val homographyFile = runtime.projectChildPath(
-          s"data/oxfordImages/${self.imageClass}/homographies/H1to${self.otherImage}p")
+        val homographyFile = new File(
+            runtime.dataRoot, 
+            s"oxfordImages/${self.imageClass}/homographies/H1to${self.otherImage}p").mustExist
         Homography.fromFile(homographyFile)
       }
     }
@@ -59,13 +60,15 @@ object WideBaselineExperiment {
     self: WideBaselineExperiment[_, _, _, _])(
       implicit runtime: RuntimeConfig) extends HasImagePair {
     override def leftImage = {
-      val file = runtime.projectChildPath(
-        s"data/oxfordImages/${self.imageClass}/images/img1.bmp")
+      val file = new File(
+        runtime.dataRoot,
+        s"oxfordImages/${self.imageClass}/images/img1.bmp").mustExist
       ImageIO.read(file)
     }
     override def rightImage = {
-      val file = runtime.projectChildPath(
-        s"data/oxfordImages/${self.imageClass}/images/img${self.otherImage}.bmp")
+      val file = new File(
+        runtime.dataRoot,
+        s"oxfordImages/${self.imageClass}/images/img${self.otherImage}.bmp").mustExist
       ImageIO.read(file)
     }
   }

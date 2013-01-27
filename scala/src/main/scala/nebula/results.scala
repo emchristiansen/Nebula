@@ -56,8 +56,7 @@ object StorageInfo {
 
     def filename: String = unixEpoch + "_" + filenameNoTime
 
-    def outDirectory: File = runtimeConfig.projectChildPath(
-      "results/experiment_data/")
+    def outDirectory: File = new File(runtimeConfig.outputRoot, "results/experiment_data/").mustExist
 
     def existingResultsFiles: Seq[File] = {
       val allPaths = outDirectory.list.toList.map(path => outDirectory + "/" + path.toString)
