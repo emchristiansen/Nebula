@@ -42,8 +42,8 @@ object WideBaselineExperiment {
     new HasGroundTruth[Homography] {
       override def groundTruth = {
         val homographyFile = new File(
-            runtime.dataRoot, 
-            s"oxfordImages/${self.imageClass}/homographies/H1to${self.otherImage}p").mustExist
+          runtime.dataRoot,
+          s"oxfordImages/${self.imageClass}/homographies/H1to${self.otherImage}p").mustExist
         Homography.fromFile(homographyFile)
       }
     }
@@ -52,9 +52,14 @@ object WideBaselineExperiment {
     self: WideBaselineExperiment[D, E, M, F])(
       runtimeConfig: RuntimeConfig) extends ExperimentRunner[WideBaselineExperimentResults[D, E, M, F]] {
     private implicit val iRC = runtimeConfig
-    
+
     override def run = WideBaselineExperimentResults(self)
   }
+
+  // TODO: Remove when Scala inference bug is fixed.
+  implicit def WTFWideBaselineExperiment2ExperimentRunner[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F](
+    self: WideBaselineExperiment[D, E, M, F])(
+      implicit runtimeConfig: RuntimeConfig) = new WideBaselineExperiment2ExperimentRunner(self)(runtimeConfig)
 
   implicit class ImplicitImagePairLike(
     self: WideBaselineExperiment[_, _, _, _])(
@@ -132,6 +137,11 @@ object WideBaselineExperimentResults extends Logging {
       Map(
         "histogram" -> (() => Histogram(self, "").render)))
   }
+
+  // TODO: Remove when Scala inference bug is fixed.
+  implicit def WTFImplicitExperimentSummary[D, E, M, F](
+    self: WideBaselineExperimentResults[D, E, M, F])(
+      implicit runtimeConfig: RuntimeConfig) = implicitExperimentSummary(self)(runtimeConfig)
 }
 
 

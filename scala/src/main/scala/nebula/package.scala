@@ -13,21 +13,38 @@ import java.io.File
 ///////////////////////////////////////////////////////////
 
 package object nebula {
+  def loadOpenCV = System.loadLibrary("opencv_java")
+  
+  // TODO: Uncomment this function and change the relevant constructors.
+  // Currently this is impossible due to a probable Scala bug.
+//  implicit def experimentRunnerInsertRuntime[A <% RuntimeConfig => ExperimentRunner[B], B](
+//    a: A)(
+//      implicit runtimeConfig: RuntimeConfig): ExperimentRunner[B] =
+//    implicitly[A => RuntimeConfig => ExperimentRunner[B]].apply(a).apply(runtimeConfig)
+
   val homeDirectory = new File(System.getProperty("user.home"))
-  
-  def getResource(path: String): File = 
+
+  def getResource(path: String): File =
     new File(getClass.getResource(path).getFile).mustExist
-  
+
   implicit class PimpFile(file: File) {
     def mustExist: File = {
       assert(file.exists, s"File ${file} doesn't exist")
       file
     }
-    
+
     def parentMustExist: File = new File(file.getParent).mustExist
+
+    def +(that: String): File = new File(file, that)
   }
-  
-  object JsonProtocols extends DetectorJsonProtocol with ExtractorJsonProtocol with PatchNormalizerJsonProtocol with WideBaselineJsonProtocol
+
+  object JsonProtocols extends 
+  DetectorJsonProtocol with 
+  ExtractorJsonProtocol with 
+  PatchNormalizerJsonProtocol with
+  MatcherJsonProtocol with
+  WideBaselineJsonProtocol with 
+  BrownJsonProtocol
 
   implicit class IntTimes(int: Int) {
     def times[A](function: => A): IndexedSeq[A] =
@@ -167,7 +184,7 @@ jsonString.asJson.convertTo[${typeName[A]}]
       (left - right).abs <= threshold,
       "left, right: %s, %s".format(left, right))
   }
-  
+
   /**
    * Checks the ratio of two positive numbers is close to 1.
    */
@@ -175,7 +192,7 @@ jsonString.asJson.convertTo[${typeName[A]}]
     require(maxRatio >= 1)
     require(left > 0)
     require(right > 0)
-    
+
     assert(left / right <= maxRatio, s"${left} / ${right} = ${left / right} > ${maxRatio}")
     assert(right / left <= maxRatio, s"${right} / ${left} = ${right / left} > ${maxRatio}")
   }

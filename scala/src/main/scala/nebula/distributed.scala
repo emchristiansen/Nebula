@@ -43,7 +43,7 @@ object Distributed extends nebula.util.Logging {
   }
 
   type Capstone = (Boolean, RuntimeConfig) => ExperimentSummary
-
+  
   /**
    * Returns a closure of type Capstone.
    * This method is unsafe, in that the needed implicits are not found at

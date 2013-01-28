@@ -19,7 +19,14 @@ object TestUtil {
     println("image is size %s by %s".format(image.getWidth, image.getHeight))
     assert(ImageIO.write(image, "png", file))
   }
-  
+
   def scale10 = (image: BufferedImage) => ImageUtil.scale(10, image)._2
   def scale100 = (image: BufferedImage) => ImageUtil.scale(100, image)._2
+
+  val runtimeConfig = RuntimeConfig(
+    homeDirectory + "Bitcasa/data",
+    new File("/tmp"),
+    None,
+    false,
+    false)
 }

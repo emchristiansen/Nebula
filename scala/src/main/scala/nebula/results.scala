@@ -20,9 +20,10 @@ trait StorageInfo[R] {
 }
 
 object StorageInfo {
-  implicit class Experiment2StorageInfoWithRuntimeConfig[E <% ExperimentRunner[R]: JsonFormat, R: JsonFormat](
-    experiment: E)(
-      implicit runtimeConfig: RuntimeConfig) extends StorageInfo[R] {
+  implicit class Experiment2StorageInfo[E <% ExperimentRunner[R]: JsonFormat, R: JsonFormat](
+    experiment: E)(runtimeConfig: RuntimeConfig) extends StorageInfo[R] {
+    private implicit val iRC = runtimeConfig
+    
     override def currentPath: File = new File(outDirectory, filename)
 
     override def mostRecentPath: Option[File] = existingResultsFiles.headOption
@@ -60,16 +61,20 @@ object StorageInfo {
 
     def existingResultsFiles: Seq[File] = {
       val allPaths = outDirectory.list.toList.map(path => outDirectory + "/" + path.toString)
-      val matchingPaths = allPaths.filter(_.contains(filenameNoTime))
-      matchingPaths.sortBy(identity).reverse.map(path => new File(path))
+      val matchingPaths = allPaths.filter(_.toString.contains(filenameNoTime))
+      matchingPaths.sorted
     }
   }
-
-  implicit def experiment2StorageInfo[E <% ExperimentRunner[R]: JsonFormat, R: JsonFormat](
-    experiment: E): RuntimeConfig => StorageInfo[R] = runtimeConfig => {
-    implicit val iRC = runtimeConfig
-    experiment
-  }
+  
+    // TODO: Remove when Scala inference bug is fixed.
+  implicit def WTFExperiment2StorageInfo[E <% ExperimentRunner[R]: JsonFormat, R: JsonFormat](
+    experiment: E)(implicit runtimeConfig: RuntimeConfig) = new Experiment2StorageInfo(experiment)(runtimeConfig)
+   
+  def destructure(function: aAndRuntimeConfig: (A, RuntimeConfig)) = 
+    
+    // TODO: Remove when Scala inference bug is fixed.
+  implicit def WTF2Experiment2StorageInfo[E <% ExperimentRunner[R]: JsonFormat, R: JsonFormat](
+    experiment: E)(implicit runtimeConfig: RuntimeConfig) = new Experiment2StorageInfo(experiment)(runtimeConfig)    
 }
 
 

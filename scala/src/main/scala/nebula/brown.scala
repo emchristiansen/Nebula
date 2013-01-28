@@ -17,13 +17,18 @@ case class BrownExperiment[E <% Extractor[F], M <% Matcher[F], F](
   matcher: M)
 
 object BrownExperiment {
-  implicit class BrownExperiment2ExperimentRunnerWithRuntime[E <% Extractor[F], M <% Matcher[F], F](
+  implicit class BrownExperiment2ExperimentRunner[E <% Extractor[F], M <% Matcher[F], F](
     self: BrownExperiment[E, M, F])(
       runtimeConfig: RuntimeConfig) extends ExperimentRunner[BrownExperimentResults[E, M, F]] {
     private implicit val iRC = runtimeConfig
 
     override def run = BrownExperimentResults(self)
   }
+  
+  // TODO: Remove when Scala inference bug is fixed.
+  implicit def WTFBrownExperiment2ExperimentRunner[E <% Extractor[F], M <% Matcher[F], F](
+    self: BrownExperiment[E, M, F])(
+      implicit runtimeConfig: RuntimeConfig) = new BrownExperiment2ExperimentRunner(self)(runtimeConfig)
 }
 
 ///////////////////////////////////////////////////////////
@@ -60,5 +65,10 @@ object BrownExperimentResults {
         "recognitionRate" -> (() => SummaryUtil.recognitionRate(self.dmatches))),
       Map())
   }
+  
+    // TODO: Remove when Scala inference bug is fixed.
+  implicit def WTFBrownExperimentResults2ExperimentSummary[E, M, F](
+    self: BrownExperimentResults[E, M, F])(implicit runtimeConfig: RuntimeConfig) = 
+      brownExperimentResults2ExperimentSummary(self)(runtimeConfig)
 }
 
