@@ -20,7 +20,8 @@ trait StorageInfo[R] {
 }
 
 object StorageInfo {
-  implicit class Experiment2StorageInfo[E <% ExperimentRunner[R]: JsonFormat, R: JsonFormat](
+  // TODO: Refactor when Scala inference bug is fixed.
+  class Experiment2StorageInfo[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat, R: JsonFormat](
     experiment: E)(runtimeConfig: RuntimeConfig) extends StorageInfo[R] {
     private implicit val iRC = runtimeConfig
     
@@ -66,16 +67,12 @@ object StorageInfo {
     }
   }
   
-    // TODO: Remove when Scala inference bug is fixed.
-  implicit def WTFExperiment2StorageInfo[E <% ExperimentRunner[R]: JsonFormat, R: JsonFormat](
-    experiment: E)(implicit runtimeConfig: RuntimeConfig) = new Experiment2StorageInfo(experiment)(runtimeConfig)
-   
-  def destructure(function: aAndRuntimeConfig: (A, RuntimeConfig)) = 
-    
-    // TODO: Remove when Scala inference bug is fixed.
-  implicit def WTF2Experiment2StorageInfo[E <% ExperimentRunner[R]: JsonFormat, R: JsonFormat](
+    // TODO: Refactor when Scala inference bug is fixed.
+  def WTFExperiment2StorageInfo[E <% RuntimeConfig => ExperimentRunner[R]: JsonFormat, R: JsonFormat](
     experiment: E)(implicit runtimeConfig: RuntimeConfig) = new Experiment2StorageInfo(experiment)(runtimeConfig)    
 }
+
+
 
 
 

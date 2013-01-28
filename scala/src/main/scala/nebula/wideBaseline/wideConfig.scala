@@ -56,11 +56,21 @@ object WideBaselineExperiment {
     override def run = WideBaselineExperimentResults(self)
   }
 
-  // TODO: Remove when Scala inference bug is fixed.
+  // TODO: Refactor when Scala inference bug is fixed.
   implicit def WTFWideBaselineExperiment2ExperimentRunner[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F](
     self: WideBaselineExperiment[D, E, M, F])(
       implicit runtimeConfig: RuntimeConfig) = new WideBaselineExperiment2ExperimentRunner(self)(runtimeConfig)
 
+  // TODO: Refactor when Scala type inference bug is fixed. 
+  implicit def WTFWideBaselineExperiment2StorageInfo[D <% PairDetector: JsonFormat, E <% Extractor[F]: JsonFormat, M <% Matcher[F]: JsonFormat, F](
+    self: WideBaselineExperiment[D, E, M, F])(
+      runtimeConfig: RuntimeConfig) = new StorageInfo.Experiment2StorageInfo(self)(runtimeConfig)      
+
+  // TODO: Refactor when Scala type inference bug is fixed.      
+  implicit def WTFWideBaselineExperiment2StorageInfoImplicit[D <% PairDetector: JsonFormat, E <% Extractor[F]: JsonFormat, M <% Matcher[F]: JsonFormat, F](
+    self: WideBaselineExperiment[D, E, M, F])(
+      implicit runtimeConfig: RuntimeConfig) = new StorageInfo.Experiment2StorageInfo(self)(runtimeConfig)            
+      
   implicit class ImplicitImagePairLike(
     self: WideBaselineExperiment[_, _, _, _])(
       implicit runtime: RuntimeConfig) extends HasImagePair {

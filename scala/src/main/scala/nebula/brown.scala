@@ -7,6 +7,8 @@ import nebula.util._
 import org.apache.commons.io.FileUtils
 import javax.imageio.ImageIO
 import nebula.summary._
+import nebula.JsonProtocols._
+import spray.json._
 
 ///////////////////////////////////////////////////////////
 
@@ -24,11 +26,20 @@ object BrownExperiment {
 
     override def run = BrownExperimentResults(self)
   }
-  
-  // TODO: Remove when Scala inference bug is fixed.
+      
   implicit def WTFBrownExperiment2ExperimentRunner[E <% Extractor[F], M <% Matcher[F], F](
     self: BrownExperiment[E, M, F])(
       implicit runtimeConfig: RuntimeConfig) = new BrownExperiment2ExperimentRunner(self)(runtimeConfig)
+
+  // TODO: Refactor when Scala type inference bug is fixed. 
+  implicit def WTFBrownExperiment2StorageInfo[E <% Extractor[F]: JsonFormat, M <% Matcher[F]: JsonFormat, F](
+    self: BrownExperiment[E, M, F])(
+      runtimeConfig: RuntimeConfig) = new StorageInfo.Experiment2StorageInfo(self)(runtimeConfig)      
+
+  // TODO: Refactor when Scala type inference bug is fixed.      
+  implicit def WTFBrownExperiment2StorageInfoImplicit[E <% Extractor[F]: JsonFormat, M <% Matcher[F]: JsonFormat, F](
+    self: BrownExperiment[E, M, F])(
+      implicit runtimeConfig: RuntimeConfig) = new StorageInfo.Experiment2StorageInfo(self)(runtimeConfig)
 }
 
 ///////////////////////////////////////////////////////////

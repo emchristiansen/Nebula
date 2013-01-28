@@ -38,21 +38,19 @@ class TestBrown extends FunSuite {
 
     implicit val runtimeConfig: RuntimeConfig = TestUtil.runtimeConfig
 
-    import BrownJsonProtocol._
-    
     val results = experiment.run
     val summary = results.to[ExperimentSummary]
-    OpenCVExtractor.SIFT.toJson
-    Matcher.L2.toJson
-    experiment.toJson
-//    experiment.to[RuntimeConfig => StorageInfo[
-//      BrownExperimentResults[
-//        nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]]]]
 
+    //    implicitly[nebula.BrownExperiment[nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]] => 
+    //      nebula.RuntimeConfig => 
+    //        nebula.StorageInfo[
+    //          nebula.BrownExperimentResults[nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]]]]
+    //    
+    //    implicitly[nebula.BrownExperiment[nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]] => 
+    //      nebula.RuntimeConfig => 
+    //        nebula.ExperimentRunner[
+    //          nebula.BrownExperimentResults[nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]]]]    
 
-    
-    StorageInfo.WTFExperiment2StorageInfo(experiment)
-
-//            Distributed.unsafeCapstone(experiment)
+    Distributed.unsafeCapstone(experiment)
   }
 }

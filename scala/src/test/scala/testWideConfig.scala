@@ -7,6 +7,7 @@ import org.scalatest.junit.JUnitRunner
 import nebula.util._
 import nebula.summary._
 import nebula.wideBaseline.WideBaselineExperiment
+import nebula.JsonProtocols._
 
 ///////////////////////////////////////////////////////////
 
@@ -22,9 +23,9 @@ class TestWideConfig extends FunSuite {
       
     implicit val runtimeConfig = TestUtil.runtimeConfig
     
-//    val results = experiment.run
-//    val summary = results.to[ExperimentSummary]
-//    
-//    Distributed.unsafeCapstone(experiment)
+    val results = experiment.run
+    val summary = results.to[ExperimentSummary]
+    
+    Distributed.unsafeCapstone(experiment)
   }
 }
