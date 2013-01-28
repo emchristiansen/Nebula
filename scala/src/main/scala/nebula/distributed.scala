@@ -14,6 +14,10 @@ import nebula.MatcherJsonProtocol._
 import nebula.wideBaseline.WideBaselineJsonProtocol._
 import scala.reflect.runtime.universe._
 import org.apache.commons.io.FileUtils
+import shapeless._
+import nebula.wideBaseline._
+
+///////////////////////////////////////////////////////////
 
 object Distributed extends nebula.util.Logging {
   def runExperiment[E <% ExperimentRunner[R] <% StorageInfo[R], R <% ExperimentSummary](
@@ -43,7 +47,7 @@ object Distributed extends nebula.util.Logging {
   }
 
   type Capstone = (Boolean, RuntimeConfig) => ExperimentSummary
-  
+
   /**
    * Returns a closure of type Capstone.
    * This method is unsafe, in that the needed implicits are not found at
@@ -66,7 +70,7 @@ object Distributed extends nebula.util.Logging {
     implicit val ersTypeName = typeName[E => RuntimeConfig => StorageInfo[R]]
     implicit val rrsTypeName = typeName[R => RuntimeConfig => ExperimentSummary]
 
-    val capstone: Capstone = (writeImages, runtimeConfig) => {      
+    val capstone: Capstone = (writeImages, runtimeConfig) => {
       System.loadLibrary("opencv_java")
 
       def dropMiddle[A, B, C](f: A => B => C, b: B): A => C = a => f(a)(b)
@@ -87,5 +91,49 @@ object Distributed extends nebula.util.Logging {
     }
 
     capstone
+  }
+  
+  /**
+   * Work in progress.
+   */
+  def capstonesFromTuples[T <: HList](tuples: T): Seq[(Capstone, JsValue)] = {
+    val source = s"""
+      val tuples = ${tuples} 
+
+      object constructExperiment extends Poly1 {
+        implicit def default[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F] = at[(D, E, M)] {
+          case (detector, extractor, matcher) => {
+            WideBaselineExperiment(imageClass, otherImage, detector, extractor, matcher)
+          }
+        }
+      }
+
+      // This lifting, combined with flatMap, filters out types that can't be used                                                                                                                                                                                                              
+      // to construct experiments.                                                                                                                                                                                                                                                              
+      object constructExperimentLifted extends Lift1(constructExperiment)
+
+      val experiments = tuples flatMap constructExperimentLifted
+
+      println(experiments)
+
+      object constructCapstone extends Poly1 {
+        implicit def default[E <% RuntimeConfig => ExperimentRunner[R] <% RuntimeConfig => StorageInfo[R]: JsonFormat: TypeTag, R <% RuntimeConfig => ExperimentSummary: TypeTag] = at[E] {
+          experiment => Distributed.unsafeCapstone(experiment)
+        }
+      }
+
+      object getJson extends Poly1 {
+        implicit def default[E: JsonFormat] = at[E] { experiment =>
+          {
+            experiment.toJson
+          }
+        }
+      }
+
+      val capstones = experiments map constructCapstone
+      val jsons = experiments map getJson
+      capstones.toList zip jsons.toList
+    """
+    eval[Seq[(Capstone, JsValue)]](source.addImports)
   }
 }

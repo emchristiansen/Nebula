@@ -13,7 +13,7 @@ import spray.json._
 ///////////////////////////////////////////////////////////
 
 case class BrownExperiment[E <% Extractor[F], M <% Matcher[F], F](
-  datasetName: String,
+  dataset: String,
   numMatches: Int,
   extractor: E,
   matcher: M)
@@ -53,7 +53,7 @@ object BrownExperimentResults {
     experiment: BrownExperiment[E, M, F])(
       implicit runtimeConfig: RuntimeConfig): BrownExperimentResults[E, M, F] = {
     val patchPairs = PatchPair.loadPatchPairs(
-      experiment.datasetName,
+      experiment.dataset,
       experiment.numMatches,
       runtimeConfig.dataRoot)
 

@@ -1,3 +1,5 @@
+package nebula
+
 import shapeless._
 
 /**
@@ -37,18 +39,51 @@ object LiftA2 {
   }
 }
 
-object HListUtils {
+object HListUtil {
   def liftA2[HF, X <: HList, Y <: HList, Out <: HList](hf: HF)(x: X, y: Y)(implicit lift: LiftA2[HF, X, Y, Out]) = lift(x, y)
 
+  ///////////////////////////////////////////////////////////
+
   def mkTuple2[A <: HList, B <: HList, Out <: HList](a: A, b: B)(implicit lift: LiftA2[tuple2.type, A, B, Out]) = liftA2(tuple2)(a, b)
+
+  ///////////////////////////////////////////////////////////
+
+  object Flatten3 extends Poly1 {
+    implicit def default[A, B, C] = at[((A, B), C)] { case ((a, b), c) => (a, b, c) }
+  }
 
   def mkTuple3[A <: HList, B <: HList, C <: HList, Out1 <: HList, Out2 <: HList](
     a: A,
     b: B,
     c: C)(
       implicit lift1: LiftA2[tuple2.type, A, B, Out1],
-      lift2: LiftA2[tuple2.type,Out1,C,Out2]) = {
+      lift2: LiftA2[tuple2.type, Out1, C, Out2],
+      mapper: Mapper[Flatten3.type, Out2]) = {
     val ab = mkTuple2(a, b)
-    mkTuple2(ab, c)
+    val tuples = mkTuple2(ab, c)
+
+    tuples map Flatten3
+  }
+
+  ///////////////////////////////////////////////////////////
+
+  object Flatten4 extends Poly1 {
+    implicit def default[A, B, C, D] = at[(((A, B), C), D)] { case (((a, b), c), d) => (a, b, c, d) }
+  }
+
+  def mkTuple4[A <: HList, B <: HList, C <: HList, D <: HList, Out1 <: HList, Out2 <: HList, Out3 <: HList](
+    a: A,
+    b: B,
+    c: C,
+    d: D)(
+      implicit lift1: LiftA2[tuple2.type, A, B, Out1],
+      lift2: LiftA2[tuple2.type, Out1, C, Out2],
+      lift3: LiftA2[tuple2.type, Out2, D, Out3],
+      mapper: Mapper[Flatten4.type, Out3]) = {
+    val ab = mkTuple2(a, b)
+    val abc = mkTuple2(ab, c)
+    val abcd = mkTuple2(abc, d)
+
+    abcd map Flatten4
   }
 }

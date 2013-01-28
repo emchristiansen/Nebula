@@ -16,7 +16,7 @@ import nebula.JsonProtocols._
 
 @RunWith(classOf[JUnitRunner])
 class TestDistributed extends FunSuite {
-  ignore("ensure implicits are found") {
+  test("ensure implicits are found for WideBaselineExperiment") {
     val imageClasses = Seq(
       "graffiti",
       "trees",
@@ -79,28 +79,7 @@ class TestDistributed extends FunSuite {
       imageClass <- imageClasses;
       otherImage <- otherImages
     ) yield {
-      object detectorMapper extends Poly1 {
-        implicit def default[D] = at[D] { detector =>
-          {
-            object extractorMapper extends Poly1 {
-              implicit def default[E] = at[E] { extractor =>
-                {
-                  object matcherMapper extends Poly1 {
-                    implicit def default[M] = at[M] { matcher =>
-                      (detector, extractor, matcher)
-                    }
-                  }
-                  matchers map matcherMapper
-                }
-              }
-            }
-            extractors flatMap extractorMapper
-          }
-        }
-      }
-
-      val tuples = detectors flatMap detectorMapper
-      println(tuples)
+      val tuples = HListUtil.mkTuple3(detectors, extractors, matchers)
 
       object constructExperiment extends Poly1 {
         implicit def default[D <% PairDetector, E <% Extractor[F], M <% Matcher[F], F] = at[(D, E, M)] {
@@ -116,27 +95,73 @@ class TestDistributed extends FunSuite {
 
       val experiments = tuples flatMap constructExperimentLifted
 
-      println(experiments)
+      object constructCapstone extends Poly1 {
+        implicit def default[E <% RuntimeConfig => ExperimentRunner[R] <% RuntimeConfig => StorageInfo[R]: JsonFormat: TypeTag, R <% RuntimeConfig => ExperimentSummary: TypeTag] = at[E] {
+          experiment => Distributed.unsafeCapstone(experiment)
+        }
+      }
 
-//      object constructCapstone extends Poly1 {
-//        implicit def default[E <% RuntimeConfig => ExperimentRunner[R] <% RuntimeConfig => StorageInfo[R]: JsonFormat: TypeTag, R <% RuntimeConfig => ExperimentSummary: TypeTag] = at[E] {
-//          experiment => Distributed.unsafeCapstone(experiment)
-//        }
-//      }
-//
-//      object getJson extends Poly1 {
-//        implicit def default[E: JsonFormat] = at[E] { experiment =>
-//          {
-//            experiment.toJson
-//          }
-//        }
-//      }
-//
-//      val capstones = experiments map constructCapstone
-//      val jsons = experiments map getJson
-//      capstones.toList zip jsons.toList
+      object getJson extends Poly1 {
+        implicit def default[E: JsonFormat] = at[E] { experiment =>
+          {
+            experiment.toJson
+          }
+        }
+      }
+
+      val capstones = experiments map constructCapstone
+      val jsons = experiments map getJson
+      capstones.toList zip jsons.toList
     }
 
-//    transposed.transpose
+    transposed.transpose
+  }
+
+  test("ensure implicits are found for BrownExperiment") {
+    val datasets = Seq("liberty")
+    val numMatchess = Seq(1000)
+    val extractors = OpenCVExtractor.SIFT :: OpenCVExtractor.SURF :: HNil
+    val matchers = Matcher.L2 :: HNil
+
+    val transposed = for (
+      dataset <- datasets;
+      numMatches <- numMatchess
+    ) yield {
+      val tuples = HListUtil.mkTuple2(extractors, matchers)
+
+      object constructExperiment extends Poly1 {
+        implicit def default[E <% Extractor[F], M <% Matcher[F], F] = at[(E, M)] {
+          case (extractor, matcher) => {
+            BrownExperiment(dataset, numMatches, extractor, matcher)
+          }
+        }
+      }
+
+      // This lifting, combined with flatMap, filters out types that can't be used                                                                                                                                                                                                              
+      // to construct experiments.                                                                                                                                                                                                                                                              
+      object constructExperimentLifted extends Lift1(constructExperiment)
+
+      val experiments = tuples flatMap constructExperimentLifted
+
+      object constructCapstone extends Poly1 {
+        implicit def default[E <% RuntimeConfig => ExperimentRunner[R] <% RuntimeConfig => StorageInfo[R]: JsonFormat: TypeTag, R <% RuntimeConfig => ExperimentSummary: TypeTag] = at[E] {
+          experiment => Distributed.unsafeCapstone(experiment)
+        }
+      }
+
+      object getJson extends Poly1 {
+        implicit def default[E: JsonFormat] = at[E] { experiment =>
+          {
+            experiment.toJson
+          }
+        }
+      }
+
+      val capstones = experiments map constructCapstone
+      val jsons = experiments map getJson
+      capstones.toList zip jsons.toList
+    }
+
+    transposed.transpose
   }
 }
