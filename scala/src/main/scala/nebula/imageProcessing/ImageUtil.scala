@@ -1,4 +1,4 @@
-package nebula.util.imageProcessing
+package nebula.imageProcessing
 
 import java.awt.{ Color, Rectangle }
 import java.awt.color.ColorSpace

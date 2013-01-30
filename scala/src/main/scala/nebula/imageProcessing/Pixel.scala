@@ -1,4 +1,4 @@
-package nebula.util.imageProcessing
+package nebula.imageProcessing
 
 import java.awt.{Color, Rectangle}
 import java.awt.color.ColorSpace
@@ -10,6 +10,8 @@ import nebula.mpie._
 import nebula.summary._
 import nebula.smallBaseline._
 import nebula.util._
+import nebula.util.imageProcessing.CIELab;
+import nebula.util.imageProcessing.LinearRGBConverter;
 import nebula.util.imageProcessing._
 import nebula.wideBaseline._
 import nebula._
