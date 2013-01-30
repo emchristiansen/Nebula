@@ -12,10 +12,10 @@ import grizzled.math.stats
 import nebula.SortDescriptor.implicitIndexedSeq
 import nebula.util.DenseMatrixUtil._
 import nebula.util.JSONUtil._
-import nebula.util.imageProcessing.RichImage.bufferedImage
+import nebula.imageProcessing.RichImage.bufferedImage
 import spray.json._
 import util.{ OpenCVUtil, Util }
-import util.imageProcessing.{ ImageUtil, Pixel }
+import imageProcessing.{ ImageUtil, Pixel }
 import SortDescriptor._
 
 import scala.reflect.runtime.universe._

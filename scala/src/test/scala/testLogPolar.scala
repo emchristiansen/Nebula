@@ -25,7 +25,7 @@ import nebula.mpie._
 import nebula.summary._
 import nebula.smallBaseline._
 import nebula.util._
-import nebula.util.imageProcessing._
+import nebula.imageProcessing._
 import nebula.wideBaseline._
 import nebula._
 
@@ -44,7 +44,7 @@ import DenseMatrixUtil._
 import TestUtil._
 
 import scala.util._
-import nebula.util.imageProcessing.RichImage._
+import nebula.imageProcessing.RichImage._
 import MathUtil._
 import grizzled.math.stats
 

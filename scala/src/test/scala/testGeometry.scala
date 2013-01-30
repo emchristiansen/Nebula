@@ -7,7 +7,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import nebula.util._
 import nebula.util.ImageGeometry._
-import nebula.util.imageProcessing._
+import nebula.imageProcessing._
 
 ///////////////////////////////////////////////////////////
 

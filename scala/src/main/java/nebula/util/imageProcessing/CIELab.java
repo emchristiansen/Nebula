@@ -1,4 +1,4 @@
-package nebula.util.imageProcessing;
+package nebula.imageProcessing;
 
 // From http://stackoverflow.com/questions/4593469/java-how-to-convert-rgb-color-to-cie-lab
 

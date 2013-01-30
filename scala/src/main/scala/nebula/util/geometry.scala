@@ -17,12 +17,12 @@ import nebula.mpie._
 import nebula.summary._
 import nebula.smallBaseline._
 import nebula.util._
-import nebula.util.imageProcessing._
+import nebula.imageProcessing._
 import nebula.wideBaseline._
 import nebula._
 import java.awt.image._
-import nebula.util.imageProcessing.ImageUtil._
-import nebula.util.imageProcessing.RichImage._
+import nebula.imageProcessing.ImageUtil._
+import nebula.imageProcessing.RichImage._
 import org.opencv.features2d._
 
 ///////////////////////////////////////////////////////////

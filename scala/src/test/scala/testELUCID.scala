@@ -8,7 +8,7 @@ import nebula._
 import org.opencv.core.Mat
 import java.awt.Color
 import java.awt.image.BufferedImage
-import nebula.util.imageProcessing.ImageUtil
+import nebula.imageProcessing.ImageUtil
 
 
 

@@ -17,7 +17,7 @@ package nebula.graveyard
 //import nebula.summary._
 //import nebula.smallBaseline._
 //import nebula.util._
-//import nebula.util.imageProcessing._
+//import nebula.imageProcessing._
 //import nebula.wideBaseline._
 //
 case class Point2D(val x: Double, val y: Double) {

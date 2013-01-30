@@ -6,8 +6,8 @@ import org.opencv.features2d.KeyPoint
 
 import breeze.linalg.{ DenseMatrix, DenseVector, copy }
 import nebula.util.DenseMatrixUtil._
-import nebula.util.imageProcessing.ImageUtil
-import nebula.util.imageProcessing.RichImage.bufferedImage
+import nebula.imageProcessing.ImageUtil
+import nebula.imageProcessing.RichImage.bufferedImage
 import scala.reflect._
 
 ///////////////////////////////////////////////////////////

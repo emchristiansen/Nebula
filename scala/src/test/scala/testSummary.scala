@@ -65,7 +65,7 @@ import nebula.mpie._
 import nebula.summary._
 import nebula.smallBaseline._
 import nebula.util._
-import nebula.util.imageProcessing._
+import nebula.imageProcessing._
 import nebula.wideBaseline._
 import nebula._
 

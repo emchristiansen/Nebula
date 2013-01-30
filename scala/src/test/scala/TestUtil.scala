@@ -2,7 +2,7 @@ import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 import java.io.File
 
-import nebula.util.imageProcessing._
+import nebula.imageProcessing._
 import nebula.util.DenseMatrixUtil._
 import nebula._
 

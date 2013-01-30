@@ -5,7 +5,7 @@ import java.io.File
 import nebula.util._
 import javax.imageio.ImageIO
 import nebula.util._
-import nebula.util.imageProcessing._
+import nebula.imageProcessing._
 import nebula.Extractor
 import nebula.Matcher
 import nebula.PimpFile
