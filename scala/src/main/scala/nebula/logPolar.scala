@@ -212,10 +212,9 @@ object LogPolar {
     response
   }
 
-  implicit class LogPolarMatcher2ResponseMap[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
-    self: LogPolarMatcher[N, M, F2])(
-      implicit ed: ((N, M)) => ExpectedDistance) {
-    def responseMap = (left: DenseMatrix[Int], right: DenseMatrix[Int]) => {
+  def getResponseMapWrapper[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
+    self: LogPolarMatcher[N, M, F2], left: DenseMatrix[Int], right: DenseMatrix[Int])(
+      implicit ed: ((N, M)) => ExpectedDistance) = {
       require(left.rows == right.rows)
       require(left.cols == right.cols)
       require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
@@ -238,11 +237,10 @@ object LogPolar {
         angleIndices,
         scaleIndices)
     }
-  }
 
   def distance[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](self: LogPolarMatcher[N, M, F2])(
     implicit ed: ((N, M)) => ExpectedDistance): Matcher.DescriptorDistance[DenseMatrix[Int]] = (left: DenseMatrix[Int], right: DenseMatrix[Int]) => {
-    val response = self.responseMap(left, right)
+    val response = getResponseMapWrapper(self, left, right)
     response.min
   }
 }

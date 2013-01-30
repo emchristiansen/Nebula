@@ -301,7 +301,7 @@ class TestLogPolar extends FunSuite {
       val normalizer = PatchNormalizer.Rank
       val matcher = LogPolarMatcher(normalizer, Matcher.L1, true, true, 0)
 
-      val response = matcher.responseMap(original, rotated)
+      val response = LogPolar.getResponseMapWrapper(matcher, original, rotated)
 
       dumpImage(f"${angle}%.2f_recoverProperAngle", scale10(response.toScaledImage))
 
@@ -340,7 +340,7 @@ class TestLogPolar extends FunSuite {
       //      dumpImage("rawLogPolarRecoverProperScale_original", scale100(original.toScaledImage))
       //      dumpImage("rawLogPolarRecoverProperScale_scaled", scale100(scaled.toScaledImage))
 
-      val response = matcher.responseMap(original, scaled)
+      val response = LogPolar.getResponseMapWrapper(matcher, original, scaled)
 
       dumpImage(f"${scaleFactor}%.2f_recoverProperScale", scale10(response.toScaledImage))
 
@@ -387,7 +387,7 @@ class TestLogPolar extends FunSuite {
       //      dumpImage("rawLogPolarRecoverProperScale_original", scale100(original.toScaledImage))
       //      dumpImage("rawLogPolarRecoverProperScale_scaled", scale100(scaled.toScaledImage))
 
-      val response = matcher.responseMap(original, warped)
+      val response = LogPolar.getResponseMapWrapper(matcher, original, warped)
 
       dumpImage(f"${angle}%.2f_${scaleFactor}%.2f_recoverProperAngleAndScale", scale10(response.toScaledImage))
 
