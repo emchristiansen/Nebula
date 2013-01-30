@@ -1,8 +1,10 @@
-package nebula
+package nebula.brown
 
 import spray.json._
 import nebula.util.JSONUtil._
 import nebula.util.DMatchJsonProtocol._
+import nebula.Extractor
+import nebula.Matcher
 
 ///////////////////////////////////////////////////////////
 

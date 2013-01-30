@@ -8,6 +8,7 @@ import nebula.util._
 import nebula.summary._
 import nebula.JsonProtocols._
 import spray.json._
+import nebula.brown._
 import com.sun.xml.internal.bind.v2.model.runtime.RuntimeClassInfo
 
 ///////////////////////////////////////////////////////////

@@ -10,6 +10,7 @@ import nebula.wideBaseline.WideBaselineJsonProtocol
 import shapeless._
 import java.io.File
 import nebula.util._
+import nebula.brown._
 
 ///////////////////////////////////////////////////////////
 

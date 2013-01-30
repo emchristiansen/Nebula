@@ -1,13 +1,15 @@
-package nebula
+package nebula.brown
 
-import org.opencv.features2d.DMatch
 import java.awt.image.BufferedImage
 import java.io.File
 import nebula.util._
-import org.apache.commons.io.FileUtils
 import javax.imageio.ImageIO
 import nebula.util._
 import nebula.util.imageProcessing._
+import nebula.Extractor
+import nebula.Matcher
+import nebula.PimpFile
+import org.apache.commons.io.FileUtils
 
 ///////////////////////////////////////////////////////////
 

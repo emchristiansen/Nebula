@@ -11,6 +11,7 @@ import shapeless._
 import spray.json._
 import reflect.runtime.universe._
 import nebula.JsonProtocols._
+import nebula.brown._
 
 ///////////////////////////////////////////////////////////
 
