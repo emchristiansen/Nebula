@@ -25,12 +25,43 @@ case class ExperimentSummary(
 
 object ExperimentSummary {
   implicit class ExperimentSummaryOps(self: ExperimentSummary) {
-    def outDirectory(implicit runtime: RuntimeConfig) = 
+    def outDirectory(implicit runtime: RuntimeConfig) =
       new File(runtime.outputRoot, "summary").mustExist
   }
 }
 
 object SummaryUtil {
+  /**
+   * The error rate for a given recall.
+   */
+  def errorRateAtRecall(recall: Double, dmatches: Seq[DMatch]): Double = {
+    require(recall >= 0)
+    require(recall <= 1)
+
+    val sorted = dmatches.sortBy(_.distance)
+
+    def positive(dmatch: DMatch): Boolean = dmatch.queryIdx == dmatch.trainIdx
+
+    def numPositive(dmatches: Seq[DMatch]): Int = dmatches.count(positive)
+
+    val totalPositive = numPositive(sorted)
+    if (totalPositive == 0) Double.NaN
+    else {
+      val allSplits = (0 to sorted.size).toStream map { i => sorted.splitAt(i) }
+
+      val (left, right) = (allSplits find {
+        case (left, right) => {
+          numPositive(left).toDouble / totalPositive >= recall
+        }
+      }).get
+
+      val errorLeft = left.size - numPositive(left)
+      val errorRight = numPositive(right)
+
+      (errorLeft + errorRight).toDouble / sorted.size
+    }
+  }
+
   def recognitionRate(dmatches: Seq[DMatch]): Double = {
     // The base image feature index is |queryIdx|, and the other 
     // image is |trainIdx|. This weirdness is caused by a convention

@@ -53,4 +53,14 @@ class TestBrown extends FunSuite {
 
     Distributed.unsafeCapstone(experiment)
   }
+
+  ignore("brown toJson") {
+    val experiment = BrownExperiment(
+      "liberty",
+      1000,
+      OpenCVExtractor.SIFT,
+      Matcher.L2)
+
+    println(experiment.toJson)
+  }
 }

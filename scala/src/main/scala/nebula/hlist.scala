@@ -32,7 +32,8 @@ object LiftA2 {
     def apply(x: HNil, y: Y) = HNil
   }
 
-  implicit def hlist[HF, XH, XT <: HList, Y <: HList, Out1 <: HList, Out2 <: HList, Out <: HList](implicit am: ApplyMapper[HF, XH, Y, Out1],
+  implicit def hlist[HF, XH, XT <: HList, Y <: HList, Out1 <: HList, Out2 <: HList, Out <: HList](
+      implicit am: ApplyMapper[HF, XH, Y, Out1],
     lift: LiftA2[HF, XT, Y, Out2],
     prepend: PrependAux[Out1, Out2, Out]) = new LiftA2[HF, XH :: XT, Y, Out] {
     def apply(x: XH :: XT, y: Y) = prepend(am(x.head, y), lift(x.tail, y))

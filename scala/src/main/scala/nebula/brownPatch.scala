@@ -6,6 +6,8 @@ import java.io.File
 import nebula.util._
 import org.apache.commons.io.FileUtils
 import javax.imageio.ImageIO
+import nebula.util._
+import nebula.util.imageProcessing._
 
 ///////////////////////////////////////////////////////////
 
@@ -29,6 +31,12 @@ object PatchPair {
     require(image.getWidth == 64)
     require(image.getHeight == 64)
 
+    // TODO: Scale down
+//    val scaleFactor = 8
+//    val scaled = ImageUtil.scale(scaleFactor, image)._2
+//    val keyPoint = KeyPointUtil(scaleFactor * 32, scaleFactor * 32)
+//    extractor.extractSingle(scaled, keyPoint)
+    
     val keyPoint = KeyPointUtil(32, 32)
     extractor.extractSingle(image, keyPoint)
   }

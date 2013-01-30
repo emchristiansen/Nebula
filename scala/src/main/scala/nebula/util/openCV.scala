@@ -148,7 +148,7 @@ object OpenCVUtil {
 
 ///////////////////////////////////////////////////////////
 
-object DMatchJsonProtocol extends DefaultJsonProtocol {
+trait DMatchJsonProtocol extends DefaultJsonProtocol {
   // This is a do-nothing wrapper, existing only so we can use the automatic
   // JsonFormat generator for case classes, rather that having to write our
   // own.
@@ -182,3 +182,5 @@ object DMatchJsonProtocol extends DefaultJsonProtocol {
 //    }
 //  }
 }
+
+object DMatchJsonProtocol extends DMatchJsonProtocol

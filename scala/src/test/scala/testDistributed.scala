@@ -164,4 +164,27 @@ class TestDistributed extends FunSuite {
 
     transposed.transpose
   }
+
+  test("hlist stuff") {
+    object mkBrown extends Poly2 {
+      implicit def default[E <% Extractor[F], M <% Matcher[F], F, B] = at[(E, M), B] {
+        case ((e, m), b) => {
+          val exp = BrownExperiment("liberty", 1000, e, m)
+          exp.toString
+        }
+      }
+    }
+
+    def foo[H <: HList, Out <: HList](h: HList)(
+        implicit lift: nebula.LiftA2[mkBrown.type,shapeless.HList,shapeless.HList,Out]) {
+      HListUtil.liftA2(mkBrown)(h, h)
+    }
+    
+//    val extractors = OpenCVExtractor.SIFT :: OpenCVExtractor.SURF :: HNil
+//    val matchers = Matcher.L2 :: HNil
+//    
+//    val tuples = HListUtil.mkTuple2(extractors, matchers)
+//    
+//    foo(tuples)
+  }
 }

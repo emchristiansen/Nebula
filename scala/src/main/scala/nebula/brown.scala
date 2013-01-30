@@ -73,7 +73,7 @@ object BrownExperimentResults {
     implicit val iRC = runtimeConfig
     ExperimentSummary(
       Map(
-        "recognitionRate" -> (() => SummaryUtil.recognitionRate(self.dmatches))),
+        "errorRateAtRecall95" -> (() => SummaryUtil.errorRateAtRecall(0.95, self.dmatches))),
       Map())
   }
   

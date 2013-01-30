@@ -115,4 +115,29 @@ class TestSummary extends FunSuite {
     val golden = "a-aa_b-*"
     assert(summary === golden)
   }
+  
+  test("errorRateAtRecall") {
+    val dmatch0 = new DMatch(0, 0, 10)
+    val dmatch1 = new DMatch(1, 2, 11)
+    val dmatch2 = new DMatch(3, 3, 12)
+    val dmatch3 = new DMatch(4, 5, 13)
+    val dmatch4 = new DMatch(2, 1, 14)
+    val dmatch5 = new DMatch(0, 0, 15)
+    
+    val dmatches = Seq(
+      dmatch1,
+      dmatch4,
+      dmatch3,
+      dmatch2,
+      dmatch5,
+      dmatch0)
+      
+    assert(SummaryUtil.errorRateAtRecall(0, dmatches) === 3 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.1, dmatches) === 2 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.4, dmatches) === 2 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.5, dmatches) === 2 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.7, dmatches) === 3 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.9, dmatches) === 3 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(1, dmatches) === 3 / 6.0)
+  }
 }

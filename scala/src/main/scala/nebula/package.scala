@@ -9,6 +9,7 @@ import spray.json._
 import nebula.wideBaseline.WideBaselineJsonProtocol
 import shapeless._
 import java.io.File
+import nebula.util._
 
 ///////////////////////////////////////////////////////////
 
@@ -33,7 +34,10 @@ package object nebula {
       file
     }
 
-    def parentMustExist: File = new File(file.getParent).mustExist
+    def parentMustExist: File = {
+      new File(file.getParent).mustExist
+      file
+    }
 
     def +(that: String): File = new File(file, that)
   }
@@ -44,7 +48,8 @@ package object nebula {
   PatchNormalizerJsonProtocol with
   MatcherJsonProtocol with
   WideBaselineJsonProtocol with 
-  BrownJsonProtocol
+  BrownJsonProtocol with
+  DMatchJsonProtocol
 
   implicit class IntTimes(int: Int) {
     def times[A](function: => A): IndexedSeq[A] =
@@ -74,12 +79,7 @@ package object nebula {
 
   val jsonImports = Imports(Set(
     "spray.json._",
-    "nebula.util.DMatchJsonProtocol._",
-    "nebula.DetectorJsonProtocol._",
-    "nebula.ExtractorJsonProtocol._",
-    "nebula.NormalizerJsonProtocol._",
-    "nebula.MatcherJsonProtocol._",
-    "nebula.wideBaseline.WideBaselineJsonProtocol._"))
+    "nebula.JsonProtocols._"))
 
   val sparkImports = Imports(Set(
     "spark.SparkContext",
@@ -87,8 +87,11 @@ package object nebula {
 
   val shapelessImports = Imports(Set(
     "shapeless._"))
+    
+  val reflectImports = Imports(Set(
+    "reflect.runtime.universe._"))
 
-  implicit val allImports = Imports(nebulaImports ++ jsonImports ++ sparkImports ++ shapelessImports)
+  implicit val allImports = Imports(nebulaImports ++ jsonImports ++ sparkImports ++ shapelessImports ++ reflectImports)
 
   // TODO: Replace with ???
   def TODO = sys.error("TODO")
