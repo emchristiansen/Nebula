@@ -1,4 +1,4 @@
-package nebula
+package nebula.util
 
 import nebula._
 import nebula.util._

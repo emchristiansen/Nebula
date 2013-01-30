@@ -1,4 +1,4 @@
-package nebula
+package nebula.util
 
 import org.scalacheck.Prop.{ forAll, propBoolean }
 import org.scalacheck.Properties

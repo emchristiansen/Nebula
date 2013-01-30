@@ -1,4 +1,4 @@
-package nebula
+package nebula.brown
 
 import nebula._
 import org.scalatest.FunSuite

@@ -1,5 +1,6 @@
-package nebula
+package nebula.wideBaseline
 
+import nebula._
 import org.scalatest.FunSuite
 import javax.imageio.ImageIO
 import java.io.File
@@ -7,7 +8,6 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import nebula.util._
 import nebula.summary._
-import nebula.wideBaseline.WideBaselineExperiment
 import nebula.JsonProtocols._
 
 ///////////////////////////////////////////////////////////

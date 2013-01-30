@@ -1,4 +1,4 @@
-package nebula
+package nebula.smallBaseline
 
 import org.apache.commons.math3.linear.{ Array2DRowRealMatrix, ArrayRealVector }
 import org.scalatest.FunSuite
