@@ -352,7 +352,7 @@ class TestLogPolar extends FunSuite {
     }
   }
 
-  ignore("recover proper angle and scale") {
+  test("recover proper angle and scale") {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 150) }
 

@@ -168,10 +168,7 @@ object LogPolar {
   //    (seqSeq ++ seqSeq.init).toMatrix
   //  }
 
-  def getResponseMap[
-    N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], 
-    M <% Matcher[DenseMatrix[F2]], 
-    F2](
+  def getResponseMap[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
     normalizer: N,
     normalizeByOverlap: Boolean,
     matcher: M,
@@ -179,24 +176,13 @@ object LogPolar {
     kernel: DenseMatrix[Int],
     angleIndices: Range,
     scaleIndices: Range)(
-        implicit ed: ((N, M)) => ExpectedDistance): DenseMatrix[Double] = {
+      implicit ed: ((N, M)) => ExpectedDistance): DenseMatrix[Double] = {
     require(2 * kernel.rows - 1 == base.rows)
     require(kernel.cols == base.cols)
     require(angleIndices.min >= 0)
     require(angleIndices.max < kernel.rows)
     require(scaleIndices.min >= -kernel.cols + 1)
     require(scaleIndices.max < kernel.cols)
-
-    //    // If |normalization| isn't raw, we do match-time normalization
-    //    // of the part of the log-polar patterns that overlap.
-    //    def normalize(patch: DenseMatrix[Double]): IndexedSeq[Double] = {
-    //      if (normalization == PatchExtractorType.Raw) 
-    //        patch.toSeqSeq.flatten
-    //      else {
-    //        val extractor = PatchExtractor.constructorDouble(normalization)
-    //        extractor(patch.toSeqSeq.flatten).values[Double]
-    //      }
-    //    }
 
     val response = DenseMatrix.fill(angleIndices.size, scaleIndices.size)(0.0)
     for (angleIndex <- angleIndices; scaleIndex <- scaleIndices) {
@@ -224,5 +210,39 @@ object LogPolar {
       } else unnormalized
     }
     response
+  }
+
+  implicit class LogPolarMatcher2ResponseMap[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
+    self: LogPolarMatcher[N, M, F2])(
+      implicit ed: ((N, M)) => ExpectedDistance) {
+    def responseMap = (left: DenseMatrix[Int], right: DenseMatrix[Int]) => {
+      require(left.rows == right.rows)
+      require(left.cols == right.cols)
+      require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
+
+      //        val distance = self.matcher.distance
+
+      val angleIndices = if (self.rotationInvariant) {
+        0 until left.rows
+      } else 0 until 1
+
+      val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius
+
+      // TODO
+      LogPolar.getResponseMap(
+        self.normalizer,
+        self.normalizeByOverlap,
+        self.matcher,
+        DenseMatrix.vertcat(left, left(0 until left.rows - 1, ::)),
+        right,
+        angleIndices,
+        scaleIndices)
+    }
+  }
+
+  def distance[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](self: LogPolarMatcher[N, M, F2])(
+    implicit ed: ((N, M)) => ExpectedDistance): Matcher.DescriptorDistance[DenseMatrix[Int]] = (left: DenseMatrix[Int], right: DenseMatrix[Int]) => {
+    val response = self.responseMap(left, right)
+    response.min
   }
 }
