@@ -1,3 +1,9 @@
+package nebula
+
+import org.scalatest.FunSuite
+
+import nebula.summary.SummaryUtil
+
 import org.scalatest.FunSuite
 import org.opencv.features2d._
 import javax.imageio.ImageIO
@@ -5,7 +11,6 @@ import java.io.File
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
 import nebula._
-//import org.apache.xmlgraphics.image.loader.ImageManager
 import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
 import nebula.util.JSONUtil
@@ -26,7 +31,9 @@ import nebula.util._
 
 import breeze.linalg._
 
-import JsonProtocols._
+import DetectorJsonProtocol._
+import ExtractorJsonProtocol._
+import MatcherJsonProtocol._
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -40,7 +47,6 @@ import java.io.File
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
 import nebula._
-//import org.apache.xmlgraphics.image.loader.ImageManager
 import org.opencv.core.Mat
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -82,23 +88,58 @@ import TestUtil._
 ///////////////////////////////////////////////////////////
 
 @RunWith(classOf[JUnitRunner])
-class TestJSON extends FunSuite {
-//  test("test flattenJson on an example") {
-//    val wide = WideBaselineExperiment(
-//      "wall",
-//      2,
-//      BoundedPairDetector(
-//        BoundedDetector(OpenCVDetector.FAST, 100),
-//        10),
-//      PatchExtractor(
-//        false,
-//        false,
-//        8,
-//        5,
-//        "Gray"),
-//      Matcher.L1)
-//      
-//    assert(JSONUtil.flattenJson(wide.toJson) === 
-//      "WideBaselineExperiment_D-{OpenCVPairDetector_D-{OpenCVDetector_DT-FAST_MKPO-100}_MKPO-10}_E-{PatchExtractor_BW-5_C-Gray_ET-Rank_NR-false_NS-false_PW-8}_IC-wall_M-L1_OI-2")
-//  }
+class TestSummary extends FunSuite { 
+  test("mapUnion") {
+    val map1 = Map(1 -> 12, 2 -> 13)
+    val map2 = Map(1 -> 10, 3 -> 10, 2 -> 13)
+    val maps = Set(map1, map2)
+
+    val union = SummaryUtil.mapUnion(maps)
+    val golden = Map(1 -> Set(12, 10), 2 -> Set(13), 3 -> Set(10))
+
+    assert(union === golden)
+  }
+
+  test("changingFields") {
+    val map1 = Map(1 -> 10, 2 -> 20)
+    val map2 = Map(1 -> 10, 2 -> 30)
+    val maps = Seq(map1, map2)
+
+    val changing = SummaryUtil.changingFields(maps)
+    val golden = Seq(Map(2 -> 20), Map(2 -> 30))
+    assert(changing === golden)
+  }
+
+  test("summarizeStructure") {
+    val map1 = Map("a" -> "aa", "b" -> "bb")
+    val map2 = Map("a" -> "aa", "b" -> "cc")
+    val summary = SummaryUtil.summarizeStructure(Set(map1, map2))
+    val golden = "a-aa_b-*"
+    assert(summary === golden)
+  }
+  
+  test("errorRateAtRecall") {
+    val dmatch0 = new DMatch(0, 0, 10)
+    val dmatch1 = new DMatch(1, 2, 11)
+    val dmatch2 = new DMatch(3, 3, 12)
+    val dmatch3 = new DMatch(4, 5, 13)
+    val dmatch4 = new DMatch(2, 1, 14)
+    val dmatch5 = new DMatch(0, 0, 15)
+    
+    val dmatches = Seq(
+      dmatch1,
+      dmatch4,
+      dmatch3,
+      dmatch2,
+      dmatch5,
+      dmatch0)
+      
+    assert(SummaryUtil.errorRateAtRecall(0, dmatches) === 3 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.1, dmatches) === 2 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.4, dmatches) === 2 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.5, dmatches) === 2 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.7, dmatches) === 3 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(0.9, dmatches) === 3 / 6.0)
+    assert(SummaryUtil.errorRateAtRecall(1, dmatches) === 3 / 6.0)
+  }
 }

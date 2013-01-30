@@ -1,8 +1,10 @@
-import nebula._
+package nebula
 
 import org.scalacheck.Properties
 import org.scalacheck.Prop._
 import org.scalacheck._
+
+///////////////////////////////////////////////////////////
 
 object CheckSortDescriptor extends Properties("SortDescriptor") {
   val vowel = Gen.oneOf('A', 'E', 'I', 'O', 'U', 'Y')

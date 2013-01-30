@@ -1,3 +1,5 @@
+package nebula
+
 import nebula._
 import nebula.util._
 import org.scalatest.FunSuite

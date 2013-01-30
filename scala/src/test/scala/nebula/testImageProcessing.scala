@@ -1,3 +1,5 @@
+package nebula
+
 import java.io.File
 
 import org.scalatest.FunSuite
@@ -60,7 +62,7 @@ import DenseMatrixUtil._
 
 import TestUtil._
 
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
 
 @RunWith(classOf[JUnitRunner])
 class TestRichImage extends FunSuite {

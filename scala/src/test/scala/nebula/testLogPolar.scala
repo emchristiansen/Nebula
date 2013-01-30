@@ -1,3 +1,5 @@
+package nebula
+
 import org.scalatest.FunSuite
 import org.opencv.features2d._
 import javax.imageio.ImageIO

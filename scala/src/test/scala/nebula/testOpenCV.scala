@@ -1,10 +1,10 @@
+package nebula
+
 import org.apache.commons.math3.linear.{ Array2DRowRealMatrix, ArrayRealVector }
 import org.scalatest.FunSuite
 import nebula.util.Homography
 
-
-
-
+///////////////////////////////////////////////////////////
 
 class TestOpenCV extends FunSuite {
   test("scaleFactor") {

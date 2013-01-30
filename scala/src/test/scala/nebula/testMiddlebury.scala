@@ -1,3 +1,5 @@
+package nebula
+
 import org.apache.commons.math3.linear.{ Array2DRowRealMatrix, ArrayRealVector }
 import org.scalatest.FunSuite
 import nebula._
@@ -9,6 +11,7 @@ import java.io.File
 import nebula.smallBaseline.FlowField
 import nebula.smallBaseline.SmallBaselinePair
 
+///////////////////////////////////////////////////////////
 
 class TestMiddlebury extends FunSuite {
   ignore("construct FlowField from file") {

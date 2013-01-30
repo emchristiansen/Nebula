@@ -1,7 +1,11 @@
+package nebula
+
 import nebula._
 
 import org.scalatest.FunSuite
  
+///////////////////////////////////////////////////////////
+
 class TestEpsilonL1Match extends FunSuite {
    
 //   test("calculateL1") {

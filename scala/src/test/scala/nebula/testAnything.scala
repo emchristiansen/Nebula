@@ -1,3 +1,5 @@
+package nebula
+
 import nebula._
 import org.scalatest.FunSuite
 import javax.imageio.ImageIO

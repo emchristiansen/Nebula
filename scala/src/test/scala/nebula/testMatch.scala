@@ -1,7 +1,11 @@
+package nebula
+
 import nebula._
 
 import org.scalatest.FunSuite
  
+///////////////////////////////////////////////////////////
+
 class TestPyramidHistogram extends FunSuite {
   // import PyramidHistogram._
   

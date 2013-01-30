@@ -1,7 +1,11 @@
+package nebula
+
 import nebula._
 import org.scalatest.FunSuite
 import nebula.util.Util
  
+///////////////////////////////////////////////////////////
+
 class TestSortDescriptor extends FunSuite {
   val sort0 = SortDescriptor(IndexedSeq(0, 1, 2, 3))
   val sort1 = SortDescriptor(IndexedSeq(2, 1, 3, 0))

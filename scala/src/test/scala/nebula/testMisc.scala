@@ -1,3 +1,5 @@
+package nebula
+
 import org.scalacheck.Prop.{ forAll, propBoolean }
 import org.scalacheck.Properties
 import org.scalatest.FunSuite
@@ -31,6 +33,8 @@ import spray.json.JsValue
 
 import spray.json._
 import JSONUtil._
+
+///////////////////////////////////////////////////////////
 
 case class Person(firstName: String, lastName: String, int: Int, double: Double)
 

@@ -1,3 +1,5 @@
+package nebula
+
 import org.scalatest.FunSuite
 import org.opencv.features2d._
 import javax.imageio.ImageIO
@@ -12,6 +14,8 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import nebula.util.Homography
 import nebula.util.OpenCVUtil
 import nebula.util.KeyPointUtil
+
+///////////////////////////////////////////////////////////
 
 class TestExtractor extends FunSuite {
 //  test("uniformRank") {

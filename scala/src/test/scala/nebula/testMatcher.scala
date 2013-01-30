@@ -1,9 +1,13 @@
+package nebula
+
 import org.scalacheck.Prop.{forAll, propBoolean}
 import org.scalacheck.Properties
 import org.scalatest.FunSuite
 import nebula.util.Util
 import nebula.Matcher._
 import nebula.SortDescriptor
+
+///////////////////////////////////////////////////////////
 
 class TestMatcher extends FunSuite {
 //  test("robustCayley") {

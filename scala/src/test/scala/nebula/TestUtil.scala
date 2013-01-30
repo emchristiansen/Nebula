@@ -1,3 +1,5 @@
+package nebula
+
 import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 import java.io.File
@@ -5,6 +7,8 @@ import java.io.File
 import nebula.imageProcessing._
 import nebula.util.DenseMatrixUtil._
 import nebula._
+
+///////////////////////////////////////////////////////////
 
 object TestUtil {
   def dumpImage(name: String, image: BufferedImage) {

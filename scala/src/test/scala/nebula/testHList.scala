@@ -1,6 +1,10 @@
+package nebula
+
 import org.scalatest.FunSuite
 import nebula._
 import shapeless._
+
+///////////////////////////////////////////////////////////
 
 class TestHList extends FunSuite {
   test("cartesian product of HLists") {
