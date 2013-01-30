@@ -20,7 +20,6 @@ import org.opencv.features2d.{ DMatch, KeyPoint }
 import org.opencv.highgui.Highgui.imread
 
 import javax.imageio.ImageIO
-//import net.liftweb.json.{ Formats, JDouble, JField, JInt, JObject, JString, JValue, MappingException, Serializer, TypeInfo }
 
 import spray.json._
 import JSONUtil._

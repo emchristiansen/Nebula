@@ -52,9 +52,12 @@ import grizzled.math.stats
 
 import org.imgscalr.Scalr
 import nebula.util.ImageGeometry._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
+@RunWith(classOf[JUnitRunner])
 class TestLogPolar extends FunSuite {
   val image = ImageIO.read(new File(
     getClass.getResource("/iSpy.png").getFile).mustExist)

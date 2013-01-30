@@ -20,9 +20,6 @@ import scala.util.Random
 import org.opencv.features2d.KeyPoint
 
 import nebula._
-//import net.liftweb.json.{ JField, JObject, JString, Serialization }
-//import net.liftweb.json.{ ShortTypeHints, parse, render }
-//import net.liftweb.json.Serialization.write
 
 import breeze.linalg._
 

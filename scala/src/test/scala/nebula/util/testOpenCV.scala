@@ -3,9 +3,12 @@ package nebula.util
 import org.apache.commons.math3.linear.{ Array2DRowRealMatrix, ArrayRealVector }
 import org.scalatest.FunSuite
 import nebula.util.Homography
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
+@RunWith(classOf[JUnitRunner])
 class TestOpenCV extends FunSuite {
   test("scaleFactor") {
     val xyPoint = new ArrayRealVector(Array(3.0, 4.0))

@@ -7,19 +7,16 @@ import java.awt.image.BufferedImage
 import java.awt.image.ConvolveOp
 import java.awt.image.Kernel
 import java.io.File
+
 import scala.Array.canBuildFrom
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
 import javax.imageio.ImageIO
-
-import nebula.util.Util
-
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
+import nebula.imageProcessing.ImageUtil
+import nebula.imageProcessing.Pixel
+import nebula.util.Geometry
+import nebula.util.MathUtil
 
 class LazyImage(
   originalPath: String,

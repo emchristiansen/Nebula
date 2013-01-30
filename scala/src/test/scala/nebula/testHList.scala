@@ -3,9 +3,12 @@ package nebula
 import org.scalatest.FunSuite
 import nebula._
 import shapeless._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
+@RunWith(classOf[JUnitRunner])
 class TestHList extends FunSuite {
   test("cartesian product of HLists") {
     val list1 = 1 :: "one" :: HNil

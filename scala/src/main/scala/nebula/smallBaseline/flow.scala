@@ -1,26 +1,21 @@
 package nebula.smallBaseline
 
-import java.awt.image.BufferedImage
 import java.io.File
+
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
 import org.apache.commons.io.FileUtils.readFileToString
+
 import breeze.linalg.DenseMatrix
 import grizzled.math.stats
-import javax.imageio.ImageIO
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
-
-import spray.json._
-import util.JSONUtil._
-import util._
-
-import MathUtil._
-import DenseMatrixUtil._
+import nebula.util.DenseMatrixUtil.DenseMatrixToSeqSeq
+import nebula.util.DenseMatrixUtil.SeqSeqToDenseMatrix
+import nebula.util.JSONUtil.AddClassName
+import spray.json.DefaultJsonProtocol
+import spray.json.JsValue
+import spray.json.RootJsonFormat
+import spray.json.pimpAny
 
 ///////////////////////////////////////////////////////////
 

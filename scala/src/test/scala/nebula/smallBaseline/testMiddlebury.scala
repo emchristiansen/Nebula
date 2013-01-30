@@ -10,9 +10,12 @@ import math._
 import java.io.File
 import nebula.smallBaseline.FlowField
 import nebula.smallBaseline.SmallBaselinePair
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
+@RunWith(classOf[JUnitRunner])
 class TestMiddlebury extends FunSuite {
   ignore("construct FlowField from file") {
     val filename = "/middleburyImages/other-gt-flow/Dimetrodon/flow10.flo.txt"

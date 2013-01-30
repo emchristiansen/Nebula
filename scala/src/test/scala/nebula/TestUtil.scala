@@ -7,9 +7,12 @@ import java.io.File
 import nebula.imageProcessing._
 import nebula.util.DenseMatrixUtil._
 import nebula._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
+@RunWith(classOf[JUnitRunner])
 object TestUtil {
   def dumpImage(name: String, image: BufferedImage) {
     val tempDirectory = File.createTempFile("temp", "").getParentFile

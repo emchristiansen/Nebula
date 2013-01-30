@@ -1,5 +1,8 @@
 package nebula
 
+import nebula.Matcher
+import nebula.PatchNormalizer
+
 /**
  * Returns the expected distance for the random output of a Normalizer
  * under a given Matcher, as a function of the size of the Normalizer

@@ -33,11 +33,14 @@ import spray.json.JsValue
 
 import spray.json._
 import JSONUtil._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
 case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
+@RunWith(classOf[JUnitRunner])
 class TestMisc extends FunSuite {
   test("caseClassToStringMap") {
 //    val person = Person("Arthur", "Dent", 42, 3.14)

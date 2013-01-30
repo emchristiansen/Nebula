@@ -14,9 +14,12 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import nebula.util.Homography
 import nebula.util.OpenCVUtil
 import nebula.util.KeyPointUtil
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
+@RunWith(classOf[JUnitRunner])
 class TestExtractor extends FunSuite {
 //  test("uniformRank") {
 //    val pixels = IndexedSeq(2, 2, 3, 3, 3)

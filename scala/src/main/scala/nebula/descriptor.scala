@@ -1,8 +1,5 @@
 package nebula
 
-import breeze.linalg.DenseMatrix
-import reflect.runtime.universe._
-
 ///////////////////////////////////////////////////////////
 
 case class SortDescriptor(values: IndexedSeq[Int]) {

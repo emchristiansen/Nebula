@@ -1,14 +1,21 @@
 package nebula
 
+import scala.Int.int2double
+import scala.reflect.runtime.universe
+import scala.runtime.ZippedTraversable2.zippedTraversable2ToTraversable
+
 import org.opencv.features2d.DMatch
 
 import breeze.linalg.DenseMatrix
-import graveyard.EpsilonL1Match
-import nebula.SortDescriptor.{ implicitIndexedSeq, sortDescriptor }
+import nebula.Matcher.KendallTau
+import nebula.Matcher.L0
+import nebula.Matcher.L1
+import nebula.Matcher.L2
+import nebula.SortDescriptor.implicitIndexedSeq
 import nebula.util.JSONUtil
-import nebula.util.JSONUtil._
-import spray.json._
-import util.Util
+import nebula.util.JSONUtil.AddClassName
+import spray.json.DefaultJsonProtocol
+import spray.json.JsonFormat
 
 ///////////////////////////////////////////////////////////
 
@@ -119,9 +126,6 @@ case class LogPolarMatcher[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M
   normalizeByOverlap: Boolean,
   rotationInvariant: Boolean,
   scaleSearchRadius: Int)
-
-import scala.reflect._
-import scala.reflect.runtime.universe._
 
 object LogPolarMatcher {
   import Matcher._

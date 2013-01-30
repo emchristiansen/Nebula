@@ -2,23 +2,28 @@ package nebula
 
 import java.awt.image.BufferedImage
 
-import scala.Option.option2Iterable
+import org.opencv.core.Mat
+import org.opencv.core.MatOfKeyPoint
+import org.opencv.features2d.DescriptorExtractor
+import org.opencv.features2d.KeyPoint
 
-import org.opencv.core.{ Mat, MatOfKeyPoint }
-import org.opencv.features2d.{ DescriptorExtractor, KeyPoint }
-
-import breeze.linalg._
-import grizzled.math.stats
-import nebula.SortDescriptor.implicitIndexedSeq
-import nebula.util.DenseMatrixUtil._
-import nebula.util.JSONUtil._
+import breeze.linalg.DenseMatrix
+import breeze.linalg.DenseVector
+import imageProcessing.ImageUtil
+import imageProcessing.Pixel
+import nebula.OpenCVExtractor.BRIEF
+import nebula.OpenCVExtractor.BRISK
+import nebula.OpenCVExtractor.FREAK
+import nebula.OpenCVExtractor.ORB
+import nebula.OpenCVExtractor.SIFT
+import nebula.OpenCVExtractor.SURF
 import nebula.imageProcessing.RichImage.bufferedImage
-import spray.json._
-import util.{ OpenCVUtil, Util }
-import imageProcessing.{ ImageUtil, Pixel }
-import SortDescriptor._
-
-import scala.reflect.runtime.universe._
+import nebula.util.JSONUtil.AddClassName
+import nebula.util.JSONUtil.singletonObject
+import spray.json.DefaultJsonProtocol
+import spray.json.JsonFormat
+import util.OpenCVUtil
+import util.Util
 
 ///////////////////////////////////////////////////////////
 

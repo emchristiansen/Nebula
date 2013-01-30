@@ -5,10 +5,12 @@ import org.scalacheck.Properties
 import org.scalatest.FunSuite
 import nebula.util.Util
 import nebula.Matcher._
-import nebula.SortDescriptor
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
+@RunWith(classOf[JUnitRunner])
 class TestMatcher extends FunSuite {
   val sort0 = SortDescriptor(IndexedSeq(0, 1, 2, 3))
   val sort1 = SortDescriptor(IndexedSeq(2, 1, 3, 0))

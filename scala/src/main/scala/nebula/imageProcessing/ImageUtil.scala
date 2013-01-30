@@ -1,25 +1,16 @@
 package nebula.imageProcessing
 
-import java.awt.{ Color, Rectangle }
-import java.awt.color.ColorSpace
+import java.awt.Rectangle
 import java.awt.geom.AffineTransform
-import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
+import java.awt.image.AffineTransformOp
+import java.awt.image.BufferedImage
+import java.awt.image.ConvolveOp
+import java.awt.image.Kernel
 
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
-
-import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }
-
+import org.imgscalr.Scalr
 import org.opencv.features2d.KeyPoint
 
-import java.awt.image.AffineTransformOp.TYPE_BILINEAR
-import org.imgscalr.Scalr
+import RichImage.bufferedImage
 
 ///////////////////////////////////////////////////////////
 

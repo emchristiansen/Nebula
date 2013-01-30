@@ -1,8 +1,14 @@
 package nebula.util
 
 import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
+import java.awt.image.BufferedImage
 import java.io.File
+
 import scala.Array.canBuildFrom
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.linear.LUDecomposition
@@ -10,20 +16,11 @@ import org.apache.commons.math3.linear.MatrixUtils
 import org.apache.commons.math3.linear.RealMatrix
 import org.apache.commons.math3.linear.RealVector
 import org.apache.commons.math3.linear.SingularValueDecomposition
-import nebula.graveyard.Point2D
+import org.opencv.features2d.KeyPoint
 
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
-import java.awt.image._
-import nebula.imageProcessing.ImageUtil._
-import nebula.imageProcessing.RichImage._
-import org.opencv.features2d._
+import nebula.graveyard.Point2D
+import nebula.imageProcessing.ImageUtil
+import nebula.imageProcessing.RichImage.bufferedImage
 
 ///////////////////////////////////////////////////////////
 

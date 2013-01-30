@@ -1,29 +1,21 @@
 package nebula.summary
 
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
-import java.awt.image.BufferedImage
 import java.io.File
-import javax.imageio.ImageIO
-import org.opencv.features2d.DMatch
+
+import scala.reflect.ClassTag
+
+import SummaryUtil.mapUnion
+import SummaryUtil.summarizeStructure
 import breeze.linalg.DenseMatrix
-
-import MathUtil._
-import DenseMatrixUtil._
-
-import SummaryUtil._
-import grizzled.math._
-import DetectorJsonProtocol._
-import ExtractorJsonProtocol._
-import MatcherJsonProtocol._
-import spray.json._
-import reflect._
+import grizzled.math.stats
+import nebula.PimpFile
+import nebula.RuntimeConfig
+import nebula.util.DenseMatrixUtil.DenseMatrixToSeqSeq
+import nebula.util.DenseMatrixUtil.SeqSeqToDenseMatrix
+import nebula.util.JSONUtil
+import spray.json.JsValue
+import spray.json.JsonFormat
+import spray.json.pimpAny
 
 ///////////////////////////////////////////////////////////////////////////////
 

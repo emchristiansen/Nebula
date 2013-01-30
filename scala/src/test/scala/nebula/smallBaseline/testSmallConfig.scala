@@ -12,10 +12,13 @@ import breeze.linalg._
 import scala.util._
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 ///////////////////////////////////////////////////////////
 
-//class TestSmallConfig extends FunSuite {
+@RunWith(classOf[JUnitRunner])
+class TestSmallConfig extends FunSuite {
 //  test("for a very simple image pair the small baseline matchers should be perfect") {
 //    // The easy image is all black with random pixels in the center.
 //    // It is simply translated a few pixels to get the other image.    
@@ -62,4 +65,4 @@ import javax.imageio.ImageIO
 //    //        println("Bad flow vector", (i, j), flowVector)
 //    //      }
 //  }
-//}
+}

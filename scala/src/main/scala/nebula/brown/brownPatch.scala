@@ -2,14 +2,17 @@ package nebula.brown
 
 import java.awt.image.BufferedImage
 import java.io.File
-import nebula.util._
+
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
+import org.apache.commons.io.FileUtils
+
 import javax.imageio.ImageIO
-import nebula.util._
-import nebula.imageProcessing._
 import nebula.Extractor
 import nebula.Matcher
 import nebula.PimpFile
-import org.apache.commons.io.FileUtils
+import nebula.util.KeyPointUtil
 
 ///////////////////////////////////////////////////////////
 

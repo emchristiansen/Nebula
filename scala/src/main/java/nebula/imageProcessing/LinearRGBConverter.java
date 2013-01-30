@@ -39,7 +39,6 @@
 
 package nebula.imageProcessing;
 
-
 /**
  * LinearRGBConverter - conversion routines for a linear sRGB colorspace
  * sRGB is a standard for RGB colorspaces, adopted by the w3c.

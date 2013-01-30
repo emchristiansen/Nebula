@@ -1,25 +1,13 @@
 package nebula.mpie
 
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.imageProcessing._
-import nebula.wideBaseline._
-
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
-
 import java.io.File
 
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
 import org.apache.commons.io.FilenameUtils
+
+import nebula.RuntimeConfig
 
 // TODO: Duplication. Grr.
 case class MPIERuntimeConfig(

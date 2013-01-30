@@ -1,20 +1,9 @@
 package nebula.imageProcessing
 
-import java.awt.{ Color, Rectangle }
-import java.awt.color.ColorSpace
-import java.awt.geom.AffineTransform
-import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
-import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
-import nebula.util._
-import nebula.imageProcessing._
-import nebula.wideBaseline._
-import nebula._
-import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }
-import org.opencv.features2d.KeyPoint
-import breeze.linalg.DenseMatrix
+import java.awt.image.BufferedImage
+
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
 
 ///////////////////////////////////////////////////////////
 

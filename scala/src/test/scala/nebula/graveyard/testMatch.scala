@@ -3,9 +3,12 @@ package nebula.graveyard
 import nebula._
 
 import org.scalatest.FunSuite
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
  
 ///////////////////////////////////////////////////////////
 
+@RunWith(classOf[JUnitRunner])
 class TestPyramidHistogram extends FunSuite {
   // import PyramidHistogram._
   
