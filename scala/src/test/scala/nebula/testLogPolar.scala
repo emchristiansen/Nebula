@@ -163,7 +163,7 @@ class TestLogPolar extends FunSuite {
       blurWidth,
       image)._1
 
-    println(scaleFactors)
+//    println(scaleFactors)
 
     for (point <- points; scaleIndex <- 0 until numScales) {
       val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3

@@ -18,7 +18,7 @@ import com.sun.xml.internal.bind.v2.model.runtime.RuntimeClassInfo
 @RunWith(classOf[JUnitRunner])
 @WrapWith(classOf[ConfigMapWrapperSuite])
 class TestBrown(val configMap: Map[String, Any]) extends ConfigMapFunSuite {
-  ignore("loadPatchPairs should return reasonable pairs", SlowTest, InteractiveTest, DatasetTest) {
+  test("loadPatchPairs should return reasonable pairs", SlowTest, InteractiveTest, DatasetTest) {
     val datasetName = "liberty"
     val numMatches = 1000
 
@@ -32,7 +32,7 @@ class TestBrown(val configMap: Map[String, Any]) extends ConfigMapFunSuite {
     }
   }
 
-  test("ensure implicits are found", InstantTest) {
+  ignore("ensure implicits are found") {
     val experiment = BrownExperiment(
       "liberty",
       1000,
@@ -42,17 +42,7 @@ class TestBrown(val configMap: Map[String, Any]) extends ConfigMapFunSuite {
     implicit val runtimeConfig: RuntimeConfig = TestUtil.runtimeConfig
 
     val results = experiment.run
-    val summary = results.to[ExperimentSummary]
-
-    //    implicitly[nebula.BrownExperiment[nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]] => 
-    //      nebula.RuntimeConfig => 
-    //        nebula.StorageInfo[
-    //          nebula.BrownExperimentResults[nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]]]]
-    //    
-    //    implicitly[nebula.BrownExperiment[nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]] => 
-    //      nebula.RuntimeConfig => 
-    //        nebula.ExperimentRunner[
-    //          nebula.BrownExperimentResults[nebula.OpenCVExtractor.SIFT.type,nebula.Matcher.L2.type,IndexedSeq[Double]]]]    
+    val summary = results.to[ExperimentSummary]  
 
     Distributed.unsafeCapstone(experiment)
   }
