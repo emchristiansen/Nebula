@@ -85,6 +85,7 @@ object SFSPipelineBuild extends Build {
 
   lazy val root = {
     val settings = libSettings ++ Seq(name := "nebula")
+//    val settings = libSettings ++ Seq(name := "nebula", fork := true)
     Project(id = "nebula", base = file("."), settings = settings)
   }
 }

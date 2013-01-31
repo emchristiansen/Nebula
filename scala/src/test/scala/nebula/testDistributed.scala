@@ -19,7 +19,7 @@ import nebula.brown._
 
 @RunWith(classOf[JUnitRunner])
 class TestDistributed extends FunSuite {
-  test("ensure implicits are found for WideBaselineExperiment") {
+  test("ensure implicits are found for WideBaselineExperiment", InstantTest) {
     val imageClasses = Seq(
       "graffiti",
       "trees",
@@ -120,7 +120,7 @@ class TestDistributed extends FunSuite {
     transposed.transpose
   }
 
-  test("ensure implicits are found for BrownExperiment") {
+  test("ensure implicits are found for BrownExperiment", InstantTest) {
     val datasets = Seq("liberty")
     val numMatchess = Seq(1000)
     val extractors = OpenCVExtractor.SIFT :: OpenCVExtractor.SURF :: HNil

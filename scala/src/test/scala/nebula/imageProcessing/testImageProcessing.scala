@@ -66,10 +66,10 @@ import TestUtil._
 
 @RunWith(classOf[JUnitRunner])
 class TestRichImage extends FunSuite {
-  val url = getClass.getResource("/goldfish_girl.jpg")
+  val url = getClass.getResource("/goldfish_girl.png")
   val image = ImageIO.read(new File(url.getFile))
 
-  test("spot check with a small image") {
+  test("spot check with a small image", InstantTest) {
     val matrix = DenseMatrix.tabulate(3, 3)((y, x) => 10 * (y * 3 + x))
     val image = matrix.toImage
 
@@ -90,7 +90,7 @@ class TestRichImage extends FunSuite {
   }
 
   test("resizing the image with getSubPixel should be the same as resizing " +
-    "it with an AffineOp and linear interpolation") {
+    "it with an AffineOp and linear interpolation", InstantTest) {
     val resizeFactor = 2
 
     val goldenImage = {

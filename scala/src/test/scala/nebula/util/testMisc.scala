@@ -8,14 +8,11 @@ import org.scalacheck.Prop._
 import org.scalacheck._
 import nebula._
 import scala.util.Random
-import nebula.util.Util
+
 import nebula.util.Util._
 import nebula.Matcher._
 import nebula.wideBaseline.WideBaselineExperiment
-import nebula.util.JSONUtil
 
-import nebula.util._
-import nebula.util.JSONUtil._
 
 import spray.json._
 
@@ -42,7 +39,7 @@ case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
 @RunWith(classOf[JUnitRunner])
 class TestMisc extends FunSuite {
-  test("caseClassToStringMap") {
+  test("caseClassToStringMap", InstantTest) {
 //    val person = Person("Arthur", "Dent", 42, 3.14)
 //    
 //    implicit val personJson =
@@ -71,19 +68,19 @@ class TestMisc extends FunSuite {
     // assert(title === golden)
   }
 
-  test("numToBits") {
+  test("numToBits", InstantTest) {
     assert(Util.numToBits(3)(15) === Seq(true, true, true))
     assert(Util.numToBits(5)(15) === Seq(false, true, true, true, true))
     assert(Util.numToBits(0)(12) === Seq())
     assert(Util.numToBits(5)(10) === Seq(false, true, false, true, false))
   }
 
-  test("nonDistinctPermutations") {
+  test("nonDistinctPermutations", InstantTest) {
     assert(nonDistinctPermutations(List(2, 1, 3)).size == List(2, 1, 3).permutations.size)
     assert(nonDistinctPermutations(List(1, 1)) == Seq(Seq(1, 1), Seq(1, 1)))
   }
 
-  test("allSorts") {
+  test("allSorts", InstantTest) {
     val hasUniqueSort = List(2, 1, 3, 4)
 
     assert(allSorts(hasUniqueSort) === List(List(1, 0, 2, 3)))
@@ -91,7 +88,7 @@ class TestMisc extends FunSuite {
     assert(allSorts(List(2, 2, 4, 3)) === List(List(0, 1, 3, 2), List(1, 0, 3, 2)))
   }
 
-  test("group") {
+  test("group", InstantTest) {
     assert(Util.group(List()) === List())
 
     assert(Util.group(List(1, 2, 3)) === List(List(1), List(2), List(3)))
@@ -100,7 +97,7 @@ class TestMisc extends FunSuite {
       List(List(2, 2), List(1), List(3, 3), List(2, 2, 2)))
   }
 
-  test("groupBySizes") {
+  test("groupBySizes", InstantTest) {
     assert(Util.groupBySizes(List(), List()) === List())
 
     assert(Util.groupBySizes(List(2, 1, 2), List(1, 2, 3, 4, 5)) ===

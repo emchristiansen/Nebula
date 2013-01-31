@@ -2,8 +2,6 @@ package nebula.summary
 
 import org.scalatest.FunSuite
 
-import nebula.summary.SummaryUtil
-
 import org.scalatest.FunSuite
 import org.opencv.features2d._
 import javax.imageio.ImageIO
@@ -89,7 +87,7 @@ import TestUtil._
 
 @RunWith(classOf[JUnitRunner])
 class TestSummary extends FunSuite { 
-  test("mapUnion") {
+  test("mapUnion", InstantTest) {
     val map1 = Map(1 -> 12, 2 -> 13)
     val map2 = Map(1 -> 10, 3 -> 10, 2 -> 13)
     val maps = Set(map1, map2)
@@ -100,7 +98,7 @@ class TestSummary extends FunSuite {
     assert(union === golden)
   }
 
-  test("changingFields") {
+  test("changingFields", InstantTest) {
     val map1 = Map(1 -> 10, 2 -> 20)
     val map2 = Map(1 -> 10, 2 -> 30)
     val maps = Seq(map1, map2)
@@ -110,7 +108,7 @@ class TestSummary extends FunSuite {
     assert(changing === golden)
   }
 
-  test("summarizeStructure") {
+  test("summarizeStructure", InstantTest) {
     val map1 = Map("a" -> "aa", "b" -> "bb")
     val map2 = Map("a" -> "aa", "b" -> "cc")
     val summary = SummaryUtil.summarizeStructure(Set(map1, map2))
@@ -118,7 +116,7 @@ class TestSummary extends FunSuite {
     assert(summary === golden)
   }
   
-  test("errorRateAtRecall") {
+  test("errorRateAtRecall", InstantTest) {
     val dmatch0 = new DMatch(0, 0, 10)
     val dmatch1 = new DMatch(1, 2, 11)
     val dmatch2 = new DMatch(3, 3, 12)

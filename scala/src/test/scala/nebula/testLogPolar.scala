@@ -71,7 +71,7 @@ class TestLogPolar extends FunSuite {
     KeyPointUtil(x.floor + 0.5.toFloat, y.floor + 0.5.toFloat)
   }
 
-  test("rollVertical on small matrix") {
+  test("rollVertical on small matrix", InstantTest) {
     val matrix = DenseMatrix((1, 2), (3, 4))
     val golden = DenseMatrix((3, 4), (1, 2))
     val estimated = matrix.rollVertical(1)
@@ -88,7 +88,7 @@ class TestLogPolar extends FunSuite {
   val numAngles = 8
   val blurWidth = 3
 
-  ignore("scaleImage should work properly") {
+  test("scaleImage should work properly", InstantTest, InteractiveTest) {
     val (scaleFactors, _, scaledImages) = LogPolar.scaleImage(
       4,
       minRadius,
@@ -103,7 +103,7 @@ class TestLogPolar extends FunSuite {
     }
   }
 
-  ignore("rawLogPolar should do rotation correctly") {
+  test("rawLogPolar should do rotation correctly", FastTest) {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 100) }
 
@@ -151,7 +151,7 @@ class TestLogPolar extends FunSuite {
     }
   }
 
-  ignore("rawLogPolar should do scale correctly") {
+  test("rawLogPolar should do scale correctly", FastTest) {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 100) }
 
@@ -276,7 +276,7 @@ class TestLogPolar extends FunSuite {
   //    }
   //  }
   //
-  ignore("recover proper angle") {
+  test("recover proper angle", SlowTest) {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 100) }
 
@@ -303,13 +303,13 @@ class TestLogPolar extends FunSuite {
 
       val response = LogPolar.getResponseMapWrapper(matcher, original, rotated)
 
-      dumpImage(f"${angle}%.2f_recoverProperAngle", scale10(response.toScaledImage))
+//      dumpImage(f"${angle}%.2f_recoverProperAngle", scale10(response.toScaledImage))
 
       assert(response.argmin === (angleIndex, 0))
     }
   }
 
-  ignore("recover proper scale") {
+  test("recover proper scale", SlowTest) {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 150) }
 
@@ -342,7 +342,7 @@ class TestLogPolar extends FunSuite {
 
       val response = LogPolar.getResponseMapWrapper(matcher, original, scaled)
 
-      dumpImage(f"${scaleFactor}%.2f_recoverProperScale", scale10(response.toScaledImage))
+//      dumpImage(f"${scaleFactor}%.2f_recoverProperScale", scale10(response.toScaledImage))
 
       //      println(response)
       //      println(scaleIndex)
@@ -352,7 +352,7 @@ class TestLogPolar extends FunSuite {
     }
   }
 
-  test("recover proper angle and scale") {
+  test("recover proper angle and scale", SlowTest) {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 150) }
 
@@ -389,7 +389,7 @@ class TestLogPolar extends FunSuite {
 
       val response = LogPolar.getResponseMapWrapper(matcher, original, warped)
 
-      dumpImage(f"${angle}%.2f_${scaleFactor}%.2f_recoverProperAngleAndScale", scale10(response.toScaledImage))
+//      dumpImage(f"${angle}%.2f_${scaleFactor}%.2f_recoverProperAngleAndScale", scale10(response.toScaledImage))
 
       //      println(response)
       //      println(scaleIndex)

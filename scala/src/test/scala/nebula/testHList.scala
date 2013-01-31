@@ -10,7 +10,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestHList extends FunSuite {
-  test("cartesian product of HLists") {
+  test("cartesian product of HLists", InstantTest) {
     val list1 = 1 :: "one" :: HNil
     val list2 = 2 :: "two" :: HNil
 
@@ -20,7 +20,7 @@ class TestHList extends FunSuite {
     assert(out1 === out1Golden)
   }
   
-  test("cartesian product of 3 HLists") {
+  test("cartesian product of 3 HLists", InstantTest) {
     val list1 = 1 :: HNil
     val list2 = 2.0 :: HNil
     val list3 = 3 :: "three" :: HNil
@@ -28,7 +28,7 @@ class TestHList extends FunSuite {
     val out2: Result2 = HListUtil.mkTuple3(list1, list2, list3)
   }
   
-  test("cartesian product of 4 HLists") {
+  test("cartesian product of 4 HLists", InstantTest) {
     val list1 = 1 :: HNil
     val list2 = 2.0 :: HNil
     val list3 = 3 :: "three" :: HNil

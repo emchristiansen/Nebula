@@ -19,7 +19,7 @@ class TestGeometry extends FunSuite {
   
   val center = KeyPointUtil(image.getWidth.toFloat / 2, image.getHeight.toFloat / 2)
   
-  ignore("rotateAboutPoint") {
+  test("rotateAboutPoint", FastTest, InteractiveTest) {
     for (theta <- 0.0 until 2 * math.Pi by math.Pi / 16) {
       val rotated = image.rotateAboutPoint(theta, center)
       val patch = ImageUtil.getSubimageCenteredAtPoint(
@@ -32,7 +32,7 @@ class TestGeometry extends FunSuite {
     }
   }
   
-  ignore("scaleAboutPoint") {
+  test("scaleAboutPoint", FastTest, InteractiveTest) {
     val exponents = 0.2 until 3.0 by 0.05
     val scaleFactors = exponents.map(e => math.pow(2, e))
     for (scaleFactor <- scaleFactors) {

@@ -14,12 +14,12 @@ import breeze.linalg.DenseMatrix
 
 @RunWith(classOf[JUnitRunner])
 class TestMath extends FunSuite {
-  test("mean") {
+  test("mean", InstantTest) {
     val in = Seq(1, 2, 3)
     assertNear(MathUtil.mean(in), 2)
   }
   
-  test("l2Norm") {
+  test("l2Norm", InstantTest) {
     val in = Seq(1, 2, 3)
     assertNear(MathUtil.l2Norm(in.toArray), math.sqrt(1 + 4 + 9))
   }

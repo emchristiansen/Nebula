@@ -20,7 +20,7 @@ class TestNormalizer extends FunSuite {
     def foo(a: A): A = a
   }  
   
-  test("Raw should do nothing on Seq") {
+  test("Raw should do nothing on Seq", InstantTest) {
     val in = randomSeq
     // TODO: Explicit cast required because of bug
     // http://stackoverflow.com/questions/14491303/limitations-of-implicit-resolution-or-type-inference
@@ -28,27 +28,27 @@ class TestNormalizer extends FunSuite {
     assert(in === out)
   }
   
-  test("Raw should do nothing on DenseMatrix") {
+  test("Raw should do nothing on DenseMatrix", InstantTest) {
     val in = randomMatrix
     val out = PatchNormalizer.Raw.to[Normalizer[DenseMatrix[Int], DenseMatrix[Int]]].normalize(in)
     assert(in === out)
   }
   
-  test("NCC should set mean to zero and norm to 1 on Seq") {
+  test("NCC should set mean to zero and norm to 1 on Seq", InstantTest) {
     val in = randomSeq
     val out = PatchNormalizer.NCC.to[Normalizer[Seq[Int], Seq[Double]]].normalize(in)
     assertNear(MathUtil.mean(out), 0)
     assertNear(MathUtil.l2Norm(out.toArray), 1)
   }
   
-  test("NCC should set mean to zero and norm to 1 on DenseMatrix") {
+  test("NCC should set mean to zero and norm to 1 on DenseMatrix", InstantTest) {
     val in = randomMatrix
     val out = PatchNormalizer.NCC.to[Normalizer[DenseMatrix[Int], DenseMatrix[Double]]].normalize(in)
     assertNear(MathUtil.mean(out.data), 0)
     assertNear(MathUtil.l2Norm(out.data), 1)
   }
   
-  test("Rank should produce a permutation on DenseMatrix") {
+  test("Rank should produce a permutation on DenseMatrix", InstantTest) {
     val in = randomMatrix
     val out = PatchNormalizer.Rank.to[Normalizer[DenseMatrix[Int], DenseMatrix[Int]]].normalize(in)
     assert(out.data.sorted.toIndexedSeq === (0 until in.rows * in.cols))

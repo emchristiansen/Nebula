@@ -15,7 +15,7 @@ import nebula.brown._
 ///////////////////////////////////////////////////////////
 
 package object nebula {
-  def loadOpenCV = System.loadLibrary("opencv_java")
+  lazy val loadOpenCV = System.loadLibrary("opencv_java")
   
   // TODO: Uncomment this function and change the relevant constructors.
   // Currently this is impossible due to a probable Scala bug.

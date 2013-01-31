@@ -8,13 +8,6 @@ import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.FeatureDetector
 import org.opencv.features2d.KeyPoint
 
-import nebula.AddTo
-import nebula.OpenCVDetector
-import nebula.OpenCVDetector.BRISK
-import nebula.OpenCVDetector.DENSE
-import nebula.OpenCVDetector.FAST
-import nebula.OpenCVDetector.SIFT
-import nebula.OpenCVDetector.SURF
 import nebula.util.JSONUtil.singletonObject
 import spray.json.DefaultJsonProtocol
 import spray.json.JsonFormat

@@ -1,7 +1,7 @@
 package nebula.brown
 
 import nebula._
-import org.scalatest.FunSuite
+import org.scalatest._
 import javax.imageio.ImageIO
 import java.io.File
 import org.junit.runner.RunWith
@@ -16,13 +16,13 @@ import com.sun.xml.internal.bind.v2.model.runtime.RuntimeClassInfo
 ///////////////////////////////////////////////////////////
 
 @RunWith(classOf[JUnitRunner])
-class TestBrown extends FunSuite {
-  ignore("loadPatchPairs should return reasonable pairs") {
+@WrapWith(classOf[ConfigMapWrapperSuite])
+class TestBrown(val configMap: Map[String, Any]) extends ConfigMapFunSuite {
+  ignore("loadPatchPairs should return reasonable pairs", SlowTest, InteractiveTest, DatasetTest) {
     val datasetName = "liberty"
     val numMatches = 1000
-    val dataRoot = new File(homeDirectory, "Bitcasa/data").mustExist
 
-    val patchPairs = PatchPair.loadPatchPairs(datasetName, numMatches, dataRoot)
+    val patchPairs = PatchPair.loadPatchPairs(datasetName, numMatches, datasetRoot)
 
     for ((patchPair, index) <- patchPairs.zipWithIndex) {
       val sideBySide = GraphicsUtil.drawSideBySide(patchPair.left.image, patchPair.right.image)
@@ -32,7 +32,7 @@ class TestBrown extends FunSuite {
     }
   }
 
-  ignore("ensure implicits are found") {
+  test("ensure implicits are found", InstantTest) {
     val experiment = BrownExperiment(
       "liberty",
       1000,
@@ -57,13 +57,13 @@ class TestBrown extends FunSuite {
     Distributed.unsafeCapstone(experiment)
   }
 
-  ignore("brown toJson") {
+  test("brown toJson", InstantTest) {
     val experiment = BrownExperiment(
       "liberty",
       1000,
       OpenCVExtractor.SIFT,
       Matcher.L2)
 
-    println(experiment.toJson)
+    experiment.toJson
   }
 }

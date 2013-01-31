@@ -16,17 +16,17 @@ class TestMatcher extends FunSuite {
   val sort1 = SortDescriptor(IndexedSeq(2, 1, 3, 0))
   val sort2 = SortDescriptor(IndexedSeq(3, 2, 1, 0))
 
-  test("l0") {
+  test("l0", InstantTest) {
     assert(Matcher.l0(sort0, sort0) === 0)
     assert(Matcher.l0(sort0, sort1) === 3)
   }
 
-  test("l1") {
+  test("l1", InstantTest) {
     assert(Matcher.l1(sort0, sort0) === 0)
     assert(Matcher.l1(sort0, sort1) === 6)
   }
 
-  test("kendallTau") {
+  test("kendallTau", InstantTest) {
     assert(Matcher.kendallTau(sort0, sort0) === 0)
     assert(Matcher.kendallTau(sort0, sort1) === 4)
     assert(Matcher.kendallTau(sort1, sort0) === 4)
@@ -34,19 +34,19 @@ class TestMatcher extends FunSuite {
     assert(Matcher.kendallTau(sort0, sort2) === 6)
   }
   
-  test("countSort") {
+  test("countSort", InstantTest) {
     val input = List(1, 0, 2, 3, 4, 2, 3, 4)
     val countSorted = Util.countSort(input, 0, 4)
     assert(input.sorted == countSorted)
   }
   
-  test("permutation") {
+  test("permutation", InstantTest) {
     val input = Array(1, 0, 2, 3, 4, 2, 3, 4)
     val permutation = Util.permutation(input, 4)
     assert(permutation === Array(1, 0, 2, 5, 3, 6, 4, 7))
   }
 
-  test("numCycles") {
+  test("numCycles", InstantTest) {
     assert(sort0.numCycles == 4)
     assert(sort1.numCycles == 2)
     assert(sort2.numCycles == 2)

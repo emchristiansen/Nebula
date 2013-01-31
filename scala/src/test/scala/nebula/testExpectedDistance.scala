@@ -50,19 +50,19 @@ class TestExpectedDistance extends FunSuite {
     }
   }
 
-  test("NCC and L1") {
+  test("NCC and L1", MediumTest) {
     testExpectedDistance(PatchNormalizer.NCC, Matcher.L1)
   }
   
-  test("NCC and L2") {
+  test("NCC and L2", MediumTest) {
     testExpectedDistance(PatchNormalizer.NCC, Matcher.L2)
   }
   
-  test("Rank and L1") {
+  test("Rank and L1", MediumTest) {
     testExpectedDistance(PatchNormalizer.Rank, Matcher.L1)
   }
   
-  test("Rank and L2") {
+  test("Rank and L2", MediumTest) {
     testExpectedDistance(PatchNormalizer.Rank, Matcher.L2)
   }
 }

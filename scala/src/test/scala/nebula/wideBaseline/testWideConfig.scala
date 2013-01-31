@@ -14,7 +14,7 @@ import nebula.JsonProtocols._
 
 @RunWith(classOf[JUnitRunner])
 class TestWideConfig extends FunSuite {
-  ignore("ensure implicits are found") {
+  test("ensure implicits are found", InstantTest) {
     val experiment = WideBaselineExperiment(
       "wall",
       2,

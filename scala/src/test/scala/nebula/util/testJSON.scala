@@ -7,10 +7,8 @@ import java.io.File
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
 import nebula._
-//import org.apache.xmlgraphics.image.loader.ImageManager
 import org.opencv.core.Mat
 import org.opencv.core.MatOfKeyPoint
-import nebula.util.JSONUtil
 import spray.json.DefaultJsonProtocol
 import spray.json.JsArray
 import spray.json.RootJsonFormat
@@ -24,7 +22,6 @@ import smallBaseline._
 import spray.json._
 
 import nebula.util.Memoize._
-import nebula.util._
 
 import breeze.linalg._
 
@@ -42,14 +39,10 @@ import java.io.File
 import org.opencv.core.MatOfKeyPoint
 import org.opencv.features2d.{ FeatureDetector, KeyPoint }
 import nebula._
-//import org.apache.xmlgraphics.image.loader.ImageManager
 import org.opencv.core.Mat
 import java.awt.Color
 import java.awt.image.BufferedImage
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
-import nebula.util.Homography
-import nebula.util.OpenCVUtil
-import nebula.util.KeyPointUtil
 
 import javax.imageio.ImageIO
 
