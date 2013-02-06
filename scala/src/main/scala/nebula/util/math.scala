@@ -8,6 +8,8 @@ import grizzled.math.stats
 ///////////////////////////////////////////////////////////
 
 object MathUtil {
+  def log2(x: Double) = math.log(x) / math.log(2)
+  
   def l2Norm[A : Ring](values: Array[A]): Double = new DenseVector(values).norm(2.0)
   
   def mean[A : Numeric](values: Seq[A]): Double = stats.mean(values: _*)

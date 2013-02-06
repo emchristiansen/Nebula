@@ -11,18 +11,24 @@ import shapeless._
 import java.io.File
 import nebula.util._
 import nebula.brown._
+import breeze.math._
+import breeze.linalg._
+import org.expecty.Expecty
 
 ///////////////////////////////////////////////////////////
 
 package object nebula {
-  lazy val loadOpenCV = System.loadLibrary("opencv_java")
+  def expecty = new Expecty()
+  def requirey = new Expecty()
   
+  lazy val loadOpenCV = System.loadLibrary("opencv_java")
+
   // TODO: Uncomment this function and change the relevant constructors.
   // Currently this is impossible due to a probable Scala bug.
-//  implicit def experimentRunnerInsertRuntime[A <% RuntimeConfig => ExperimentRunner[B], B](
-//    a: A)(
-//      implicit runtimeConfig: RuntimeConfig): ExperimentRunner[B] =
-//    implicitly[A => RuntimeConfig => ExperimentRunner[B]].apply(a).apply(runtimeConfig)
+  //  implicit def experimentRunnerInsertRuntime[A <% RuntimeConfig => ExperimentRunner[B], B](
+  //    a: A)(
+  //      implicit runtimeConfig: RuntimeConfig): ExperimentRunner[B] =
+  //    implicitly[A => RuntimeConfig => ExperimentRunner[B]].apply(a).apply(runtimeConfig)
 
   val homeDirectory = new File(System.getProperty("user.home"))
 
@@ -43,14 +49,7 @@ package object nebula {
     def +(that: String): File = new File(file, that)
   }
 
-  object JsonProtocols extends 
-  DetectorJsonProtocol with 
-  ExtractorJsonProtocol with 
-  PatchNormalizerJsonProtocol with
-  MatcherJsonProtocol with
-  WideBaselineJsonProtocol with 
-  BrownJsonProtocol with
-  DMatchJsonProtocol
+  object JsonProtocols extends DetectorJsonProtocol with ExtractorJsonProtocol with PatchNormalizerJsonProtocol with MatcherJsonProtocol with WideBaselineJsonProtocol with BrownJsonProtocol with DMatchJsonProtocol
 
   implicit class IntTimes(int: Int) {
     def times[A](function: => A): IndexedSeq[A] =
@@ -88,14 +87,11 @@ package object nebula {
 
   val shapelessImports = Imports(Set(
     "shapeless._"))
-    
+
   val reflectImports = Imports(Set(
     "reflect.runtime.universe._"))
 
   implicit val allImports = Imports(nebulaImports ++ jsonImports ++ sparkImports ++ shapelessImports ++ reflectImports)
-
-  // TODO: Replace with ???
-  def TODO = sys.error("TODO")
 
   implicit class AddImportsToSource(source: String) {
     def addImports(implicit imports: Imports): String = {
@@ -118,8 +114,8 @@ package object nebula {
 
   implicit def typeTag2TypeName[A: TypeTag]: TypeName[A] = TypeName(typeTag[A].tpe.toString)
 
-  // The compiler crashes if you invoke it several times simultaneously.
-  val compilerLock: AnyRef = new Object()
+//  // The compiler crashes if you invoke it several times simultaneously.
+//  val compilerLock: AnyRef = new Object()
 
   /**
    * Checks the type of the given expression.
@@ -181,12 +177,51 @@ jsonString.asJson.convertTo[${typeName[A]}]
     }
   }
 
-  def assertNear(
-    left: => Double,
-    right: => Double)(implicit threshold: Epsilon): Unit = {
+  trait IsNear[A] {
+    def isNear(that: A)(implicit threshold: Epsilon): Boolean
+  }
+
+  implicit class Double2IsNear[A <% Double](self: A) extends IsNear[A] {
+    override def isNear(other: A)(implicit threshold: Epsilon) =
+      (self - other).abs <= threshold
+  }
+
+  implicit class Complex2IsNear(self: Complex) extends IsNear[Complex] {
+    override def isNear(other: Complex)(implicit threshold: Epsilon) =
+      (self - other).abs <= threshold
+  }
+
+  // TODO: Currently the more general code (see below) crashes the compiler.
+  implicit class IndexedSeq2IsNear[A <% IsNear[A]](self: IndexedSeq[A]) extends IsNear[IndexedSeq[A]] {
+    override def isNear(other: IndexedSeq[A])(implicit threshold: Epsilon) = {
+      self.size == other.size && (self.zip(other).count {
+        case (left, right) => left.isNear(right)
+      }) == self.size
+    }
+  }
+  
+  implicit class DenseMatrix2IsNear[A <% IsNear[A]](self: DenseMatrix[A]) extends IsNear[DenseMatrix[A]] {
+    override def isNear(other: DenseMatrix[A])(implicit threshold: Epsilon) = {
+      self.rows == other.rows && self.cols == other.cols && (self.data.toIndexedSeq.zip(other.data.toIndexedSeq).count {
+        case (left, right) => left.isNear(right)
+      }) == self.size
+    }
+  }
+
+  //  implicit class Seq2IsNear[C[_] <: Iterable[_], A <% IsNear[A]](self: C[A]) extends IsNear[C[A]] {
+  //    override def isNear(other: C[A])(implicit threshold: Epsilon) = {
+  //      self.size == other.size && (self.zip(other).count {
+  //        case (left, right) => left.isNear(right)
+  //      }) == self.size
+  //    }
+  //  }
+
+  def assertNear[A <% IsNear[A]](
+    left: => A,
+    right: => A)(implicit threshold: Epsilon): Unit = {
     Predef.assert(
-      (left - right).abs <= threshold,
-      "left, right: %s, %s".format(left, right))
+      left.isNear(right),
+      s"\nleft: ${left}\nright: ${right}")
   }
 
   /**

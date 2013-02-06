@@ -61,6 +61,8 @@ trait ConfigMapFunSuite extends FunSuite {
 
 object TestUtil {
   System.loadLibrary("opencv_java")
+  
+  val random = new scala.util.Random(0)
 
   def dumpImage(name: String, image: BufferedImage) {
     val tempDirectory = File.createTempFile("temp", "").getParentFile

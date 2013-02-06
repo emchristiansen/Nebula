@@ -14,7 +14,8 @@ object SFSPipelineBuild extends Build {
 //      "repo.codahale.com" at "http://repo.codahale.com",
       "maven.twttr.com" at "http://maven.twttr.com",
       "spray-io" at "http://repo.spray.io/",
-      "typesafe-releases" at "http://repo.typesafe.com/typesafe/repo"
+      "typesafe-releases" at "http://repo.typesafe.com/typesafe/repo",
+      "Expecty Repository" at "https://raw.github.com/pniederw/expecty/master/m2repo/"
     )
   )
 
@@ -24,6 +25,7 @@ object SFSPipelineBuild extends Build {
     libraryDependencies ++= Seq(
 //      "com.nativelibs4java" % "scalacl" % "0.3-SNAPSHOT",
 //      "com.nativelibs4java" % "javacl" % "1.0-SNAPSHOT",
+      "org.expecty" % "expecty" % "0.9",
       "org.scala-lang" % "scala-reflect" % "2.10.0",
       "org.scala-lang" % "scala-compiler" % "2.10.0",
       "log4j" % "log4j" % "1.2.17",
@@ -57,6 +59,7 @@ object SFSPipelineBuild extends Build {
       "com.chuusai" % "shapeless_2.10.0-RC5" % "1.2.4-SNAPSHOT"
     )
   )
+
 
   // def extraAssemblySettings() = Seq(test in assembly := {}) ++ Seq(
   //   mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) => {
