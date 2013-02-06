@@ -19,6 +19,7 @@ import org.expecty.Expecty
 
 package object nebula {
   def expecty = new Expecty()
+  def asserty = new Expecty()
   def requirey = new Expecty()
   
   lazy val loadOpenCV = System.loadLibrary("opencv_java")

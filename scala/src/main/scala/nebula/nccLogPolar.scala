@@ -11,22 +11,24 @@ import org.opencv.features2d._
 case class AffinePair(scale: Double, offset: Double)
 
 case class ScaleMap[A](data: IndexedSeq[A]) {
-  require(data.size % 2 == 1)
+  requirey(data.size % 2 == 1)
 }
 
 object ScaleMap {
   def apply[A](map: Map[Int, A]): ScaleMap[A] = {
     val minIndex = map.keys.min
     val maxIndex = map.keys.max
-    require(minIndex == -maxIndex)
-    require(map.keys.toList.sorted == (minIndex to maxIndex))
+    requirey(minIndex == -maxIndex)
+    requirey(map.keys.toList.sorted == (minIndex to maxIndex))
 
     val data = map.toList.sortBy(_._1).map(_._2).toIndexedSeq
     ScaleMap(data)
   }
 }
 
-case class NCCBlock(fourierData: DenseMatrix[Complex], scaleMap: ScaleMap[AffinePair])
+case class NCCBlock(
+  fourierData: DenseMatrix[Complex],
+  scaleMap: ScaleMap[AffinePair])
 
 case class NCCLogPolarExtractor(extractor: LogPolarExtractor)
 
@@ -38,13 +40,13 @@ object NCCLogPolarExtractor {
       for (samples <- samplesOption) yield {
         assert(samples.rows == self.extractor.numScales)
         assert(samples.cols == self.extractor.numAngles)
-        
+
         val zeroPadding = DenseMatrix.zeros[Int](
-            self.extractor.numScales - 1, 
-            self.extractor.numAngles)
-            
+          self.extractor.numScales - 1,
+          self.extractor.numAngles)
+
         val padded = DenseMatrix.vertcat(samples, zeroPadding)
-        
+
         ???
       }
     }
