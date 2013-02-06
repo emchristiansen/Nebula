@@ -36,7 +36,7 @@ object DenseMatrixUtil {
     def toMatrix: DenseMatrix[A] = {
       val rows = seqSeq.size
       val cols = seqSeq.head.size
-      for (row <- seqSeq) assert(row.size == cols)
+      for (row <- seqSeq) asserty(row.size == cols)
 
       val matrix = new DenseMatrix[A](rows, cols)
       for (i <- 0 until rows; j <- 0 until cols) {
@@ -82,7 +82,7 @@ object DenseMatrixUtil {
       val image = new BufferedImage(self.cols, self.rows, TYPE_INT_ARGB)
       for (y <- 0 until self.rows; x <- 0 until self.cols) {
         val value = self(y, x)
-        assert(value >= 0 && value < 256)
+        asserty(value >= 0 && value < 256)
 
         val pixel = Pixel(255, value, value, value)
         image.setRGB(x, y, pixel.argb)
@@ -126,8 +126,8 @@ object Util extends Logging {
   }
   
   def groupBySizes[A](sizes: Seq[Int], seq: Seq[A]): Seq[Seq[A]] = {
-    assert(sizes.sum == seq.size)
-    if (!sizes.isEmpty) assert(sizes.min > 0)
+    asserty(sizes.sum == seq.size)
+    if (!sizes.isEmpty) asserty(sizes.min > 0)
 
     if (sizes.isEmpty) {
       List()
@@ -179,7 +179,7 @@ object Util extends Logging {
         val smaller = withIndex.filter(_._1 < withIndex.head._1)
         val equal = withIndex.filter(x => !(x._1 < withIndex.head._1) && !(x._1 > withIndex.head._1))
         val bigger = withIndex.filter(_._1 > withIndex.head._1)
-        assert(smaller.size + equal.size + bigger.size == withIndex.size)
+        asserty(smaller.size + equal.size + bigger.size == withIndex.size)
         for (
           smallerSort <- helper(smaller);
           equalSort <- equal.permutations;
@@ -197,8 +197,8 @@ object Util extends Logging {
   // the |numBits| low order bits in the representation, where the head of
   // the list is the high-order bit.
   def numToBits(numBits: Int)(num: Int): Seq[Boolean] = {
-    require(numBits >= 0)
-    require(num >= 0)
+    requirey(numBits >= 0)
+    requirey(num >= 0)
 
     val divisors = (0 until numBits).reverse.map(p => math.pow(2, p).toInt)
     val divided = divisors.map(d => num / d)
@@ -240,8 +240,8 @@ object Util extends Logging {
     homography: Homography,
     leftKeyPoints: Seq[KeyPoint],
     rightKeyPoints: Seq[KeyPoint]): Seq[Tuple2[KeyPoint, KeyPoint]] = {
-    require(leftKeyPoints.size == leftKeyPoints.toSet.size)
-    require(rightKeyPoints.size == rightKeyPoints.toSet.size)
+    requirey(leftKeyPoints.size == leftKeyPoints.toSet.size)
+    requirey(rightKeyPoints.size == rightKeyPoints.toSet.size)
     // TODO
     logDebug("leftKeyPoints.size: " + leftKeyPoints.size)
     logDebug("rightKeyPoints.size: " + rightKeyPoints.size)
@@ -251,7 +251,7 @@ object Util extends Logging {
       threshold,
       homography,
       rightKeyPoints))
-    assert(leftKeyPoints.size == rightMatches.size)
+    asserty(leftKeyPoints.size == rightMatches.size)
     val culledOption = leftKeyPoints zip rightMatches filter (_._2.isDefined)
     val culled = culledOption map {
       case (left, rightOption) => (left, rightOption.get)
@@ -318,7 +318,7 @@ object Util extends Logging {
   }
 
   def assertWithValue[A](assertion: () => Boolean, value: A): A = {
-    assert(assertion())
+    asserty(assertion())
     value
   }
 
@@ -329,16 +329,16 @@ object Util extends Logging {
     }
   }
 
-  def assertEQ[A](left: A, right: A) {
-    assert(left == right, "%s == %s".format(left, right))
-  }
-
-  def assertContentsEqual[A](left: Seq[A], right: Seq[A]) {
-    assertEQ(left.size, right.size)
-    for ((l, r) <- left.view.zip(right.view)) {
-      assertEQ(l, r)
-    }
-  }
+//  def assertEQ[A](left: A, right: A) {
+//    asserty(left == right, "%s == %s".format(left, right))
+//  }
+//
+//  def assertContentsEqual[A](left: Seq[A], right: Seq[A]) {
+//    assertEQ(left.size, right.size)
+//    for ((l, r) <- left.view.zip(right.view)) {
+//      assertEQ(l, r)
+//    }
+//  }
 
   // Replace "Hi my name is ${name}." with "Hi my name is Eric."
   def bashStyleReplace(substitutions: Map[String, String], original: String): String = {
@@ -374,7 +374,7 @@ object Util extends Logging {
     val histogram = Array.fill(max + 1)(List[Int]())
     input.zipWithIndex.foreach({ x => histogram(x._1) = x._2 :: histogram(x._1) })
     val out = histogram.map(_.reverse).flatten
-    assert(out.toSet == (0 until input.size).toSet)
+    asserty(out.toSet == (0 until input.size).toSet)
     out
   }
 

@@ -76,7 +76,7 @@ object SFSPipelineBuild extends Build {
       "-optimize",
       "-unchecked",
       "-deprecation",
-      "-feature",
+//      "-feature",
       "-language:implicitConversions",
       "-language:postfixOps",
       "-language:existentials",

@@ -75,7 +75,7 @@ class TestLogPolar extends FunSuite {
     val matrix = DenseMatrix((1, 2), (3, 4))
     val golden = DenseMatrix((3, 4), (1, 2))
     val estimated = matrix.rollVertical(1)
-    assert(golden === estimated)
+    asserty(golden == estimated)
   }
 
   val width = image.getWidth
@@ -147,7 +147,7 @@ class TestLogPolar extends FunSuite {
       //        angleIndex,
       //        stats.mean(diff.data: _*))
       //      println(stats.mean(diff.data.map(_.abs): _*))
-      assert(stats.mean(diff.data.map(_.abs): _*) < 10)
+      assert(stats.mean(diff.data.map(_.abs): _*) == 10)
     }
   }
 
@@ -208,11 +208,11 @@ class TestLogPolar extends FunSuite {
       //      dumpImage("rawLogPolarScaleDiff", testDiff.toScaledImage)
 
       //      println(testDiff.map(_.abs).argmax, testDiff.map(_.abs).max)
-      //      assert(testDiff.map(_.abs).max < 5)
+      //      asserty(testDiff.map(_.abs).max < 5)
 
       //      println((overlapOriginal - overlapScaled).map(_.abs).max)
       val diff = overlapOriginal - overlapScaled
-      //      assert((overlapOriginal - overlapScaled).map(_.abs).max < 50)
+      //      asserty((overlapOriginal - overlapScaled).map(_.abs).max < 50)
       //      println(stats.mean(diff.data.map(_.abs): _*))
       assert(stats.mean(diff.data.map(_.abs): _*) < 30)
     }
@@ -244,9 +244,9 @@ class TestLogPolar extends FunSuite {
   //        val normalizer = PatchNormalizer.Rank
   //        val descriptor = normalizer.normalize(rawExtractor.extractSingle(image, point).get)
   //        val data: Array[Int] = descriptor.data
-  //        assert(data.min == 0)
-  //        assert(data.max == data.size - 1)
-  //        assert(data.distinct.size == data.size)
+  //        asserty(data.min == 0)
+  //        asserty(data.max == data.size - 1)
+  //        asserty(data.distinct.size == data.size)
   //      }
   //    }
   //  }
@@ -305,7 +305,7 @@ class TestLogPolar extends FunSuite {
 
 //      dumpImage(f"${angle}%.2f_recoverProperAngle", scale10(response.toScaledImage))
 
-      assert(response.argmin === (angleIndex, 0))
+      asserty(response.argmin == (angleIndex, 0))
     }
   }
 
@@ -348,7 +348,7 @@ class TestLogPolar extends FunSuite {
       //      println(scaleIndex)
       //
       //      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
-      assert(response.argmin === (0, scaleIndex + numScales - 1))
+      asserty(response.argmin == (0, scaleIndex + numScales - 1))
     }
   }
 
@@ -395,7 +395,7 @@ class TestLogPolar extends FunSuite {
       //      println(scaleIndex)
       //
       //      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
-      assert(response.argmin === (angleIndex, scaleIndex + numScales - 1))
+      asserty(response.argmin == (angleIndex, scaleIndex + numScales - 1))
     }
   }
 }

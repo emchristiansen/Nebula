@@ -1,5 +1,6 @@
 package nebula.summary
 
+import nebula._
 import java.awt.image.BufferedImage
 import java.io.File
 
@@ -27,8 +28,8 @@ object SummaryUtil {
    * The error rate for a given recall.
    */
   def errorRateAtRecall(recall: Double, dmatches: Seq[DMatch]): Double = {
-    require(recall >= 0)
-    require(recall <= 1)
+    requirey(recall >= 0)
+    requirey(recall <= 1)
 
     val sorted = dmatches.sortBy(_.distance)
 

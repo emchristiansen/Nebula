@@ -53,7 +53,7 @@ class TestMisc extends FunSuite {
 //      "int" -> "42",
 //      "double" -> "3.14")
 //
-//    assert(map === goldenMap)
+//    asserty(map === goldenMap)
 //
 //    val experiment1 = WideBaselineExperiment(
 //      "bikes",
@@ -65,14 +65,14 @@ class TestMisc extends FunSuite {
 //    val experiment2 = experiment1.copy(otherImage = 4)
     // val title = SummaryUtil.tableTitle(Seq(experiment1, experiment2))
     // val golden = "D-FASTDetector-MKP-100_E-SortExtractor-BW-5-C-true-NR-false-NS-false-PW-8_IC-bikes_M-L0Matcher_OI-*"
-    // assert(title === golden)
+    // asserty(title === golden)
   }
 
   test("numToBits", InstantTest) {
-    assert(Util.numToBits(3)(15) === Seq(true, true, true))
-    assert(Util.numToBits(5)(15) === Seq(false, true, true, true, true))
-    assert(Util.numToBits(0)(12) === Seq())
-    assert(Util.numToBits(5)(10) === Seq(false, true, false, true, false))
+    asserty(Util.numToBits(3)(15) == Seq(true, true, true))
+    asserty(Util.numToBits(5)(15) == Seq(false, true, true, true, true))
+    asserty(Util.numToBits(0)(12) == Seq())
+    asserty(Util.numToBits(5)(10) == Seq(false, true, false, true, false))
   }
 
   test("nonDistinctPermutations", InstantTest) {
@@ -83,25 +83,24 @@ class TestMisc extends FunSuite {
   test("allSorts", InstantTest) {
     val hasUniqueSort = List(2, 1, 3, 4)
 
-    assert(allSorts(hasUniqueSort) === List(List(1, 0, 2, 3)))
+    assert(allSorts(hasUniqueSort) == List(List(1, 0, 2, 3)))
 
-    assert(allSorts(List(2, 2, 4, 3)) === List(List(0, 1, 3, 2), List(1, 0, 3, 2)))
+    assert(allSorts(List(2, 2, 4, 3)) == List(List(0, 1, 3, 2), List(1, 0, 3, 2)))
   }
 
   test("group", InstantTest) {
-    assert(Util.group(List()) === List())
+    asserty(Util.group(List()) == List())
 
-    assert(Util.group(List(1, 2, 3)) === List(List(1), List(2), List(3)))
+    asserty(Util.group(List(1, 2, 3)) == List(List(1), List(2), List(3)))
 
-    assert(Util.group(List(2, 2, 1, 3, 3, 2, 2, 2)) ===
+    asserty(Util.group(List(2, 2, 1, 3, 3, 2, 2, 2)) ==
       List(List(2, 2), List(1), List(3, 3), List(2, 2, 2)))
   }
 
   test("groupBySizes", InstantTest) {
-    assert(Util.groupBySizes(List(), List()) === List())
+    asserty(Util.groupBySizes(List(), List()) == List())
 
-    assert(Util.groupBySizes(List(2, 1, 2), List(1, 2, 3, 4, 5)) ===
-      List(List(1, 2), List(3), List(4, 5)))
+    asserty(Util.groupBySizes(List(2, 1, 2), List(1, 2, 3, 4, 5)) == List(List(1, 2), List(3), List(4, 5)))
   }
 }
 

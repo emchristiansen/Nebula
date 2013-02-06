@@ -1,5 +1,6 @@
 package nebula.imageProcessing
 
+import nebula._
 import java.awt.image.BufferedImage
 
 import scala.annotation.elidable
@@ -10,8 +11,8 @@ import scala.annotation.elidable.ASSERTION
 // TODO: Make trait
 case class RichImage(image: BufferedImage) {
   def getPixel(x: Int, y: Int): Pixel = {
-    require(x >= 0 && x < image.getWidth)
-    require(y >= 0 && y < image.getHeight)
+    requirey(x >= 0 && x < image.getWidth)
+    requirey(y >= 0 && y < image.getHeight)
     Pixel.getPixel(image, x, y)
   }
 
@@ -31,7 +32,7 @@ case class RichImage(image: BufferedImage) {
           val floorWeight = 1 - (shifted - floor)
           val ceil = shifted.ceil
           val ceilWeight = 1 - floorWeight
-          assert(floorWeight + ceilWeight == 1)
+          asserty(floorWeight + ceilWeight == 1)
           List((floor.toInt, floorWeight), (ceil.toInt, ceilWeight))
         }
       }

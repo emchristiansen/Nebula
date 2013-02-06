@@ -64,7 +64,7 @@ import java.awt.image.BufferedImage
 
 // object PyramidHistogram {
 //   def createFromSinglePoint(weight: Int)(box: Box)(vector: IndexedSeq[Int]): PyramidHistogram = {
-//     assert(box.ranges.size == vector.size)    
+//     asserty(box.ranges.size == vector.size)    
     
 //     def createList(weight: Int, box: Box): List[Tuple2[Int, Int]] = {
 //       val thisScale = (box.hashCode, weight)
@@ -95,7 +95,7 @@ import java.awt.image.BufferedImage
 //   def distance(left: PyramidHistogram, right: PyramidHistogram): Double = {
 //     val leftSum = left.bins.values.sum.toDouble
 //     val rightSum = right.bins.values.sum.toDouble
-//     assert(leftSum == rightSum)
+//     asserty(leftSum == rightSum)
 //     val keys = left.bins.keys.toSet ++ right.bins.keys.toSet
 //     val errors = for (key <- keys.toList) yield {
 //       if (left.bins.contains(key) && right.bins.contains(key)) (left.bins(key) - right.bins(key)).abs
@@ -135,7 +135,7 @@ import java.awt.image.BufferedImage
 //   def distance(left: BufferedImage, right: BufferedImage): Double = {
 //     val (leftDimension, leftHistogram) = histogram(left)
 //     val (rightDimension, rightHistogram) = histogram(right)
-//     assert(leftDimension == rightDimension)
+//     asserty(leftDimension == rightDimension)
 //     estimateL1Matching(scale, leftDimension, leftHistogram, rightHistogram)  
 //   }
 // }

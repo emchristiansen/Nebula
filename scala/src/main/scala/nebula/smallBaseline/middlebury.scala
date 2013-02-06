@@ -1,5 +1,6 @@
 package nebula.smallBaseline
 
+import nebula._
 import java.awt.image.BufferedImage
 import java.io.File
 
@@ -11,20 +12,21 @@ import javax.imageio.ImageIO
 ///////////////////////////////////////////////////////////
 
 case class SmallBaselinePair(left: BufferedImage, right: BufferedImage, flow: FlowField) {
-  require(left.getWidth == right.getWidth)
-  require(left.getWidth == flow.data.cols)
-  require(left.getHeight == right.getHeight)
-  require(left.getHeight == flow.data.rows)
+  requirey(left.getWidth == right.getWidth)
+  requirey(left.getWidth == flow.data.cols)
+  requirey(left.getHeight == right.getHeight)
+  requirey(left.getHeight == flow.data.rows)
 }
 
 object SmallBaselinePair {
   def apply(directoryRoot: File, name: String): SmallBaselinePair = {
-    require(directoryRoot.isDirectory)
+    requirey(directoryRoot.isDirectory)
 
     def getFile(format: String): File = {
       val filename = format.format(name)
       val file = new File(directoryRoot, filename)
-      assert(file.isFile, "not a file: %s".format(file.toString))
+//      asserty(file.isFile, "not a file: %s".format(file.toString))
+      asserty(file.isFile)
       file
     }
 
@@ -36,7 +38,7 @@ object SmallBaselinePair {
     def getImage(format: String): BufferedImage = {
       val file = getFile(format)
       val image = ImageIO.read(file)
-      assert(image != null)
+      asserty(image != null)
       image
     }
 

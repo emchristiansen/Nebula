@@ -1,5 +1,6 @@
 package nebula.brown
 
+import nebula._
 import java.awt.image.BufferedImage
 import java.io.File
 
@@ -33,8 +34,8 @@ object PatchPair {
   }
 
   def extractDescriptorAtCenter[E <% Extractor[F], F](extractor: E, image: BufferedImage): Option[F] = {
-    require(image.getWidth == 64)
-    require(image.getHeight == 64)
+    requirey(image.getWidth == 64)
+    requirey(image.getHeight == 64)
 
     // TODO: Scale down
 //    val scaleFactor = 8
@@ -52,7 +53,7 @@ object PatchPair {
     val manifest = new File(directory, s"m50_${numMatches}_${numMatches}_0.txt").mustExist
 
     val lines = FileUtils.readFileToString(manifest).split("\n")
-    assert(lines.size == numMatches)
+    asserty(lines.size == numMatches)
 
     lines.toStream.map(manifestLineToPatchPair(directory))
   }
@@ -77,20 +78,20 @@ object PatchPair {
     val numPatchesPerFile = 256
 
     val imageIndex = index / numPatchesPerFile
-    assert(imageIndex >= 0)
+    asserty(imageIndex >= 0)
     val imageFile = new File(directory, f"patches${imageIndex}%04d.bmp").mustExist
     val image = ImageIO.read(imageFile)
 
     val patchIndex = index - numPatchesPerFile * imageIndex
-    assert(patchIndex >= 0)
-    assert(patchIndex < numPatchesPerFile)
+    asserty(patchIndex >= 0)
+    asserty(patchIndex < numPatchesPerFile)
     val numPatchesPerRow = 16
     val patchRow = patchIndex / numPatchesPerRow
-    assert(patchRow >= 0)
-    assert(patchRow < numPatchesPerFile / numPatchesPerRow)
+    asserty(patchRow >= 0)
+    asserty(patchRow < numPatchesPerFile / numPatchesPerRow)
     val patchColumn = patchIndex - numPatchesPerRow * patchRow
-    assert(patchColumn >= 0)
-    assert(patchColumn < numPatchesPerRow)
+    asserty(patchColumn >= 0)
+    asserty(patchColumn < numPatchesPerRow)
 
     // Patches are square.
     val patchWidth = 64

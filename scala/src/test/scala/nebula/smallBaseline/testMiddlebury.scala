@@ -32,6 +32,6 @@ class TestMiddlebury(val configMap: Map[String, Any]) extends ConfigMapFunSuite 
       FlowField(file)
     }
     
-    assert(flow.mse(flow).abs === 0)
+    asserty(flow.mse(flow).abs == 0)
   }
 }

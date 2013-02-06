@@ -1,5 +1,6 @@
 package nebula.graveyard
 
+import nebula._
 import java.awt.image.BufferedImage
 
 ///////////////////////////////////////////////////////////
@@ -15,7 +16,7 @@ case class NNClassifier[A](
         candidates
       }
       case (numNeighbors, distance) :: remainingDistances => {
-        assert(numNeighbors > 0)
+        asserty(numNeighbors > 0)
         val distancesAndLabels = candidates.par.map({
           case (label, image) => (distance(query, image), (label, image))
         }).toList

@@ -21,16 +21,17 @@ import org.opencv.features2d.KeyPoint
 import nebula.graveyard.Point2D
 import nebula.imageProcessing.ImageUtil
 import nebula.imageProcessing.RichImage.bufferedImage
+import nebula._
 
 ///////////////////////////////////////////////////////////
 
 // TODO: Use Breeze vectors throughout entire file.
 case class Homography(matrix: RealMatrix) {
-  require(matrix.getRowDimension == 3)
-  require(matrix.getColumnDimension == 3)
+  requirey(matrix.getRowDimension == 3)
+  requirey(matrix.getColumnDimension == 3)
 
   def transform(in: RealVector): RealVector = {
-    require(in.getDimension == 2)
+    requirey(in.getDimension == 2)
     val inHomogeneous = Geometry.homogenize(in)
     val outHomogeneous = matrix.operate(inHomogeneous)
     Geometry.dehomogenize(outHomogeneous)
@@ -63,9 +64,9 @@ object ImageGeometry {
         // Just make sure the point really did stay the same.
         val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
         val pointAfter = rotated.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-        assert(pointBefore.isDefined)
-        assert(pointAfter.isDefined)
-//        assert(pointBefore.get.isSimilar(5, pointAfter.get))
+        asserty(pointBefore.isDefined)
+        asserty(pointAfter.isDefined)
+//        asserty(pointBefore.get.isSimilar(5, pointAfter.get))
 
         rotated
       }
@@ -88,9 +89,9 @@ object ImageGeometry {
         // Just make sure the point really did stay the same.
         val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
         val pointAfter = scaled.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-        assert(pointBefore.isDefined)
-        assert(pointAfter.isDefined)
-        if (scaleFactor >= 1) assert(pointBefore.get.isSimilar(20, pointAfter.get))
+        asserty(pointBefore.isDefined)
+        asserty(pointAfter.isDefined)
+        if (scaleFactor >= 1) asserty(pointBefore.get.isSimilar(20, pointAfter.get))
 
         scaled
       }
@@ -104,14 +105,14 @@ object Geometry {
 
   def dehomogenize(homogeneous: RealVector): RealVector = {
     val homogeneousElement = homogeneous.getEntry(homogeneous.getDimension - 1)
-    require(homogeneousElement != 0)
+    requirey(homogeneousElement != 0)
     val normalized = homogeneous.mapMultiply(1.0 / homogeneousElement)
     normalized.getSubVector(0, homogeneous.getDimension - 1)
   }
 
   def fitAffine(source: List[Point2D], target: List[Point2D]): AffineTransform = {
-    assert(source.size == target.size)
-    assert(source.size >= 3)
+    asserty(source.size == target.size)
+    asserty(source.size >= 3)
 
     val lhs = {
       val data = target.map(_.toList).transpose.map(_.toArray).toArray
@@ -126,8 +127,8 @@ object Geometry {
     val solver = new SingularValueDecomposition(rhs).getSolver
     val transformation = solver.solve(lhs).transpose
 
-    assert(transformation.getRowDimension == 2)
-    assert(transformation.getColumnDimension == 3)
+    asserty(transformation.getRowDimension == 2)
+    asserty(transformation.getColumnDimension == 3)
 
     new AffineTransform(transformation.getData.transpose.flatten)
   }
@@ -138,7 +139,7 @@ object Geometry {
     // "Least-Squares Estimation of Transformation Parameters Between To Point Patterns" by Umeyama.
     // Returns 3x3 homogeneous transformation matrix.
 
-    assert(xsList.size == ysList.size && xsList.size >= 2)
+    asserty(xsList.size == ysList.size && xsList.size >= 2)
 
     def vectorize(v: Tuple2[Double, Double]): RealVector = {
       val (v1, v2) = v

@@ -57,8 +57,8 @@ object MathUtil {
   }
 
   def dot(left: DenseMatrix[Double], right: DenseMatrix[Double]): Double = {
-    require(left.rows == right.rows)
-    require(left.cols == right.cols)
+    requirey(left.rows == right.rows)
+    requirey(left.cols == right.cols)
 
     left.toVector.dot(right.toVector)
   }

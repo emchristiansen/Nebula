@@ -76,8 +76,8 @@ object Extractor {
       image: BufferedImage,
       keyPoint: KeyPoint): Option[IndexedSeq[Int]] = {
     // TODO
-    assert(!normalizeRotation)
-    assert(!normalizeScale)
+    asserty(!normalizeRotation)
+    asserty(!normalizeScale)
 
     val blurred = ImageUtil.boxBlur(blurWidth, image)
     val patchOption = ImageUtil.extractPatch(blurred, patchWidth, keyPoint)
@@ -98,13 +98,13 @@ object Extractor {
 
       if (descriptor.rows == 0 || descriptor.cols == 0) None
       else {
-        assert(descriptor.rows == 1)
-        assert(descriptor.cols > 0)
-        //        assert(descriptor.`type` == CvType.CV_8UC1)
+        asserty(descriptor.rows == 1)
+        asserty(descriptor.cols > 0)
+        //        asserty(descriptor.`type` == CvType.CV_8UC1)
 
         val doubles = for (c <- 0 until descriptor.cols) yield {
           val doubles = descriptor.get(0, c)
-          assert(doubles.size == 1)
+          asserty(doubles.size == 1)
           doubles.head
         }
 
@@ -190,7 +190,7 @@ object LogPolarExtractor {
   implicit def implicitLogPolarExtractor(self: LogPolarExtractor): Extractor[DenseMatrix[Int]] =
     new Extractor[DenseMatrix[Int]] {
       override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
-        assert(self.color == "Gray")
+        asserty(self.color == "Gray")
 
         LogPolar.rawLogPolarSeq(
           self.steerScale,
@@ -204,8 +204,8 @@ object LogPolarExtractor {
         //          for (raw <- rawOption) yield {
         //            val seqSeq = raw.toSeqSeq
         //            if (self.partitionIntoRings) {
-        //              assert(seqSeq.size == raw.rows)
-        //              assert(seqSeq.head.size == raw.cols)
+        //              asserty(seqSeq.size == raw.rows)
+        //              asserty(seqSeq.head.size == raw.cols)
         //
         //              val transposed = for (column <- seqSeq.transpose) yield {
         //                PatchExtractor.constructor(
@@ -248,7 +248,7 @@ object ELUCIDExtractor {
         val angles = (0 until self.numSamplesPerRadius).map(_ * 2 * math.Pi / self.numSamplesPerRadius)
 
         def samplePattern(scaleFactor: Double, rotationOffset: Double): Seq[DenseVector[Double]] = {
-          require(scaleFactor > 0)
+          requirey(scaleFactor > 0)
           Seq(DenseVector(0.0, 0.0)) ++ (for (
             angle <- angles;
             radius <- radii
@@ -261,12 +261,12 @@ object ELUCIDExtractor {
 
         def samplePoints(keyPoint: KeyPoint): Seq[DenseVector[Double]] = {
           val scaleFactor = if (self.normalizeScale) {
-            assert(keyPoint.size > 0)
+            asserty(keyPoint.size > 0)
             keyPoint.size / 10.0
           } else 1
 
           val rotationOffset = if (self.normalizeRotation) {
-            assert(keyPoint.angle != -1)
+            asserty(keyPoint.angle != -1)
             keyPoint.angle * 2 * math.Pi / 360
           } else 0
 

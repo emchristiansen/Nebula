@@ -66,7 +66,7 @@ object TestUtil {
 
   def dumpImage(name: String, image: BufferedImage) {
     val tempDirectory = File.createTempFile("temp", "").getParentFile
-    assert(tempDirectory != null)
+    asserty(tempDirectory != null)
     val testDirectory = new File(tempDirectory, "nebulaTest")
     println(testDirectory)
     if (!testDirectory.isDirectory) testDirectory.mkdir

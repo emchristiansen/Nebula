@@ -26,7 +26,7 @@ object LogPolar {
     numScales: Int): Tuple3[Double, Double, Double] = {
     val maxScalingFactor = samplingRadius / minRadius
     val minScalingFactor = samplingRadius / maxRadius
-    assert(maxScalingFactor > minScalingFactor)
+    asserty(maxScalingFactor > minScalingFactor)
     val base = math.exp(math.log(minScalingFactor / maxScalingFactor) / (numScales - 1))
     (minScalingFactor, maxScalingFactor, base)
   }
@@ -49,12 +49,12 @@ object LogPolar {
 
     val (minScalingFactor, maxScalingFactor, base) =
       getFactors(samplingRadius, minRadius, maxRadius, numScales)
-    assert(base < 1)
+    asserty(base < 1)
 
     val idealScaleFactors = for (scaleIndex <- 0 until numScales) yield {
       val scaleFactor = maxScalingFactor * math.pow(base, scaleIndex)
-      assert(scaleFactor >= minScalingFactor - epsilon)
-      assert(scaleFactor <= maxScalingFactor + epsilon)
+      asserty(scaleFactor >= minScalingFactor - epsilon)
+      asserty(scaleFactor <= maxScalingFactor + epsilon)
       if (scaleIndex == 0) assertNear(scaleFactor, maxScalingFactor)
       if (scaleIndex == numScales - 1) assertNear(scaleFactor, minScalingFactor)
       scaleFactor
@@ -158,8 +158,8 @@ object LogPolar {
   //    val padded = seqSeq.map(zeroPadding ++ _ ++ zeroPadding)
   //
   //    val replicated = (padded ++ padded.init).toMatrix
-  //    assert(replicated.cols == 3 * matrix.cols - 2)
-  //    assert(replicated.rows == 2 * matrix.rows - 1)
+  //    asserty(replicated.cols == 3 * matrix.cols - 2)
+  //    asserty(replicated.rows == 2 * matrix.rows - 1)
   //    replicated
   //  }
 
@@ -177,12 +177,12 @@ object LogPolar {
     angleIndices: Range,
     scaleIndices: Range)(
       implicit ed: ((N, M)) => ExpectedDistance): DenseMatrix[Double] = {
-    require(2 * kernel.rows - 1 == base.rows)
-    require(kernel.cols == base.cols)
-    require(angleIndices.min >= 0)
-    require(angleIndices.max < kernel.rows)
-    require(scaleIndices.min >= -kernel.cols + 1)
-    require(scaleIndices.max < kernel.cols)
+    requirey(2 * kernel.rows - 1 == base.rows)
+    requirey(kernel.cols == base.cols)
+    requirey(angleIndices.min >= 0)
+    requirey(angleIndices.max < kernel.rows)
+    requirey(scaleIndices.min >= -kernel.cols + 1)
+    requirey(scaleIndices.max < kernel.cols)
 
     val response = DenseMatrix.fill(angleIndices.size, scaleIndices.size)(0.0)
     for (angleIndex <- angleIndices; scaleIndex <- scaleIndices) {
@@ -215,9 +215,9 @@ object LogPolar {
   def getResponseMapWrapper[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
     self: LogPolarMatcher[N, M, F2], left: DenseMatrix[Int], right: DenseMatrix[Int])(
       implicit ed: ((N, M)) => ExpectedDistance) = {
-      require(left.rows == right.rows)
-      require(left.cols == right.cols)
-      require(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
+      requirey(left.rows == right.rows)
+      requirey(left.cols == right.cols)
+      requirey(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
 
       //        val distance = self.matcher.distance
 

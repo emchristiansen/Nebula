@@ -86,7 +86,7 @@ class TestRichImage extends FunSuite {
       Seq(45, 45, 48, 52, 56, 60, 64),
       Seq(57, 57, 60, 64, 68, 72, 76)).toMatrix
 
-    assert(subsampled === golden)
+    asserty(subsampled == golden)
   }
 
   test("resizing the image with getSubPixel should be the same as resizing " +
@@ -109,7 +109,7 @@ class TestRichImage extends FunSuite {
         val pixel = image.getSubPixel(
           x / resizeFactor.toDouble,
           y / resizeFactor.toDouble)
-        assert(pixel.isDefined)
+        asserty(pixel.isDefined)
         resized.setPixel(x, y, pixel.get)
       }
       resized
@@ -122,7 +122,7 @@ class TestRichImage extends FunSuite {
     //    dumpImage("getSubPixelEstimated", estimatedImage)
     //    dumpImage("getSubPixelDifference_shouldBeZeros", difference.toScaledImage)
 
-    //    assert(goldenImage.toMatrix == estimatedImage.toMatrix)
+    //    asserty(goldenImage.toMatrix == estimatedImage.toMatrix)
   }
 }
 

@@ -11,7 +11,7 @@ case class RuntimeConfig(
   deleteTemporaryFiles: Boolean,
   skipCompletedExperiments: Boolean) {
   for (temp <- tempDirectory) {
-    if (!temp.isDirectory) assert(temp.mkdir)
+    if (!temp.isDirectory) asserty(temp.mkdir)
   }
 }
 

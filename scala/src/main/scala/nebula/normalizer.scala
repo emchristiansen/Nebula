@@ -114,8 +114,8 @@ trait PatchNormalizerToNormalizer extends PatchNormalizer {
   //      if (range == 0) data // Do nothing.
   //      else {
   //        val normalized = data.map(x => ((x - min) * 255.0 / range))
-  //        assert(normalized.min == 0)
-  //        assert(normalized.max == 255)
+  //        asserty(normalized.min == 0)
+  //        asserty(normalized.max == 255)
   //        normalized
   //      }
   //    }

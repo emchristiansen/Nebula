@@ -25,7 +25,7 @@ object FFT {
   def fftWrapper(
     transform: TransformType)(
       data: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-    require(isZeroOrPowerOf2(data.size))
+    requirey(isZeroOrPowerOf2(data.size))
     data.size match {
       case 0 => IndexedSeq()
       case _ => new FastFourierTransformer(DftNormalization.STANDARD).transform(
@@ -41,8 +41,8 @@ object FFT {
   def fft2Wrapper(
     transform: TransformType)(
       data: DenseMatrix[Complex]): DenseMatrix[Complex] = {
-    require(isZeroOrPowerOf2(data.rows))
-    require(isZeroOrPowerOf2(data.cols))
+    requirey(isZeroOrPowerOf2(data.rows))
+    requirey(isZeroOrPowerOf2(data.cols))
 
     val seqSeq = data.toSeqSeq
 
@@ -91,7 +91,7 @@ object FFT {
   def correlateSameSize(
     left: IndexedSeq[Complex],
     right: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-    require(left.size == right.size)
+    requirey(left.size == right.size)
 
     def shiftLeft[A](seq: IndexedSeq[A]): IndexedSeq[A] = {
       seq.tail :+ seq.head
@@ -110,7 +110,7 @@ object FFT {
   def convolveSameSize(
     left: IndexedSeq[Complex],
     right: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-    require(left.size == right.size)
+    requirey(left.size == right.size)
 
     def shiftLeft[A](seq: IndexedSeq[A]): IndexedSeq[A] = {
       seq.tail :+ seq.head
@@ -159,8 +159,8 @@ object FFT {
     })
 
     val correlation = streamStream.map(_.toIndexedSeq).toIndexedSeq.toMatrix
-    assert(correlation.rows == left.rows)
-    assert(correlation.cols == left.cols)
+    asserty(correlation.rows == left.rows)
+    asserty(correlation.cols == left.cols)
 
     correlation
   }
@@ -204,15 +204,15 @@ object FFT {
     })
 
     val convolution = streamStream.map(_.toIndexedSeq).toIndexedSeq.toMatrix
-    assert(convolution.rows == left.rows)
-    assert(convolution.cols == left.cols)
+    asserty(convolution.rows == left.rows)
+    asserty(convolution.cols == left.cols)
 
     convolution
   }
 
   // Based on http://rosettacode.org/wiki/Fast_Fourier_transform#Scala
   //  def fft(data: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-  //    require(data.size == 0 || MathUtil.log2(data.size) == MathUtil.log2(data.size).round)
+  //    requirey(data.size == 0 || MathUtil.log2(data.size) == MathUtil.log2(data.size).round)
   //    data.size match {
   //      case 0 => IndexedSeq()
   //      case 1 => data

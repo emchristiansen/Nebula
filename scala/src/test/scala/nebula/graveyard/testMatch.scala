@@ -24,6 +24,6 @@ class TestPyramidHistogram extends FunSuite {
   // test("distance") {
   //   val x = create(box)(List(xPoint0, xPoint1, xPoint2))
   //   val y = create(box)(List(yPoint0, yPoint1, yPoint2))
-  //   assert(distance(x, y) === 8)
+  //   asserty(distance(x, y) === 8)
   // }
 }

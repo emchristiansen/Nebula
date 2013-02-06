@@ -22,13 +22,13 @@ object XMLUtil {
 
   def singleOnKey[A](function: (Node) => A, key: String)(implicit node: Node): A = {
     val list = mapOnKey(function, key)
-    assert(list.size == 1)
+    asserty(list.size == 1)
     list.head
   }
 
   def text(node: Node)(key: String): String = {
     val list = (node \ key).toList
-    assert(list.size == 1)
+    asserty(list.size == 1)
     list.head.text
   }
 

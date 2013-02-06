@@ -1,5 +1,6 @@
 package nebula.mpie
 
+import nebula._
 import java.io.File
 
 import scala.annotation.elidable
@@ -88,7 +89,7 @@ object MPIECondition {
 //  val distance: String,
 //  val leftCondition: MPIECondition,
 //  val rightCondition: MPIECondition) extends Experiment {
-//  if (roi == "CFR") assert(leftCondition.pose == "051" && rightCondition.pose == "051")
+//  if (roi == "CFR") asserty(leftCondition.pose == "051" && rightCondition.pose == "051")
 //
 //  val parameterAbbreviations: List[String] =
 //    "R D P I L N J M B".split(" ").toList
@@ -153,11 +154,11 @@ object MPIECondition {
 //}
 
 case class MPIEProperties(id: String, session: String, expression: String, pose: String, illumination: String) {
-  assert(id.size == 3)
-  assert(List("01", "02", "03", "04").contains(session))
-  assert(expression == "01")
-  assert(List("240", "190", "051").contains(pose))
-  assert(List("00", "04", "06").contains(illumination))
+  asserty(id.size == 3)
+  asserty(List("01", "02", "03", "04").contains(session))
+  asserty(expression == "01")
+  asserty(List("240", "190", "051").contains(pose))
+  asserty(List("00", "04", "06").contains(illumination))
 
   def pathSegment = {
     val poseUnderscore = pose match {

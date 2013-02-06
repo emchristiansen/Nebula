@@ -38,8 +38,8 @@ object NCCLogPolarExtractor {
       val samplesOption = self.extractor.extractSingle(image, keyPoint)
 
       for (samples <- samplesOption) yield {
-        assert(samples.rows == self.extractor.numScales)
-        assert(samples.cols == self.extractor.numAngles)
+        asserty(samples.rows == self.extractor.numScales)
+        asserty(samples.cols == self.extractor.numAngles)
 
         val zeroPadding = DenseMatrix.zeros[Int](
           self.extractor.numScales - 1,
@@ -57,7 +57,7 @@ object NCCLogPolarExtractor {
   //  implicit def implicitLogPolarExtractor(self: LogPolarExtractor): Extractor[DenseMatrix[Int]] =
   //    new Extractor[DenseMatrix[Int]] {
   //      override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
-  //        assert(self.color == "Gray")
+  //        asserty(self.color == "Gray")
   //
   //        LogPolar.rawLogPolarSeq(
   //          self.steerScale,
@@ -71,8 +71,8 @@ object NCCLogPolarExtractor {
   //        //          for (raw <- rawOption) yield {
   //        //            val seqSeq = raw.toSeqSeq
   //        //            if (self.partitionIntoRings) {
-  //        //              assert(seqSeq.size == raw.rows)
-  //        //              assert(seqSeq.head.size == raw.cols)
+  //        //              asserty(seqSeq.size == raw.rows)
+  //        //              asserty(seqSeq.head.size == raw.cols)
   //        //
   //        //              val transposed = for (column <- seqSeq.transpose) yield {
   //        //                PatchExtractor.constructor(

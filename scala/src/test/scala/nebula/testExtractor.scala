@@ -26,7 +26,7 @@ class TestExtractor(val configMap: Map[String, Any]) extends ConfigMapFunSuite {
   //  test("uniformRank") {
   //    val pixels = IndexedSeq(2, 2, 3, 3, 3)
   //    val uniformRank = Extractor.uniformRank(pixels)
-  //    assert(uniformRank === IndexedSeq(1, 1, 3, 3, 3))
+  //    asserty(uniformRank === IndexedSeq(1, 1, 3, 3, 3))
   //  }
 
   test("BRISK", FastTest) {
@@ -56,8 +56,8 @@ class TestExtractor(val configMap: Map[String, Any]) extends ConfigMapFunSuite {
     val url = getClass.getResource("/goldfish_girl.png")
     val image = ImageIO.read(new File(url.getFile))
 
-    assert(extractor.extractSingle(image, new KeyPoint(0, 0, 1, 0, 1, 1, 1)) == None)
-    assert(extractor.extractSingle(image, new KeyPoint(5, 5, 1, 0, 1, 1, 1)).isDefined)
+    assert(extractor.extractSingle(image, new KeyPoint(0, 0, 1, 0, 1, 1, 1)) === None)
+    asserty(extractor.extractSingle(image, new KeyPoint(5, 5, 1, 0, 1, 1, 1)).isDefined)
   }
 
   test("elucid bikes", FastTest, DatasetTest, InteractiveTest) {

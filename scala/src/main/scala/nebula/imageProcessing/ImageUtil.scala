@@ -1,5 +1,6 @@
 package nebula.imageProcessing
 
+import nebula._
 import java.awt.Rectangle
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
@@ -46,8 +47,8 @@ object ImageUtil {
     //    val transformOp = new AffineTransformOp(transformMatrix, TYPE_BILINEAR);
     //
     //    val scaled = transformOp.filter(image, null)
-    //    assert(scaled.getWidth == (factor * image.getWidth).round)
-    //    assert(scaled.getHeight == (factor * image.getHeight).round)
+    //    asserty(scaled.getWidth == (factor * image.getWidth).round)
+    //    asserty(scaled.getHeight == (factor * image.getHeight).round)
     //    scaled
   }
 
@@ -70,10 +71,10 @@ object ImageUtil {
                   y: Double,
                   width: Int,
                   height: Int): BufferedImage = {
-    require(x >= 0)
-    require(x + width < image.getWidth)
-    require(y >= 0)
-    require(y + height < image.getHeight)
+    requirey(x >= 0)
+    requirey(x + width < image.getWidth)
+    requirey(y >= 0)
+    requirey(y + height < image.getHeight)
 
     // Crop out enough of the image to just contain the patch.
     val xInt = x.floor.toInt

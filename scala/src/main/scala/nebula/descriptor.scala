@@ -3,7 +3,7 @@ package nebula
 ///////////////////////////////////////////////////////////
 
 case class SortDescriptor(values: IndexedSeq[Int]) {
-  assert(values.sorted == (0 until values.size))
+  asserty(values.sorted == (0 until values.size))
 }
 
 object SortDescriptor {

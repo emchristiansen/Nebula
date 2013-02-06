@@ -229,12 +229,14 @@ jsonString.asJson.convertTo[${typeName[A]}]
    * Checks the ratio of two positive numbers is close to 1.
    */
   def assertRelativelyNear(maxRatio: Double)(left: Double, right: Double) {
-    require(maxRatio >= 1)
-    require(left > 0)
-    require(right > 0)
+    requirey(maxRatio >= 1)
+    requirey(left > 0)
+    requirey(right > 0)
 
-    assert(left / right <= maxRatio, s"${left} / ${right} = ${left / right} > ${maxRatio}")
-    assert(right / left <= maxRatio, s"${right} / ${left} = ${right / left} > ${maxRatio}")
+//    asserty(left / right <= maxRatio, s"${left} / ${right} = ${left / right} > ${maxRatio}")
+//    asserty(right / left <= maxRatio, s"${right} / ${left} = ${right / left} > ${maxRatio}")
+    asserty(left / right <= maxRatio)
+    asserty(right / left <= maxRatio)    
   }
 
   implicit class AddTo[A](obj: A) {

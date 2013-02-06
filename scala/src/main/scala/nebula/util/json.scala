@@ -36,17 +36,17 @@ object JSONUtil extends Logging {
   def singletonObject[A: TypeTag](a: A): RootJsonFormat[A] = {
     val typeName = typeTag[A].tpe.toString
     val objectName = {
-      assert(typeName.endsWith(".type"))
+      asserty(typeName.endsWith(".type"))
       // Remove the ".type" from the end of the object type.
       val noType = typeName.take(typeName.size - 5)
       // Remove the "nebula." from the beginning of the object type.
-      assert(noType.startsWith("nebula."))
+      asserty(noType.startsWith("nebula."))
       noType.drop(7)
     }
     
     val noTypeName = new RootJsonFormat[A] {
       override def write(e: A) = {
-        assert(e == a)
+        asserty(e == a)
         JsString(objectName)
       }
       
@@ -64,12 +64,12 @@ object JSONUtil extends Logging {
     def addClassInfo(scalaClass: String) = new RootJsonFormat[A] {
       override def write(e: A) = {
         val fields = self.write(e).asJsObject.fields
-        assert(!fields.contains("scalaClass"))
+        asserty(!fields.contains("scalaClass"))
         JsObject(fields + ("scalaClass" -> JsString(scalaClass)))
       }
       override def read(value: JsValue) = {
         val fields = value.asJsObject.fields
-        assert(fields.contains("scalaClass"))
+        asserty(fields.contains("scalaClass"))
         self.read(JsObject(fields - "scalaClass"))
       }
     }
@@ -157,7 +157,7 @@ object JSONUtil extends Logging {
   //      case JsNumber(number) => number.toString
   //      case _ => {
   //        val fields = json.asJsObject.fields
-  //        require(fields.keys.toList contains "scalaClass")
+  //        requirey(fields.keys.toList contains "scalaClass")
   //        
   //        val stringMap = fields filterKeys (_ != "scalaClass") map {
   //          case (key, value) => camelCaseToAbbreviation(key) -> recurse(value, depth + 1)

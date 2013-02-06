@@ -23,6 +23,7 @@ import javax.imageio.ImageIO
 
 import spray.json._
 import JSONUtil._
+import nebula._
 
 ///////////////////////////////////////////////////////////
 
@@ -36,8 +37,8 @@ object KeyPointUtil {
   }
 
   def pairQuality(left: KeyPoint, right: KeyPoint): Double = {
-    require(left.response >= 0)
-    require(right.response >= 0)
+    requirey(left.response >= 0)
+    requirey(right.response >= 0)
     left.response * right.response
   }
   
@@ -48,7 +49,7 @@ object KeyPointUtil {
   }
   
   def scaleFactor(homography: Homography, xyPoint: RealVector): Double = {
-    require(xyPoint.getDimension == 2)
+    requirey(xyPoint.getDimension == 2)
 
     val plusX = xyPoint.add(new ArrayRealVector(Array(1.0, 0.0)))
     val plusY = xyPoint.add(new ArrayRealVector(Array(0.0, 1.0)))
@@ -140,7 +141,7 @@ object OpenCVUtil {
     ImageIO.write(image, "bmp", file)
     val mat = imread(file.toString)
     file.delete
-    assert(mat != null)
+    asserty(mat != null)
     mat
   }
 }

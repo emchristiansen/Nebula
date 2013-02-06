@@ -36,7 +36,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   implicit def genPowerOfTwo = Gen(_ => {
     val power = (random.nextInt % 8).abs
     val size = math.pow(2, power).toInt
-    assert(size > 0)
+    asserty(size > 0)
     Some(size)
   })
 
@@ -69,7 +69,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
       val cols = genPowerOfTwo.sample.get
 
       for (data <- Gen.listOfN(rows * cols, implicitly[Gen[T]]).sample) yield {
-        assert(data.size == rows * cols)
+        asserty(data.size == rows * cols)
 
         data.toIndexedSeq.grouped(rows).toIndexedSeq.toMatrix
       }
@@ -84,7 +84,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
       val cols = genPowerOfTwo.sample.get
 
       def sample = for (data <- Gen.listOfN(rows * cols, implicitly[Gen[T]]).sample) yield {
-        assert(data.size == rows * cols)
+        asserty(data.size == rows * cols)
 
         data.toIndexedSeq.grouped(rows).toIndexedSeq.toMatrix
       }

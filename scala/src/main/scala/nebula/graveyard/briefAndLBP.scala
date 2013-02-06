@@ -11,7 +11,7 @@ case class ImagePoint(val x: Int, val y: Int, val z: Int)
 
 //   protected def extractUnsafe(image: BufferedImage): Descriptor[Boolean] = {
 //     val values = for ((left, right) <- pairs) yield {
-//       assert(left.z == 0 && right.z == 0)
+//       asserty(left.z == 0 && right.z == 0)
 //       val leftIntensity = Pixel.getPixel(image, left.x, left.y).gray
 //       val rightIntensity = Pixel.getPixel(image, right.x, right.y).gray
 //       leftIntensity < rightIntensity

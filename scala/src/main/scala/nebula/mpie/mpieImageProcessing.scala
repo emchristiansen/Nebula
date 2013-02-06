@@ -1,5 +1,6 @@
 package nebula.mpie
 
+import nebula._
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.AffineTransformOp.TYPE_BILINEAR
@@ -70,7 +71,7 @@ class LazyImage(
         image
       } else {
         // When doing artificial illumination, we start with neutral.
-        assert(mpieProperties.illumination == "00")
+        asserty(mpieProperties.illumination == "00")
 
         val factor = illum.init.toDouble
 
@@ -151,7 +152,7 @@ class LazyImage(
           } else {
             all
           }
-          assert(culled.size == 4)
+          asserty(culled.size == 4)
           culled.toList
         }
 
@@ -177,7 +178,7 @@ class LazyImage(
         val transformed = new BufferedImage(image.getWidth, image.getHeight, image.getType)
         transformOp.filter(image, transformed)
 
-        assert(transformed.getWidth == image.getWidth && transformed.getHeight == image.getHeight)
+        asserty(transformed.getWidth == image.getWidth && transformed.getHeight == image.getHeight)
 
         ImageUtil.transparentToGreen(transformed)
       }

@@ -13,6 +13,7 @@ import javax.imageio.ImageIO
 import nebula.RuntimeConfig
 import nebula.eval
 import nebula.typeTag2TypeName
+import nebula._
 
 ///////////////////////////////////////////////////////////
 
@@ -131,7 +132,7 @@ object IO {
 //  }
 
   def writeImage(directory: File, image: BufferedImage): File = {
-    require(directory.isDirectory)
+    requirey(directory.isDirectory)
     val file = File.createTempFile("histogram", ".png", directory)
     ImageIO.write(image, "png", file)
     file
