@@ -10,9 +10,19 @@ import grizzled.math.stats
 object MathUtil {
   def log2(x: Double) = math.log(x) / math.log(2)
   
+  // TODO: Clean this crap up with typeclasses.
   def l2Norm[A : Ring](values: Array[A]): Double = new DenseVector(values).norm(2.0)
   
   def mean[A : Numeric](values: Seq[A]): Double = stats.mean(values: _*)
+  
+  def normalizeL2[A <% Double](values: Seq[A]): Seq[Double] = {
+    val doubles = values map (_.toDouble)
+    
+    val m = mean(doubles)
+    val centered = doubles map (_ - m)
+    val norm = l2Norm(centered.toArray)
+    centered map (_ / norm)
+  }
   
   // The correct implementation of a % b.
   implicit class AddMod(self: Double) {

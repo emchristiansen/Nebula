@@ -11,6 +11,11 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.scalatest._
+import org.scalacheck._
+import reflect._
+import breeze.math._
+import breeze.linalg._
+import nebula.util._
 
 ///////////////////////////////////////////////////////////
 
@@ -53,7 +58,7 @@ trait ConfigMapFunSuite extends FunSuite {
     require(
       configMap.contains("datasetRoot"),
       "This suite requires a path to external datasets to be passed in the configMap")
-      
+
     val path = configMap("datasetRoot").asInstanceOf[String]
     new File(path).mustExist
   }
@@ -61,7 +66,7 @@ trait ConfigMapFunSuite extends FunSuite {
 
 object TestUtil {
   System.loadLibrary("opencv_java")
-  
+
   val random = new scala.util.Random(0)
 
   def dumpImage(name: String, image: BufferedImage) {
@@ -86,4 +91,86 @@ object TestUtil {
     None,
     false,
     false)
+
+  def genNum[T: Numeric: Choose] = Gen.oneOf(Gen.negNum[T], Gen.posNum[T])
+
+  implicit def genDouble = genNum[Double]
+  implicit def genComplex = Gen(_ =>
+    Some(Complex(random.nextDouble, random.nextDouble)))
+  def genPowerOfTwo = Gen(_ => {
+    val power = (random.nextInt % 8).abs
+    val size = math.pow(2, power).toInt
+    asserty(size > 0)
+    Some(size)
+  })
+
+  def genPowerOfTwoSeq[T: Gen] = {
+    def next = {
+      val size = genPowerOfTwo.sample.get
+
+      Gen.listOfN(size, implicitly[Gen[T]]).sample.map(_.toIndexedSeq)
+    }
+
+    Gen(_ => next)
+  }
+
+  def genPowerOfTwoSeqPair[T: Gen] = {
+    def next = {
+      val size = genPowerOfTwo.sample.get
+
+      def sample = Gen.listOfN(size, implicitly[Gen[T]]).sample.map(_.toIndexedSeq)
+      val Some(left) = sample
+      val Some(right) = sample
+      Some(left, right)
+    }
+
+    Gen(_ => next)
+  }
+
+  def genPowerOfTwoMatrix[T: Gen: ClassTag] = {
+    def next = {
+      val rows = genPowerOfTwo.sample.get
+      val cols = genPowerOfTwo.sample.get
+
+      for (data <- Gen.listOfN(rows * cols, implicitly[Gen[T]]).sample) yield {
+        asserty(data.size == rows * cols)
+
+        data.toIndexedSeq.grouped(rows).toIndexedSeq.toMatrix
+      }
+    }
+
+    Gen(_ => next)
+  }
+
+  def genPowerOfTwoMatrixPair[T: Gen: ClassTag] = {
+    def next = {
+      val rows = genPowerOfTwo.sample.get
+      val cols = genPowerOfTwo.sample.get
+
+      def sample = for (data <- Gen.listOfN(rows * cols, implicitly[Gen[T]]).sample) yield {
+        asserty(data.size == rows * cols)
+
+        data.toIndexedSeq.grouped(rows).toIndexedSeq.toMatrix
+      }
+
+      val Some(left) = sample
+      val Some(right) = sample
+      Some(left, right)
+    }
+
+    Gen(_ => next)
+  }
+
+  def normalize(matrix: DenseMatrix[Int]): DenseMatrix[Double] = {
+    val mean = MathUtil.mean(matrix.data)
+    val centered = matrix mapValues (_ - mean)
+    val norm = MathUtil.l2Norm(centered.data)
+    centered mapValues (_ / norm)
+  }
+  
+  def doubleToComplex(double: Double): Complex = Complex(double, 0)
+  def complexToDouble(complex: Complex): Double = {
+    assertNear(complex.imag, 0)
+    complex.real
+  }
 }

@@ -147,7 +147,7 @@ class TestLogPolar extends FunSuite {
       //        angleIndex,
       //        stats.mean(diff.data: _*))
       //      println(stats.mean(diff.data.map(_.abs): _*))
-      assert(stats.mean(diff.data.map(_.abs): _*) == 10)
+      assert(stats.mean(diff.data.map(_.abs): _*) < 10)
     }
   }
 

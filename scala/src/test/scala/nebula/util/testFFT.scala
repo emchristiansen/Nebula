@@ -20,82 +20,11 @@ import org.apache.commons.math3.transform.TransformType
 import DenseMatrixUtil._
 import reflect._
 
-//val evenInts = for (n <- Gen.choose(-1000, 1000)) yield 2 * n
-
 ///////////////////////////////////////////////////////////
 
 @RunWith(classOf[JUnitRunner])
 class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMatchers {
-  val random = new scala.util.Random(0)
-
-  def genNum[T: Numeric: Choose] = Gen.oneOf(Gen.negNum[T], Gen.posNum[T])
-
-  implicit def genDouble = genNum[Double]
-  implicit def genComplex = Gen(_ =>
-    Some(Complex(random.nextDouble, random.nextDouble)))
-  implicit def genPowerOfTwo = Gen(_ => {
-    val power = (random.nextInt % 8).abs
-    val size = math.pow(2, power).toInt
-    asserty(size > 0)
-    Some(size)
-  })
-
-  def genPowerOfTwoSeq[T: Gen] = {
-    def next = {
-      val size = genPowerOfTwo.sample.get
-
-      Gen.listOfN(size, implicitly[Gen[T]]).sample.map(_.toIndexedSeq)
-    }
-
-    Gen(_ => next)
-  }
-
-  def genPowerOfTwoSeqPair[T: Gen] = {
-    def next = {
-      val size = genPowerOfTwo.sample.get
-
-      def sample = Gen.listOfN(size, implicitly[Gen[T]]).sample.map(_.toIndexedSeq)
-      val Some(left) = sample
-      val Some(right) = sample
-      Some(left, right)
-    }
-
-    Gen(_ => next)
-  }
-
-  def genPowerOfTwoMatrix[T: Gen: ClassTag] = {
-    def next = {
-      val rows = genPowerOfTwo.sample.get
-      val cols = genPowerOfTwo.sample.get
-
-      for (data <- Gen.listOfN(rows * cols, implicitly[Gen[T]]).sample) yield {
-        asserty(data.size == rows * cols)
-
-        data.toIndexedSeq.grouped(rows).toIndexedSeq.toMatrix
-      }
-    }
-
-    Gen(_ => next)
-  }
-
-  def genPowerOfTwoMatrixPair[T: Gen: ClassTag] = {
-    def next = {
-      val rows = genPowerOfTwo.sample.get
-      val cols = genPowerOfTwo.sample.get
-
-      def sample = for (data <- Gen.listOfN(rows * cols, implicitly[Gen[T]]).sample) yield {
-        asserty(data.size == rows * cols)
-
-        data.toIndexedSeq.grouped(rows).toIndexedSeq.toMatrix
-      }
-
-      val Some(left) = sample
-      val Some(right) = sample
-      Some(left, right)
-    }
-
-    Gen(_ => next)
-  }
+  import TestUtil._
 
   def complexToApache(complex: Complex) =
     new org.apache.commons.math3.complex.Complex(complex.real, complex.imag)
@@ -104,7 +33,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
     Complex(apache.getReal, apache.getImaginary)
 
   test("apache's ifft should be the inverse of fft", FastTest) {
-    forAll(genPowerOfTwoSeq[Complex]) { complex =>
+    forAll(TestUtil.genPowerOfTwoSeq[Complex]) { complex =>
       whenever(complex.size > 0) {
         val fourier =
           new FastFourierTransformer(DftNormalization.STANDARD).transform(
@@ -122,7 +51,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   }
 
   test("fft should agree with Apache's implementation", FastTest) {
-    forAll(genPowerOfTwoSeq[Complex]) { complex =>
+    forAll(TestUtil.genPowerOfTwoSeq[Complex]) { complex =>
       whenever(complex.size > 0 && complex.size < 5) {
         val estimated = FFT.fft(complex)
 
@@ -137,7 +66,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   }
 
   test("ifft should agree with Apache's implementation", FastTest) {
-    forAll(genPowerOfTwoSeq[Complex]) { complex =>
+    forAll(TestUtil.genPowerOfTwoSeq[Complex]) { complex =>
       whenever(complex.size > 0) {
         val estimated = FFT.ifft(complex)
 
@@ -151,7 +80,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   }
 
   test("fft and ifft should be inverses", FastTest) {
-    forAll(genPowerOfTwoSeq[Complex]) { complex =>
+    forAll(TestUtil.genPowerOfTwoSeq[Complex]) { complex =>
       val forward = FFT.ifft(FFT.fft(complex))
       val backward = FFT.fft(FFT.ifft(complex))
 
@@ -161,14 +90,12 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   }
 
   test("abs on Complex values should return the magnitude", FastTest) {
-    forAll(genComplex) { complex =>
+    forAll(TestUtil.genComplex) { complex =>
       val magnitude = math.sqrt(
         math.pow(complex.real, 2) + math.pow(complex.imag, 2))
       assertNear(complex.abs, magnitude)
     }
   }
-
-  def doubleToComplex(double: Double): Complex = Complex(double, 0)
 
   test("convolveSameSize should work on simple example", FastTest) {
     val left = IndexedSeq[Double](1, 2, 0, 1)
@@ -211,7 +138,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   }
 
   test("fft and ifft should satisfy the convolution property", FastTest) {
-    forAll(genPowerOfTwoSeqPair[Complex]) {
+    forAll(TestUtil.genPowerOfTwoSeqPair[Complex]) {
       case (left, right) =>
         val bruteConvolution = FFT.convolveSameSize(
           left,
@@ -233,7 +160,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   }
 
   test("fft2 and ifft2 should be inverses", FastTest) {
-    forAll(genPowerOfTwoMatrix[Complex]) { complex =>
+    forAll(TestUtil.genPowerOfTwoMatrix[Complex]) { complex =>
       val forward = FFT.ifft2(FFT.fft2(complex))
       val backward = FFT.fft2(FFT.ifft2(complex))
 
@@ -264,11 +191,11 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   }
 
   test("correlationFromPreprocessed on real values", FastTest) {
-    forAll(genPowerOfTwoSeqPair[Double]) {
+    forAll(TestUtil.genPowerOfTwoSeqPair[Double]) {
       case (left, right) =>
         val leftComplex = left map doubleToComplex
         val rightComplex = right map doubleToComplex
-        
+
         val brute = FFT.correlateSameSize(
           leftComplex,
           rightComplex)
@@ -319,7 +246,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   }
 
   test("fft2 and ifft2 should satisfy the convolution property", FastTest) {
-    forAll(genPowerOfTwoMatrixPair[Complex]) {
+    forAll(TestUtil.genPowerOfTwoMatrixPair[Complex]) {
       // Let's keep the matrices small for speed.
       case (left, right) => whenever(left.size <= 64) {
         val bruteConvolution = FFT.convolveSameSize(
@@ -344,14 +271,14 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
       }
     }
   }
-  
+
   test("correlateSameSize on real valued matrices", FastTest) {
-    forAll(genPowerOfTwoMatrixPair[Double]) {
+    forAll(TestUtil.genPowerOfTwoMatrixPair[Double]) {
       // Let's keep the matrices small for speed.
       case (left, right) => whenever(left.size <= 64) {
         val leftComplex = left mapValues doubleToComplex
         val rightComplex = right mapValues doubleToComplex
-        
+
         val brute = FFT.correlateSameSize(
           leftComplex,
           rightComplex)
@@ -362,7 +289,7 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
 
           FFT.correlationFromPreprocessed(leftFFT, rightFFT)
         }
-        
+
         assertNear(brute, fft)
       }
     }

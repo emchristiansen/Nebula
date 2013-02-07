@@ -43,7 +43,7 @@ class TestMatcher extends FunSuite {
   test("permutation", InstantTest) {
     val input = Array(1, 0, 2, 3, 4, 2, 3, 4)
     val permutation = Util.permutation(input, 4)
-    assert(permutation == Array(1, 0, 2, 5, 3, 6, 4, 7))
+    assert(permutation === Array(1, 0, 2, 5, 3, 6, 4, 7))
   }
 
   test("numCycles", InstantTest) {

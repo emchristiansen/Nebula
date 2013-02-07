@@ -131,6 +131,12 @@ object Extractor {
 
 ///////////////////////////////////////////////////////////
 
+trait SingleExtractor[F] extends Extractor[F] {
+  override def extract = Extractor.applySeveral(extractSingle)    
+}
+
+///////////////////////////////////////////////////////////
+
 object OpenCVExtractor {
   object BRISK
   object FREAK
@@ -192,6 +198,7 @@ object LogPolarExtractor {
       override def extract = (image: BufferedImage, keyPoints: Seq[KeyPoint]) => {
         asserty(self.color == "Gray")
 
+        // TODO: Make scaleXangle not angleXscale
         LogPolar.rawLogPolarSeq(
           self.steerScale,
           self.minRadius,
@@ -199,28 +206,6 @@ object LogPolarExtractor {
           self.numScales,
           self.numAngles,
           self.blurWidth)(image, keyPoints)
-
-        //        for (rawOption <- rawOptions) yield {
-        //          for (raw <- rawOption) yield {
-        //            val seqSeq = raw.toSeqSeq
-        //            if (self.partitionIntoRings) {
-        //              asserty(seqSeq.size == raw.rows)
-        //              asserty(seqSeq.head.size == raw.cols)
-        //
-        //              val transposed = for (column <- seqSeq.transpose) yield {
-        //                PatchExtractor.constructor(
-        //                  self.extractorType)(
-        //                    column).values[Double]
-        //              }
-        //
-        //              transposed.transpose.toMatrix.to[Descriptor]
-        //            } else {
-        //              val processed = PatchExtractor.constructor(self.extractorType)(
-        //                seqSeq.flatten).values[Double]
-        //              processed.grouped(seqSeq.head.size).toIndexedSeq.toMatrix.to[Descriptor]
-        //            }
-        //          }
-        //        }
       }
 
       override def extractSingle = (image: BufferedImage, keyPoint: KeyPoint) =>

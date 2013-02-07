@@ -19,8 +19,11 @@ object FFT {
   def apacheToComplex(apache: org.apache.commons.math3.complex.Complex) =
     Complex(apache.getReal, apache.getImaginary)
 
+  def isPowerOf2(size: Int): Boolean =
+    MathUtil.log2(size) == MathUtil.log2(size).round
+    
   def isZeroOrPowerOf2(size: Int): Boolean =
-    size == 0 || MathUtil.log2(size) == MathUtil.log2(size).round
+    size == 0 || isPowerOf2(size)
 
   def fftWrapper(
     transform: TransformType)(
