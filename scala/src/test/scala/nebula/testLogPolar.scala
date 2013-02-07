@@ -54,11 +54,16 @@ import org.imgscalr.Scalr
 import nebula.util.ImageGeometry._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.scalacheck._
+import org.scalatest.prop._
+import org.scalatest._
 
 ///////////////////////////////////////////////////////////
 
 @RunWith(classOf[JUnitRunner])
-class TestLogPolar extends FunSuite {
+@WrapWith(classOf[ConfigMapWrapperSuite])
+class TestLogPolar(
+  val configMap: Map[String, Any]) extends ConfigMapFunSuite with GeneratorDrivenPropertyChecks with ShouldMatchers {
   val image = ImageIO.read(new File(
     getClass.getResource("/iSpy.png").getFile).mustExist)
 
@@ -75,6 +80,13 @@ class TestLogPolar extends FunSuite {
     val matrix = DenseMatrix((1, 2), (3, 4))
     val golden = DenseMatrix((3, 4), (1, 2))
     val estimated = matrix.rollVertical(1)
+    asserty(golden == estimated)
+  }
+
+  test("rollHorizontal on small matrix", InstantTest) {
+    val matrix = DenseMatrix((1, 2), (3, 4))
+    val golden = DenseMatrix((2, 1), (4, 3))
+    val estimated = matrix.rollHorizontal(1)
     asserty(golden == estimated)
   }
 
@@ -130,7 +142,7 @@ class TestLogPolar extends FunSuite {
         extractor.extractSingle(rotatedImage, point).get
       }
 
-      val unrotated = rotated.rollVertical(angleIndex)
+      val unrotated = rotated.rollHorizontal(angleIndex)
 
       //      println(original)
       //      println("herej")
@@ -163,7 +175,7 @@ class TestLogPolar extends FunSuite {
       blurWidth,
       image)._1
 
-//    println(scaleFactors)
+    //    println(scaleFactors)
 
     for (point <- points; scaleIndex <- 0 until numScales) {
       val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3
@@ -186,12 +198,12 @@ class TestLogPolar extends FunSuite {
         point).get
 
       val overlapOriginal = copy(original(
-        ::,
-        0 until original.cols - scaleIndex))
+        0 until original.rows - scaleIndex,
+        ::))
 
       val overlapScaled = copy(scaled(
-        ::,
-        scaleIndex until original.cols))
+        scaleIndex until original.rows,
+        ::))
 
       //            dumpImage(f"${scaleFactor}%.2f_rawLogPolarScaleOriginal", scale100(original.toScaledImage))
       //            dumpImage(f"${scaleFactor}%.2f_rawLogPolarScaleScaled", scale100(scaled.toScaledImage))
@@ -218,64 +230,6 @@ class TestLogPolar extends FunSuite {
     }
   }
 
-  //  test("pixel processing should work with LogPolarExtractor") {
-  //    val numPoints = 4
-  //    val points = numPoints times { randomPoint(width, height, 100) }
-  //
-  //    for (point <- points) {
-  //      val rawExtractor = LogPolarExtractor(
-  //        normalizeScale,
-  //        minRadius,
-  //        maxRadius,
-  //        numScales,
-  //        numAngles,
-  //        blurWidth,
-  //        "Gray")
-  //
-  //      {
-  //        val normalizer = PatchNormalizer.NCC
-  //        val descriptor = normalizer.normalize(rawExtractor.extractSingle(image, point).get)
-  //        val data: Array[Double] = descriptor.data
-  //        assertNear(stats.mean(data: _*), 0)
-  //        assertNear(stats.sampleStdDev(data: _*), 1)
-  //      }
-  //
-  //      {
-  //        val normalizer = PatchNormalizer.Rank
-  //        val descriptor = normalizer.normalize(rawExtractor.extractSingle(image, point).get)
-  //        val data: Array[Int] = descriptor.data
-  //        asserty(data.min == 0)
-  //        asserty(data.max == data.size - 1)
-  //        asserty(data.distinct.size == data.size)
-  //      }
-  //    }
-  //  }
-  //
-  //  test("per-ring normalization") {
-  //    val numPoints = 1
-  //    val points = numPoints times { randomPoint(width, height, 100) }
-  //
-  //    for (point <- points) {
-  //      val extractor = LogPolarExtractor(
-  //        PatchExtractorType.NCC,
-  //        normalizeScale,
-  //        true,
-  //        minRadius,
-  //        maxRadius,
-  //        numScales,
-  //        numAngles,
-  //        blurWidth,
-  //        "Gray")
-  //
-  //      val descriptor = extractor.extractSingle(image, point).get
-  //      val matrix = descriptor.original.asInstanceOf[DenseMatrix[Double]]
-  //      for (column <- matrix.toSeqSeq.transpose) {
-  //        assertNear2(stats.mean(column: _*), 0)
-  //        assertNear2(stats.sampleStdDev(column: _*), 1)
-  //      }
-  //    }
-  //  }
-  //
   test("recover proper angle", SlowTest) {
     val numPoints = 1
     val points = numPoints times { randomPoint(width, height, 100) }
@@ -303,9 +257,9 @@ class TestLogPolar extends FunSuite {
 
       val response = LogPolar.getResponseMapWrapper(matcher, original, rotated)
 
-//      dumpImage(f"${angle}%.2f_recoverProperAngle", scale10(response.toScaledImage))
+      //      dumpImage(f"${angle}%.2f_recoverProperAngle", scale10(response.toScaledImage))
 
-      asserty(response.argmin == (angleIndex, 0))
+      asserty(response.argmin == (0, angleIndex))
     }
   }
 
@@ -342,13 +296,13 @@ class TestLogPolar extends FunSuite {
 
       val response = LogPolar.getResponseMapWrapper(matcher, original, scaled)
 
-//      dumpImage(f"${scaleFactor}%.2f_recoverProperScale", scale10(response.toScaledImage))
+      //      dumpImage(f"${scaleFactor}%.2f_recoverProperScale", scale10(response.toScaledImage))
 
       //      println(response)
       //      println(scaleIndex)
       //
       //      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
-      asserty(response.argmin == (0, scaleIndex + numScales - 1))
+      asserty(response.argmin == (scaleIndex + numScales - 1, 0))
     }
   }
 
@@ -395,7 +349,7 @@ class TestLogPolar extends FunSuite {
       //      println(scaleIndex)
       //
       //      dumpImage("rawLogPolarRecoverProperScale_response", scale100(response.toScaledImage))
-      asserty(response.argmin == (angleIndex, scaleIndex + numScales - 1))
+      asserty(response.argmin == (scaleIndex + numScales - 1, angleIndex))
     }
   }
 }

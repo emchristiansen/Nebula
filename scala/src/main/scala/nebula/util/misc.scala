@@ -51,20 +51,26 @@ object DenseMatrixUtil {
       for (i <- 0 until matrix.rows) yield {
         for (j <- 0 until matrix.cols) yield matrix(i, j)
       }
-  }  
-  
-//  implicit def implicitDenseMatrixToSeqSeq[A](matrix: DenseMatrix[A]) = new {
-//    def toSeqSeq: IndexedSeq[IndexedSeq[A]] =
-//      for (i <- 0 until matrix.rows) yield {
-//        for (j <- 0 until matrix.cols) yield matrix(i, j)
-//      }
-//  }
+  }
+
+  //  implicit def implicitDenseMatrixToSeqSeq[A](matrix: DenseMatrix[A]) = new {
+  //    def toSeqSeq: IndexedSeq[IndexedSeq[A]] =
+  //      for (i <- 0 until matrix.rows) yield {
+  //        for (j <- 0 until matrix.cols) yield matrix(i, j)
+  //      }
+  //  }
 
   implicit class DenseMatrixMethods[A: ClassTag](matrix: DenseMatrix[A]) {
     def rollVertical(deltaY: Int): DenseMatrix[A] =
       matrix.mapPairs({
         case ((y, x), value) => matrix((y - deltaY) mod matrix.rows, x)
       })
+
+    def rollHorizontal(deltaX: Int): DenseMatrix[A] =
+      matrix.mapPairs({
+        case ((y, x), value) => matrix(y, (x - deltaX) mod matrix.cols)
+      })
+
   }
 
   implicit class DenseMatrixTo(self: DenseMatrix[Int]) {
@@ -124,7 +130,7 @@ object Util extends Logging {
       case (treeMap, pair) => treeMap + pair
     }
   }
-  
+
   def groupBySizes[A](sizes: Seq[Int], seq: Seq[A]): Seq[Seq[A]] = {
     asserty(sizes.sum == seq.size)
     if (!sizes.isEmpty) asserty(sizes.min > 0)
@@ -205,18 +211,18 @@ object Util extends Logging {
     divided.map(_ % 2 == 1)
   }
 
-//  // Takes a set of pairs and ensures they form an onto function.
-//  // When onto-ness is violated, only the best pair is kept.
-//  // The best pair is the one that comes earliest in the ordering.
-//  def makeOntoFunction[A, B](pairs: Seq[Tuple2[A, B]])(
-//      implicit ordering: Ordering[Tuple2[A, B]]): Set[Tuple2[A, B]] = {
-//	// Take the first duplicate first entries.
-//    val pairs1 = pairs.groupBy(_._1).map(_._2).map(_.head)
-//    
-//    // Remove all pairs with duplicate second entries.
-//    pairs1.groupBy(_._2).filter(_._2.size > 1).map(_._2).map(_.head).toSet
-//  } 
-  
+  //  // Takes a set of pairs and ensures they form an onto function.
+  //  // When onto-ness is violated, only the best pair is kept.
+  //  // The best pair is the one that comes earliest in the ordering.
+  //  def makeOntoFunction[A, B](pairs: Seq[Tuple2[A, B]])(
+  //      implicit ordering: Ordering[Tuple2[A, B]]): Set[Tuple2[A, B]] = {
+  //	// Take the first duplicate first entries.
+  //    val pairs1 = pairs.groupBy(_._1).map(_._2).map(_.head)
+  //    
+  //    // Remove all pairs with duplicate second entries.
+  //    pairs1.groupBy(_._2).filter(_._2.size > 1).map(_._2).map(_.head).toSet
+  //  } 
+
   // Warp the leftKeyPoint by the homography and return its nearest neighbor
   // among the rightKeyPoints.
   def nearestUnderWarp(
@@ -246,7 +252,7 @@ object Util extends Logging {
     logDebug("leftKeyPoints.size: " + leftKeyPoints.size)
     logDebug("rightKeyPoints.size: " + rightKeyPoints.size)
     println("leftKeyPoints.size: " + leftKeyPoints.size)
-    println("rightKeyPoints.size: " + rightKeyPoints.size)    
+    println("rightKeyPoints.size: " + rightKeyPoints.size)
     val rightMatches = leftKeyPoints.map(nearestUnderWarp(
       threshold,
       homography,
@@ -259,30 +265,30 @@ object Util extends Logging {
     logDebug("culled.size: " + culled.size)
     // TODO
     println("culled.size: " + culled.size)
-    
+
     // Sort all the putative pairs by their quality.
     // The best pairs will be _at the end_.
     val sorted = culled.sortBy(KeyPointUtil.pairQuality)
-    
-//    // Use the Map constructor to quickly filter out repeated keys
-//    // and repeated values.
-//    // Note the constructor favors later key-value pairs over
-//    // earlier pairs, so it will take the pairs with the highest quality.
-//    val noKeyDuplicates = sorted.toMap.toSeq.sortBy(KeyPointUtil.pairQuality)
-    
+
+    //    // Use the Map constructor to quickly filter out repeated keys
+    //    // and repeated values.
+    //    // Note the constructor favors later key-value pairs over
+    //    // earlier pairs, so it will take the pairs with the highest quality.
+    //    val noKeyDuplicates = sorted.toMap.toSeq.sortBy(KeyPointUtil.pairQuality)
+
     // Now the tricky bit; we flip the map, making keys into values and
     // vice-versa. We then repeat the constructor trick, this time removing
     // repeated values.
     val noDuplicates = sorted.map(_.swap).toMap.toSeq.map(_.swap)
-    
+
     // Now sort the results so the best matches come first.
     noDuplicates.sortBy(KeyPointUtil.pairQuality).reverse
-    
-//    val onto = makeOntoFunction(culled).toIndexedSeq
-//    logDebug("onto.size: " + onto.size)
-//    // TODO
-//    println("onto.size: " + onto.size)
-//    onto
+
+    //    val onto = makeOntoFunction(culled).toIndexedSeq
+    //    logDebug("onto.size: " + onto.size)
+    //    // TODO
+    //    println("onto.size: " + onto.size)
+    //    onto
   }
 
   def pruneKeyPoints(
@@ -329,16 +335,16 @@ object Util extends Logging {
     }
   }
 
-//  def assertEQ[A](left: A, right: A) {
-//    asserty(left == right, "%s == %s".format(left, right))
-//  }
-//
-//  def assertContentsEqual[A](left: Seq[A], right: Seq[A]) {
-//    assertEQ(left.size, right.size)
-//    for ((l, r) <- left.view.zip(right.view)) {
-//      assertEQ(l, r)
-//    }
-//  }
+  //  def assertEQ[A](left: A, right: A) {
+  //    asserty(left == right, "%s == %s".format(left, right))
+  //  }
+  //
+  //  def assertContentsEqual[A](left: Seq[A], right: Seq[A]) {
+  //    assertEQ(left.size, right.size)
+  //    for ((l, r) <- left.view.zip(right.view)) {
+  //      assertEQ(l, r)
+  //    }
+  //  }
 
   // Replace "Hi my name is ${name}." with "Hi my name is Eric."
   def bashStyleReplace(substitutions: Map[String, String], original: String): String = {

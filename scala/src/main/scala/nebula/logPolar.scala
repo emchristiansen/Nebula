@@ -105,7 +105,7 @@ object LogPolar {
 
       if (!isInsideBounds(keyPoint)) None
       else {
-        val matrix = DenseMatrix.fill(numAngles, numScales)(0)
+        val matrix = DenseMatrix.fill(numScales, numAngles)(0)
         for (scaleIndex <- 0 until numScales; angleIndex <- 0 until numAngles) {
           val scaledImage = scaledImages(scaleIndex)
           val (scaleFactorX, scaleFactorY) = realScaleFactors(scaleIndex)
@@ -122,7 +122,7 @@ object LogPolar {
           val (x, y) = (scaledX + pixelOffset(0), scaledY + pixelOffset(1))
           val pixel = scaledImage.getSubPixel(x, y).get
 
-          matrix(angleIndex, scaleIndex) = pixel.gray.head
+          matrix(scaleIndex, angleIndex) = pixel.gray.head
         }
         Some(matrix)
       }
@@ -177,33 +177,33 @@ object LogPolar {
     angleIndices: Range,
     scaleIndices: Range)(
       implicit ed: ((N, M)) => ExpectedDistance): DenseMatrix[Double] = {
-    requirey(2 * kernel.rows - 1 == base.rows)
-    requirey(kernel.cols == base.cols)
+    requirey(2 * kernel.cols - 1 == base.cols)
+    requirey(kernel.rows == base.rows)
     requirey(angleIndices.min >= 0)
-    requirey(angleIndices.max < kernel.rows)
-    requirey(scaleIndices.min >= -kernel.cols + 1)
-    requirey(scaleIndices.max < kernel.cols)
+    requirey(angleIndices.max < kernel.cols)
+    requirey(scaleIndices.min >= -kernel.rows + 1)
+    requirey(scaleIndices.max < kernel.rows)
 
-    val response = DenseMatrix.fill(angleIndices.size, scaleIndices.size)(0.0)
-    for (angleIndex <- angleIndices; scaleIndex <- scaleIndices) {
+    val response = DenseMatrix.fill(scaleIndices.size, angleIndices.size)(0.0)
+    for (scaleIndex <- scaleIndices; angleIndex <- angleIndices) {
       val baseScaleRange =
-        math.max(0, scaleIndex) until math.min(base.cols, base.cols + scaleIndex)
+        math.max(0, scaleIndex) until math.min(base.rows, base.rows + scaleIndex)
       val kernelScaleRange =
-        math.max(0, -scaleIndex) until math.min(base.cols, base.cols - scaleIndex)
+        math.max(0, -scaleIndex) until math.min(base.rows, base.rows - scaleIndex)
 
       val baseMatrixUnnormalized = copy(base(
-        angleIndex until angleIndex + kernel.rows,
-        baseScaleRange))
+        baseScaleRange,
+        angleIndex until angleIndex + kernel.rows))
       val kernelMatrixUnnormalized = copy(kernel(
-        ::,
-        kernelScaleRange))
+        kernelScaleRange,
+        ::))
 
       val baseMatrix = normalizer.normalize(baseMatrixUnnormalized)
       val kernelMatrix = normalizer.normalize(kernelMatrixUnnormalized)
 
       val scaleOffset = scaleIndex - scaleIndices.min
       val unnormalized = matcher.distance(baseMatrix, kernelMatrix)
-      response(angleIndex, scaleOffset) = if (normalizeByOverlap) {
+      response(scaleOffset, angleIndex) = if (normalizeByOverlap) {
         val size = baseMatrix.rows * baseMatrix.cols
         val expectedDistance = (normalizer, matcher).to[ExpectedDistance].expectedDistance(size)
         unnormalized / expectedDistance
@@ -215,28 +215,28 @@ object LogPolar {
   def getResponseMapWrapper[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
     self: LogPolarMatcher[N, M, F2], left: DenseMatrix[Int], right: DenseMatrix[Int])(
       implicit ed: ((N, M)) => ExpectedDistance) = {
-      requirey(left.rows == right.rows)
-      requirey(left.cols == right.cols)
-      requirey(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.cols)
+    requirey(left.rows == right.rows)
+    requirey(left.cols == right.cols)
+    requirey(self.scaleSearchRadius >= 0 && self.scaleSearchRadius < left.rows)
 
-      //        val distance = self.matcher.distance
+    //        val distance = self.matcher.distance
 
-      val angleIndices = if (self.rotationInvariant) {
-        0 until left.rows
-      } else 0 until 1
+    val angleIndices = if (self.rotationInvariant) {
+      0 until left.cols
+    } else 0 until 1
 
-      val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius
+    val scaleIndices = -self.scaleSearchRadius to self.scaleSearchRadius
 
-      // TODO
-      LogPolar.getResponseMap(
-        self.normalizer,
-        self.normalizeByOverlap,
-        self.matcher,
-        DenseMatrix.vertcat(left, left(0 until left.rows - 1, ::)),
-        right,
-        angleIndices,
-        scaleIndices)
-    }
+    // TODO
+    LogPolar.getResponseMap(
+      self.normalizer,
+      self.normalizeByOverlap,
+      self.matcher,
+      DenseMatrix.horzcat(left, left(::, 0 until left.cols - 1)),
+      right,
+      angleIndices,
+      scaleIndices)
+  }
 
   def distance[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](self: LogPolarMatcher[N, M, F2])(
     implicit ed: ((N, M)) => ExpectedDistance): Matcher.DescriptorDistance[DenseMatrix[Int]] = (left: DenseMatrix[Int], right: DenseMatrix[Int]) => {
