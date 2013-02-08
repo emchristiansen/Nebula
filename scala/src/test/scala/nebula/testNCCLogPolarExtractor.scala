@@ -70,12 +70,12 @@ class TestNCCLogPolarExtractor(
         
         asserty(block.fourierData.rows == 2 * numScales)
         asserty(block.fourierData.cols == numAngles)
-        asserty(block.scaleMap.data.size == 2 * numScales - 1)
+        asserty(block.scaleMap.map.size == 2 * numScales - 1)
         
         val dotProduct = descriptor.toSeqSeq.flatten.map(x => x * x).sum
         val correlation = FFT.correlationFromPreprocessed(
            block.fourierData,
-           block.fourierData) mapValues TestUtil.complexToDouble
+           block.fourierData) mapValues MathUtil.complexToDouble
            
         assertNear(dotProduct, correlation.max)
         asserty(correlation.argmax == (0, 0))

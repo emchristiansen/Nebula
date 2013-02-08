@@ -8,6 +8,18 @@ import grizzled.math.stats
 ///////////////////////////////////////////////////////////
 
 object MathUtil {
+  def doubleToComplex(double: Double): Complex = Complex(double, 0)
+  def complexToDouble(complex: Complex): Double = {
+    assertNear(complex.imag, 0)
+    complex.real
+  }  
+  
+  def dotProduct(left: DenseMatrix[Int], right: DenseMatrix[Int]): Int = {
+    left.data.zip(right.data) map {
+      case (l, r) => l * r
+    }
+  } sum
+  
   def log2(x: Double) = math.log(x) / math.log(2)
   
   // TODO: Clean this crap up with typeclasses.

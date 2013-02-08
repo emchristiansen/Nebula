@@ -18,6 +18,8 @@ import org.expecty.Expecty
 ///////////////////////////////////////////////////////////
 
 package object nebula {
+  def printlns[S](string: S) = println(s"\n${string}")
+  
   def expecty = new Expecty()
   def asserty = new Expecty()
   def requirey = new Expecty()

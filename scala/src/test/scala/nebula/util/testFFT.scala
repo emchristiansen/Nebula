@@ -106,18 +106,18 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
       9,
       6)
 
-    assertNear(convolution.map(doubleToComplex),
+    assertNear(convolution.map(MathUtil.doubleToComplex),
       FFT.convolveSameSize(
-        left.map(doubleToComplex),
-        right.map(doubleToComplex)))
+        left.map(MathUtil.doubleToComplex),
+        right.map(MathUtil.doubleToComplex)))
   }
 
   test("convolveSameSize and fft convolution should be the same on simple examples", FastTest) {
     val left = IndexedSeq[Double](1, 2, 0, 1)
     val right = IndexedSeq[Double](2, 3, 1, 2)
 
-    val leftComplex = left.map(doubleToComplex)
-    val rightComplex = right.map(doubleToComplex)
+    val leftComplex = left.map(MathUtil.doubleToComplex)
+    val rightComplex = right.map(MathUtil.doubleToComplex)
 
     val bruteConvolution = FFT.convolveSameSize(
       leftComplex,
@@ -173,8 +173,8 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
     val left = IndexedSeq[Double](0, 2, 3, 7)
     val right = IndexedSeq[Double](5, 3, 0, 9)
 
-    val leftComplex = left.map(doubleToComplex)
-    val rightComplex = right.map(doubleToComplex)
+    val leftComplex = left.map(MathUtil.doubleToComplex)
+    val rightComplex = right.map(MathUtil.doubleToComplex)
 
     val brute = FFT.correlateSameSize(
       leftComplex,
@@ -193,8 +193,8 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
   test("correlationFromPreprocessed on real values", FastTest) {
     forAll(TestUtil.genPowerOfTwoSeqPair[Double]) {
       case (left, right) =>
-        val leftComplex = left map doubleToComplex
-        val rightComplex = right map doubleToComplex
+        val leftComplex = left map MathUtil.doubleToComplex
+        val rightComplex = right map MathUtil.doubleToComplex
 
         val brute = FFT.correlateSameSize(
           leftComplex,
@@ -224,8 +224,8 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
         1, 2, 3, 0,
         3, 3, 0, 0))
 
-    val leftComplex = left mapValues doubleToComplex
-    val rightComplex = right mapValues doubleToComplex
+    val leftComplex = left mapValues MathUtil.doubleToComplex
+    val rightComplex = right mapValues MathUtil.doubleToComplex
 
     val bruteConvolution = FFT.convolveSameSize(leftComplex, rightComplex)
 
@@ -276,8 +276,8 @@ class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMat
     forAll(TestUtil.genPowerOfTwoMatrixPair[Double]) {
       // Let's keep the matrices small for speed.
       case (left, right) => whenever(left.size <= 64) {
-        val leftComplex = left mapValues doubleToComplex
-        val rightComplex = right mapValues doubleToComplex
+        val leftComplex = left mapValues MathUtil.doubleToComplex
+        val rightComplex = right mapValues MathUtil.doubleToComplex
 
         val brute = FFT.correlateSameSize(
           leftComplex,

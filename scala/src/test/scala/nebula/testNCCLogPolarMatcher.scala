@@ -18,6 +18,7 @@ import grizzled.math.stats
 import org.scalacheck._
 import org.scalatest.prop._
 import org.scalatest._
+import DenseMatrixUtil._
 
 ///////////////////////////////////////////////////////////
 
@@ -28,7 +29,7 @@ class TestNCCLogPolarMatcher(
   import TestUtil._
 
   test("nccFromUnnormalized on no-op example", FastTest) {
-    val unnormalizedInnerProduct = 10
+    val unnormalizedInnerProduct = .7
     val leftData = NormalizationData(
       AffinePair(1, 0),
       3,
@@ -50,8 +51,8 @@ class TestNCCLogPolarMatcher(
 
   def correlationHelper(left: DenseMatrix[Int], right: DenseMatrix[Int]) {
     val unnormalizedCorrelation = FFT.correlateSameSize(
-      left mapValues (_.toDouble) mapValues TestUtil.doubleToComplex,
-      right mapValues (_.toDouble) mapValues TestUtil.doubleToComplex) mapValues TestUtil.complexToDouble
+      left mapValues (_.toDouble) mapValues MathUtil.doubleToComplex,
+      right mapValues (_.toDouble) mapValues MathUtil.doubleToComplex) mapValues MathUtil.complexToDouble
 
     val leftData = NCCLogPolarExtractor.getNormalizationData(left)
     val rightData = NCCLogPolarExtractor.getNormalizationData(right)
@@ -66,8 +67,8 @@ class TestNCCLogPolarMatcher(
       val leftNormalized = TestUtil.normalize(left)
       val rightNormalized = TestUtil.normalize(right)
       FFT.correlateSameSize(
-        leftNormalized mapValues TestUtil.doubleToComplex,
-        rightNormalized mapValues TestUtil.doubleToComplex) mapValues TestUtil.complexToDouble
+        leftNormalized mapValues MathUtil.doubleToComplex,
+        rightNormalized mapValues MathUtil.doubleToComplex) mapValues MathUtil.complexToDouble
     }
 
     assertNear(postNormalized, ncc)
@@ -94,4 +95,79 @@ class TestNCCLogPolarMatcher(
       }
     }
   }
+
+  def responseMapHelper(
+    scaleSearchRadius: Int,
+    leftSamples: DenseMatrix[Int],
+    rightSamples: DenseMatrix[Int]) {
+    val nccResponseMap = {
+      val leftBlock = NCCLogPolarExtractor.getNCCBlock(leftSamples)
+      val rightBlock = NCCLogPolarExtractor.getNCCBlock(rightSamples)
+      NCCLogPolarMatcher.getResponseMap(
+        scaleSearchRadius,
+        leftBlock,
+        rightBlock)
+    }
+
+    /**
+     * Assuming the dot product is between two unit length vectors, find
+     * their l2 distance.
+     * Divides by sqrt(2) to undo a previous normalization.
+     */
+    def dotProductToL2DistanceUnnormalized(dotProduct: Double): Double =
+      math.sqrt(2 - 2 * dotProduct) / math.sqrt(2)
+
+    val nccDistanceMap =
+      nccResponseMap mapValues dotProductToL2DistanceUnnormalized
+
+    val goldenResponseMap = {
+      val matcher = LogPolarMatcher(
+        PatchNormalizer.NCC,
+        Matcher.L2,
+        true,
+        true,
+        scaleSearchRadius)
+      LogPolar.getResponseMapWrapper(matcher, leftSamples, rightSamples)
+    }
+
+    assertNear(nccDistanceMap, goldenResponseMap)
+  }
+
+  test("responseMapHelper on simple example", SlowTest) {
+    val left = new DenseMatrix(
+      2,
+      Array(1, 2, 3, 4, 5, 6, 7, 8))
+
+    val right = new DenseMatrix(
+      2,
+      Array(-1, 2, -3, -4, 5, -2, -7, 1))
+
+    val correlation = FFT.correlateSameSize(
+        left mapValues (_.toDouble) mapValues MathUtil.doubleToComplex, 
+        right mapValues (_.toDouble) mapValues MathUtil.doubleToComplex)
+    println(correlation)
+        
+    responseMapHelper(1, left, right)
+  }
+
+  test("responseMapHelper", FastTest) {
+    forAll(TestUtil.genPowerOfTwoMatrixPair[Double]) {
+      case (left, right) => whenever(left.rows > 1 && left.cols > 2 && left.size <= 16) {
+        val numScales = left.rows
+        
+        responseMapHelper(
+          numScales - 1,
+          left mapValues (_.toInt),
+          right mapValues (_.toInt))
+      }
+    }
+  }
 }
+
+
+
+
+
+
+
+

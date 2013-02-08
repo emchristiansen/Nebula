@@ -167,10 +167,4 @@ object TestUtil {
     val norm = MathUtil.l2Norm(centered.data)
     centered mapValues (_ / norm)
   }
-  
-  def doubleToComplex(double: Double): Complex = Complex(double, 0)
-  def complexToDouble(complex: Complex): Double = {
-    assertNear(complex.imag, 0)
-    complex.real
-  }
 }

@@ -9,6 +9,7 @@ import nebula.util.DenseMatrixUtil._
 import nebula.imageProcessing.ImageUtil
 import nebula.imageProcessing.RichImage.bufferedImage
 import scala.reflect._
+import nebula.util._
 
 ///////////////////////////////////////////////////////////
 
@@ -184,6 +185,9 @@ object LogPolar {
     requirey(scaleIndices.min >= -kernel.rows + 1)
     requirey(scaleIndices.max < kernel.rows)
 
+    printlns(base)
+    printlns(kernel)
+    
     val response = DenseMatrix.fill(scaleIndices.size, angleIndices.size)(0.0)
     for (scaleIndex <- scaleIndices; angleIndex <- angleIndices) {
       val baseScaleRange =
@@ -193,11 +197,15 @@ object LogPolar {
 
       val baseMatrixUnnormalized = copy(base(
         baseScaleRange,
-        angleIndex until angleIndex + kernel.rows))
+        angleIndex until angleIndex + kernel.cols))
       val kernelMatrixUnnormalized = copy(kernel(
         kernelScaleRange,
         ::))
 
+      printlns(baseMatrixUnnormalized)
+      printlns(kernelMatrixUnnormalized)
+      printlns(MathUtil.dotProduct(baseMatrixUnnormalized, kernelMatrixUnnormalized))
+        
       val baseMatrix = normalizer.normalize(baseMatrixUnnormalized)
       val kernelMatrix = normalizer.normalize(kernelMatrixUnnormalized)
 

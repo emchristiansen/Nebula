@@ -6,6 +6,8 @@ import breeze.linalg._
 import org.opencv.core._
 import org.opencv.features2d._
 import nebula.util._
+import MathUtil._
+import DenseMatrixUtil._
 
 ///////////////////////////////////////////////////////////
 
@@ -19,20 +21,16 @@ case class NormalizationData(
   elementSum: Double,
   size: Int)
 
-case class ScaleMap[A](data: IndexedSeq[A]) {
-  requirey(data.size % 2 == 1)
+case class ScaleMap[A](map: Map[Int, A]) {
+  val minIndex = map.keys.min
+  val maxIndex = map.keys.max
+  requirey(minIndex == -maxIndex)
+  requirey(map.keys.toList.sorted == (minIndex to maxIndex))
+  requirey(map.size % 2 == 1)
 }
 
 object ScaleMap {
-  def apply[A](map: Map[Int, A]): ScaleMap[A] = {
-    val minIndex = map.keys.min
-    val maxIndex = map.keys.max
-    requirey(minIndex == -maxIndex)
-    requirey(map.keys.toList.sorted == (minIndex to maxIndex))
-
-    val data = map.toList.sortBy(_._1).map(_._2).toIndexedSeq
-    ScaleMap(data)
-  }
+  implicit def scaleMap2Map[A](self: ScaleMap[A]): Map[Int, A] = self.map
 }
 
 case class NCCBlock(
@@ -44,7 +42,7 @@ case class NCCLogPolarExtractor(extractor: LogPolarExtractor)
 object NCCLogPolarExtractor {
   def getAffinePair(descriptor: DenseMatrix[Int]): AffinePair = {
     requirey(descriptor.size > 1)
-    
+
     val data = descriptor.data
     val offset = MathUtil.mean(data)
     val scale = MathUtil.l2Norm(data map (_ - offset))
@@ -62,7 +60,7 @@ object NCCLogPolarExtractor {
     descriptor: DenseMatrix[Int]): ScaleMap[NormalizationData] = {
     requirey(descriptor.rows > 0)
     requirey(descriptor.cols > 1)
-    
+
     val numScales = descriptor.rows
 
     val pairs = for (scaleOffset <- (-numScales + 1) to (numScales - 1)) yield {
@@ -142,7 +140,43 @@ object NCCLogPolarMatcher {
     val numerator = unnormalizedInnerProduct - aybxy - axbyx - bxby
     val denominator = leftData.affinePair.scale * rightData.affinePair.scale
     asserty(denominator != 0)
+    
+    val correlation = numerator / denominator
+    asserty(correlation <= 1 + implicitly[Epsilon])
+    asserty(correlation >= -1 - implicitly[Epsilon])
+    correlation
+  }
 
-    numerator / denominator
+  def getResponseMap(
+    scaleSearchRadius: Int,
+    leftBlock: NCCBlock,
+    rightBlock: NCCBlock): DenseMatrix[Double] = {
+    requirey(leftBlock.fourierData.rows == rightBlock.fourierData.rows)
+    requirey(leftBlock.fourierData.cols == rightBlock.fourierData.cols)
+    requirey(scaleSearchRadius < leftBlock.fourierData.rows)
+
+    // TODO: Some weirdness here regarding flipping left and right.
+    val correlation = FFT.correlationFromPreprocessed(
+      rightBlock.fourierData,
+      leftBlock.fourierData) mapValues MathUtil.complexToDouble
+
+    println(correlation)
+      
+    //    val scaleOffsets = (0 to scaleSearchRadius) ++ (-scaleSearchRadius until 0)
+    // The normalized rows corresponding to each scale offset.
+    // TODO: Some weirdness here involving the order over search radii.
+    val normalizedRows = for (scaleOffset <- (-scaleSearchRadius to scaleSearchRadius).reverse) yield {
+      val rowIndex = scaleOffset mod leftBlock.fourierData.rows
+      val row = copy(correlation(rowIndex, ::))
+      val normalized = row mapValues { correlation =>
+        nccFromUnnormalized(
+          leftBlock.scaleMap(-scaleOffset),
+          rightBlock.scaleMap(scaleOffset),
+          correlation)
+      }
+      normalized.toSeqSeq.flatten
+    }
+
+    normalizedRows.toMatrix
   }
 }
