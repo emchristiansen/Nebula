@@ -159,19 +159,15 @@ object NCCLogPolarMatcher {
     val correlation = FFT.correlationFromPreprocessed(
       rightBlock.fourierData,
       leftBlock.fourierData) mapValues MathUtil.complexToDouble
-
-    println(correlation)
       
-    //    val scaleOffsets = (0 to scaleSearchRadius) ++ (-scaleSearchRadius until 0)
     // The normalized rows corresponding to each scale offset.
-    // TODO: Some weirdness here involving the order over search radii.
-    val normalizedRows = for (scaleOffset <- (-scaleSearchRadius to scaleSearchRadius).reverse) yield {
+    val normalizedRows = for (scaleOffset <- (-scaleSearchRadius to scaleSearchRadius)) yield {
       val rowIndex = scaleOffset mod leftBlock.fourierData.rows
       val row = copy(correlation(rowIndex, ::))
       val normalized = row mapValues { correlation =>
         nccFromUnnormalized(
-          leftBlock.scaleMap(-scaleOffset),
-          rightBlock.scaleMap(scaleOffset),
+          leftBlock.scaleMap(scaleOffset),
+          rightBlock.scaleMap(-scaleOffset),
           correlation)
       }
       normalized.toSeqSeq.flatten

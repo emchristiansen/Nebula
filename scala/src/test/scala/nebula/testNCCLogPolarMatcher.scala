@@ -133,26 +133,26 @@ class TestNCCLogPolarMatcher(
     assertNear(nccDistanceMap, goldenResponseMap)
   }
 
-  test("responseMapHelper on simple example", SlowTest) {
+  test("responseMapHelper on simple example", FastTest) {
     val left = new DenseMatrix(
       2,
-      Array(1, 2, 3, 4, 5, 6, 7, 8))
+      Array(1, 5, 3, 4, 5, -6, 7, -8))
 
     val right = new DenseMatrix(
       2,
       Array(-1, 2, -3, -4, 5, -2, -7, 1))
 
-    val correlation = FFT.correlateSameSize(
-        left mapValues (_.toDouble) mapValues MathUtil.doubleToComplex, 
-        right mapValues (_.toDouble) mapValues MathUtil.doubleToComplex)
-    println(correlation)
+//    val correlation = FFT.correlateSameSize(
+//        left mapValues (_.toDouble) mapValues MathUtil.doubleToComplex, 
+//        right mapValues (_.toDouble) mapValues MathUtil.doubleToComplex)
+//    println(correlation)
         
     responseMapHelper(1, left, right)
   }
 
   test("responseMapHelper", FastTest) {
     forAll(TestUtil.genPowerOfTwoMatrixPair[Double]) {
-      case (left, right) => whenever(left.rows > 1 && left.cols > 2 && left.size <= 16) {
+      case (left, right) => whenever(left.rows > 1 && left.cols > 2 && left.size <= 128) {
         val numScales = left.rows
         
         responseMapHelper(

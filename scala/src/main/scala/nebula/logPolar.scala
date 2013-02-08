@@ -185,8 +185,8 @@ object LogPolar {
     requirey(scaleIndices.min >= -kernel.rows + 1)
     requirey(scaleIndices.max < kernel.rows)
 
-    printlns(base)
-    printlns(kernel)
+//    printlns(base)
+//    printlns(kernel)
     
     val response = DenseMatrix.fill(scaleIndices.size, angleIndices.size)(0.0)
     for (scaleIndex <- scaleIndices; angleIndex <- angleIndices) {
@@ -202,9 +202,9 @@ object LogPolar {
         kernelScaleRange,
         ::))
 
-      printlns(baseMatrixUnnormalized)
-      printlns(kernelMatrixUnnormalized)
-      printlns(MathUtil.dotProduct(baseMatrixUnnormalized, kernelMatrixUnnormalized))
+//      printlns(baseMatrixUnnormalized)
+//      printlns(kernelMatrixUnnormalized)
+//      printlns(MathUtil.dotProduct(baseMatrixUnnormalized, kernelMatrixUnnormalized))
         
       val baseMatrix = normalizer.normalize(baseMatrixUnnormalized)
       val kernelMatrix = normalizer.normalize(kernelMatrixUnnormalized)
