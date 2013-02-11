@@ -37,7 +37,10 @@ case class NCCBlock(
   fourierData: DenseMatrix[Complex],
   scaleMap: ScaleMap[NormalizationData])
 
-case class NCCLogPolarExtractor(extractor: LogPolarExtractor)
+case class NCCLogPolarExtractor(extractor: LogPolarExtractor) {
+  require(FFT.isPowerOf2(extractor.numScales))
+  require(FFT.isPowerOf2(extractor.numAngles))
+}
 
 object NCCLogPolarExtractor {
   def getAffinePair(descriptor: DenseMatrix[Int]): AffinePair = {
@@ -110,6 +113,10 @@ object NCCLogPolarExtractor {
   }
 }
 
+case class NCCLogPolarMatcher(
+  rotationInvariant: Boolean,
+  scaleSearchRadius: Int)
+
 object NCCLogPolarMatcher {
   def nccFromUnnormalized(
     leftData: NormalizationData,
@@ -140,7 +147,7 @@ object NCCLogPolarMatcher {
     val numerator = unnormalizedInnerProduct - aybxy - axbyx - bxby
     val denominator = leftData.affinePair.scale * rightData.affinePair.scale
     asserty(denominator != 0)
-    
+
     val correlation = numerator / denominator
     asserty(correlation <= 1 + implicitly[Epsilon])
     asserty(correlation >= -1 - implicitly[Epsilon])
@@ -159,7 +166,7 @@ object NCCLogPolarMatcher {
     val correlation = FFT.correlationFromPreprocessed(
       rightBlock.fourierData,
       leftBlock.fourierData) mapValues MathUtil.complexToDouble
-      
+
     // The normalized rows corresponding to each scale offset.
     val normalizedRows = for (scaleOffset <- (-scaleSearchRadius to scaleSearchRadius)) yield {
       val rowIndex = scaleOffset mod leftBlock.fourierData.rows
@@ -174,5 +181,32 @@ object NCCLogPolarMatcher {
     }
 
     normalizedRows.toMatrix
+  }
+
+  /**
+   * Assuming the dot product is between two unit length vectors, find
+   * their l2 distance.
+   * Divides by sqrt(2) to undo a previous normalization.
+   */
+  def dotProductToL2DistanceUnnormalized(dotProduct: Double): Double =
+    math.sqrt(2 - 2 * dotProduct) / math.sqrt(2)
+
+  def responseMapToDistanceMap: DenseMatrix[Double] => DenseMatrix[Double] =
+    responseMap => responseMap mapValues dotProductToL2DistanceUnnormalized
+
+  def distanceHelper = (scaleSearchRadius: Int) =>
+    (left: NCCBlock, right: NCCBlock) => {
+      val responseMap = getResponseMap(scaleSearchRadius, left, right)
+      val distanceMap = responseMapToDistanceMap(responseMap)
+      distanceMap.min
+    }
+
+  implicit class NCCLogPolarMatcher2Matcher(
+    self: NCCLogPolarMatcher) extends SingleMatcher[NCCBlock] {
+    override def distance = {
+      // TODO
+      require(self.rotationInvariant == true)
+      distanceHelper(self.scaleSearchRadius)
+    }
   }
 }

@@ -19,6 +19,7 @@ import org.scalacheck._
 import org.scalatest.prop._
 import org.scalatest._
 import DenseMatrixUtil._
+import org.opencv.features2d.{ DMatch, KeyPoint }
 
 ///////////////////////////////////////////////////////////
 
@@ -109,16 +110,8 @@ class TestNCCLogPolarMatcher(
         rightBlock)
     }
 
-    /**
-     * Assuming the dot product is between two unit length vectors, find
-     * their l2 distance.
-     * Divides by sqrt(2) to undo a previous normalization.
-     */
-    def dotProductToL2DistanceUnnormalized(dotProduct: Double): Double =
-      math.sqrt(2 - 2 * dotProduct) / math.sqrt(2)
-
     val nccDistanceMap =
-      nccResponseMap mapValues dotProductToL2DistanceUnnormalized
+      NCCLogPolarMatcher.responseMapToDistanceMap(nccResponseMap)
 
     val goldenResponseMap = {
       val matcher = LogPolarMatcher(
@@ -142,24 +135,90 @@ class TestNCCLogPolarMatcher(
       2,
       Array(-1, 2, -3, -4, 5, -2, -7, 1))
 
-//    val correlation = FFT.correlateSameSize(
-//        left mapValues (_.toDouble) mapValues MathUtil.doubleToComplex, 
-//        right mapValues (_.toDouble) mapValues MathUtil.doubleToComplex)
-//    println(correlation)
-        
+    //    val correlation = FFT.correlateSameSize(
+    //        left mapValues (_.toDouble) mapValues MathUtil.doubleToComplex, 
+    //        right mapValues (_.toDouble) mapValues MathUtil.doubleToComplex)
+    //    println(correlation)
+
     responseMapHelper(1, left, right)
   }
 
   test("responseMapHelper", FastTest) {
     forAll(TestUtil.genPowerOfTwoMatrixPair[Double]) {
-      case (left, right) => whenever(left.rows > 1 && left.cols > 2 && left.size <= 128) {
-        val numScales = left.rows
-        
-        responseMapHelper(
-          numScales - 1,
-          left mapValues (_.toInt),
-          right mapValues (_.toInt))
-      }
+      case (left, right) => whenever(
+        left.rows > 1 &&
+          left.cols > 2 &&
+          left.size <= 128) {
+          val numScales = left.rows
+
+          responseMapHelper(
+            numScales - 1,
+            left mapValues (_.toInt),
+            right mapValues (_.toInt))
+        }
+    }
+  }
+
+  val image = ImageIO.read(new File(
+    getClass.getResource("/iSpy.png").getFile).mustExist)
+
+  val random = new scala.util.Random(0)
+
+  def randomPoint(width: Int, height: Int, buffer: Int): KeyPoint = {
+    val x = random.nextFloat * (width - 2 * buffer) + buffer
+    val y = random.nextFloat * (height - 2 * buffer) + buffer
+    //    KeyPointUtil(x, y)
+    KeyPointUtil(x.floor + 0.5.toFloat, y.floor + 0.5.toFloat)
+  }
+
+  val genRandomPoint = Gen(_ => Some(randomPoint(
+    image.getWidth,
+    image.getHeight,
+    100)))
+
+  val genRandomPointPair = Gen(_ => Some((
+    genRandomPoint.sample.get,
+    genRandomPoint.sample.get)))
+
+  test("NCCLogPolar must agree with LogPolar", FastTest) {
+    implicit val generatorDrivenConfig =
+      PropertyCheckConfig(minSuccessful = 5)
+    forAll(genRandomPointPair) {
+      case (left, right) =>
+        val goldenExtractor = LogPolarExtractor(
+          false,
+          2,
+          32,
+          8,
+          16,
+          3,
+          "Gray")
+
+        val nccExtractor = NCCLogPolarExtractor(goldenExtractor)
+
+        val goldenMatcher = LogPolarMatcher(
+          PatchNormalizer.NCC,
+          Matcher.L2,
+          true,
+          true,
+          4)
+
+        val nccMatcher = NCCLogPolarMatcher(
+          true,
+          4)
+
+        def distance[E <% Extractor[F], M <% Matcher[F], F](
+          extractor: E,
+          matcher: M): Double = {
+          val leftDescriptor = extractor.extractSingle(image, left).get
+          val rightDescriptor = extractor.extractSingle(image, right).get
+
+          matcher.distance(leftDescriptor, rightDescriptor)
+        }
+
+        val goldenDistance = distance(goldenExtractor, goldenMatcher)
+        val nccDistance = distance(nccExtractor, nccMatcher)
+        assertNear(goldenDistance, nccDistance)
     }
   }
 }

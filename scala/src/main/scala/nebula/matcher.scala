@@ -120,6 +120,12 @@ object Matcher {
 
 ///////////////////////////////////////////////////////////
 
+trait SingleMatcher[F] extends Matcher[F] {
+  override def doMatch = Matcher.applyIndividual(distance)
+}
+
+///////////////////////////////////////////////////////////
+
 case class LogPolarMatcher[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
   normalizer: N,
   matcher: M,
