@@ -19,12 +19,17 @@ object SFSPipelineBuild extends Build {
     )
   )
 
+  def extraTestFrameworks = Seq(
+//    testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
+  )
+
   val slf4jVersion = "1.7.2"
 
   def extraLibraryDependencies = Seq(
     libraryDependencies ++= Seq(
 //      "com.nativelibs4java" % "scalacl" % "0.3-SNAPSHOT",
 //      "com.nativelibs4java" % "javacl" % "1.0-SNAPSHOT",
+//      "com.github.axel22" %% "scalameter" % "0.2",
       "org.expecty" % "expecty" % "0.9",
       "org.scala-lang" % "scala-reflect" % "2.10.0",
       "org.scala-lang" % "scala-compiler" % "2.10.0",
@@ -84,7 +89,7 @@ object SFSPipelineBuild extends Build {
     )
   )
 
-  def libSettings = Project.defaultSettings ++ extraResolvers ++ extraLibraryDependencies ++ scalaSettings ++ assemblySettings// ++ extraAssemblySettings
+  def libSettings = Project.defaultSettings ++ extraResolvers ++ extraLibraryDependencies ++ scalaSettings ++ extraTestFrameworks ++ assemblySettings// ++ extraAssemblySettings
 
   lazy val root = {
     val settings = libSettings ++ Seq(name := "nebula")
