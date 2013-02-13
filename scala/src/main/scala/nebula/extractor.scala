@@ -24,6 +24,7 @@ import spray.json.DefaultJsonProtocol
 import spray.json.JsonFormat
 import util.OpenCVUtil
 import util.Util
+import nebula.util._
 
 ///////////////////////////////////////////////////////////
 
@@ -96,20 +97,22 @@ object Extractor {
       val descriptor = new Mat
       extractor.compute(imageMat, new MatOfKeyPoint(keyPoint), descriptor)
 
-      if (descriptor.rows == 0 || descriptor.cols == 0) None
-      else {
-        asserty(descriptor.rows == 1)
-        asserty(descriptor.cols > 0)
-        //        asserty(descriptor.`type` == CvType.CV_8UC1)
-
-        val doubles = for (c <- 0 until descriptor.cols) yield {
-          val doubles = descriptor.get(0, c)
-          asserty(doubles.size == 1)
-          doubles.head
-        }
-
-        Some(doubles)
-      }
+      DenseMatrixUtil.matToMatrixDouble(descriptor) map (_.data.toIndexedSeq)
+//      
+//      if (descriptor.rows == 0 || descriptor.cols == 0) None
+//      else {
+//        asserty(descriptor.rows == 1)
+//        asserty(descriptor.cols > 0)
+//        //        asserty(descriptor.`type` == CvType.CV_8UC1)
+//
+//        val doubles = for (c <- 0 until descriptor.cols) yield {
+//          val doubles = descriptor.get(0, c)
+//          asserty(doubles.size == 1)
+//          doubles.head
+//        }
+//
+//        Some(doubles)
+//      }
     }
 
   def intExtractorFromEnum(enum: Int): ExtractorActionSingle[IndexedSeq[Int]] = (image, keyPoint) => {
@@ -132,7 +135,7 @@ object Extractor {
 ///////////////////////////////////////////////////////////
 
 trait SingleExtractor[F] extends Extractor[F] {
-  override def extract = Extractor.applySeveral(extractSingle)    
+  override def extract = Extractor.applySeveral(extractSingle)
 }
 
 ///////////////////////////////////////////////////////////

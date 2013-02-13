@@ -18,6 +18,7 @@ import scala.text.{ DocText, Document }
 import scala.util.Random
 
 import org.opencv.features2d.KeyPoint
+import org.opencv.core._
 
 import nebula._
 
@@ -32,6 +33,20 @@ import reflect._
 ///////////////////////////////////////////////////////////
 
 object DenseMatrixUtil {
+  def matToMatrixDouble(mat: Mat): Option[DenseMatrix[Double]] = {
+    if (mat.rows == 0 || mat.cols == 0) None
+    else {
+      val matrix = DenseMatrix.zeros[Double](mat.rows, mat.cols)
+      for (row <- 0 until mat.rows; column <- 0 until mat.cols) {
+        val doubles = mat.get(row, column)
+        asserty(doubles.size == 1)
+        matrix(row, column) = doubles.head
+      }
+
+      Some(matrix)
+    }
+  }  
+  
   implicit class SeqSeqToDenseMatrix[A: ClassTag](seqSeq: Seq[Seq[A]]) {
     def toMatrix: DenseMatrix[A] = {
       val rows = seqSeq.size
@@ -73,7 +88,7 @@ object DenseMatrixUtil {
 
   }
 
-  implicit class DenseMatrixTo(self: DenseMatrix[Int]) {
+  implicit class DenseMatrixTo[A <% Double](self: DenseMatrix[A]) {
     //    // Simply dumps the Ints into the BufferedImage, with no concern
     //    // as to the resulting colors.
     //    def toImage: BufferedImage = {
@@ -85,10 +100,11 @@ object DenseMatrixUtil {
     //    }
 
     def toImage: BufferedImage = {
+      requirey((self mapValues (_.toDouble)).max <= 255)
+      requirey((self mapValues (_.toDouble)).min >= 0)
       val image = new BufferedImage(self.cols, self.rows, TYPE_INT_ARGB)
       for (y <- 0 until self.rows; x <- 0 until self.cols) {
-        val value = self(y, x)
-        asserty(value >= 0 && value < 256)
+        val value = self(y, x).toDouble.round.toInt
 
         val pixel = Pixel(255, value, value, value)
         image.setRGB(x, y, pixel.argb)

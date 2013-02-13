@@ -178,8 +178,11 @@ class TestLogPolar(
     //    println(scaleFactors)
 
     for (point <- points; scaleIndex <- 0 until numScales) {
-      val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3
-      val scaleFactor = math.pow(base, scaleIndex)
+      val scaleFactor = LogPolar.getScaleFactors(
+          4.0, 
+          minRadius, 
+          maxRadius, 
+          numScales).apply(scaleIndex)
 
       val extractor = LogPolarExtractor(
         false,
@@ -280,8 +283,11 @@ class TestLogPolar(
 
       val original = extractor.extractSingle(image, point).get
 
-      val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3
-      val scaleFactor = math.pow(base, scaleIndex)
+      val scaleFactor = LogPolar.getScaleFactors(
+          4.0, 
+          minRadius, 
+          maxRadius, 
+          numScales).apply(scaleIndex)
 
       val scaled = extractor.extractSingle(image.scaleAboutPoint(
         scaleFactor,
@@ -328,8 +334,11 @@ class TestLogPolar(
         angle,
         point)
 
-      val base = LogPolar.getFactors(4.0, minRadius, maxRadius, numScales)._3
-      val scaleFactor = math.pow(base, scaleIndex)
+      val scaleFactor = LogPolar.getScaleFactors(
+          4.0, 
+          minRadius, 
+          maxRadius, 
+          numScales).apply(scaleIndex)
       val warped = extractor.extractSingle(rotated.scaleAboutPoint(
         scaleFactor,
         point),

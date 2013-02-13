@@ -14,28 +14,59 @@ import nebula.util._
 ///////////////////////////////////////////////////////////
 
 object LogPolar {
-  //  implicit val epsilon = nebula.Epsilon(0.00001)
-
-  // Get the minimum, maximum, and exponential base of the scaling
-  // factors. These are used to create the image pyramid from
-  // which descriptors are extracted.
-  // TODO: Why doesn't this just return the factors directly?
-  def getFactors(
+  /**
+   * Get image scaling factors. These are used to create the image pyramid from
+   * which descriptors are extracted.
+   */
+  def getScaleFactors(
     samplingRadius: Double,
     minRadius: Double,
     maxRadius: Double,
-    numScales: Int): Tuple3[Double, Double, Double] = {
+    numScales: Int): IndexedSeq[Double] = {
     val maxScalingFactor = samplingRadius / minRadius
     val minScalingFactor = samplingRadius / maxRadius
     asserty(maxScalingFactor > minScalingFactor)
-    val base = math.exp(math.log(minScalingFactor / maxScalingFactor) / (numScales - 1))
-    (minScalingFactor, maxScalingFactor, base)
+    val base = math.exp(
+      math.log(minScalingFactor / maxScalingFactor) / (numScales - 1))
+    asserty(base < 1)
+
+    for (scaleIndex <- 0 until numScales) yield {
+      val scaleFactor = maxScalingFactor * math.pow(base, scaleIndex)
+      asserty(scaleFactor >= minScalingFactor - epsilon)
+      asserty(scaleFactor <= maxScalingFactor + epsilon)
+      if (scaleIndex == 0) assertNear(scaleFactor, maxScalingFactor)
+      if (scaleIndex == numScales - 1) assertNear(scaleFactor, minScalingFactor)
+      scaleFactor
+    }
   }
 
-  // Get the image pyramid, as well as the scaling factors that
-  // were used to create it. Since the ideal scaling factors cannot be
-  // used in all cases (integer rounding), we return the ideal factors
-  // plus the actual factors used.
+  /**
+   * Not all scaling factors can be perfectly realized, as images must have
+   * integer width and height.
+   * Returns the realizable (width, height) pairs that most closely match
+   * the desired scaling factors.
+   */
+  def getRealScaleTargets(
+    idealScalingFactors: IndexedSeq[Double],
+    imageWidth: Int,
+    imageHeight: Int): IndexedSeq[((Int, Int), (Double, Double))] = {
+    for (scaleFactor <- idealScalingFactors) yield {
+      val scaledWidth = (scaleFactor * imageWidth).round.toInt
+      val scaledHeight = (scaleFactor * imageHeight).round.toInt
+
+      val realFactorX = scaledWidth.toDouble / imageWidth
+      val realFactorY = scaledHeight.toDouble / imageHeight
+
+      ((scaledWidth, scaledHeight), (realFactorX, realFactorY))
+    }
+  }
+
+  /**
+   * Get the image pyramid, as well as the scaling factors that
+   * were used to create it. Since the ideal scaling factors cannot be
+   * used in all cases (integer rounding), we return the ideal factors
+   * plus the actual factors used.
+   */
   def scaleImage(
     samplingRadius: Double,
     minRadius: Double,
@@ -47,29 +78,55 @@ object LogPolar {
     // so that |minRadius| in the original image is |samplingRadius|
     // in the scaled image. The smallest image is scaled so that
     // |maxRadius| maps to |samplingRadius|.
-
-    val (minScalingFactor, maxScalingFactor, base) =
-      getFactors(samplingRadius, minRadius, maxRadius, numScales)
-    asserty(base < 1)
-
-    val idealScaleFactors = for (scaleIndex <- 0 until numScales) yield {
-      val scaleFactor = maxScalingFactor * math.pow(base, scaleIndex)
-      asserty(scaleFactor >= minScalingFactor - epsilon)
-      asserty(scaleFactor <= maxScalingFactor + epsilon)
-      if (scaleIndex == 0) assertNear(scaleFactor, maxScalingFactor)
-      if (scaleIndex == numScales - 1) assertNear(scaleFactor, minScalingFactor)
-      scaleFactor
-    }
-
+    val idealScaleFactors = getScaleFactors(
+      samplingRadius,
+      minRadius,
+      maxRadius,
+      numScales)
     val blurred = ImageUtil.boxBlur(blurWidth, image)
 
-    val (realFactors, scaledImages) = (for (scaleFactor <- idealScaleFactors) yield {
-      ImageUtil.scale(scaleFactor, blurred)
-    }) unzip
+    val (realScaleSizes, realScaleFactors) = getRealScaleTargets(
+      idealScaleFactors,
+      blurred.getWidth,
+      blurred.getHeight).unzip
 
-    (idealScaleFactors, realFactors, scaledImages)
+    val scaledImages = for (targetSize <- realScaleSizes) yield {
+      ImageUtil.scale(targetSize, blurred)
+    }
+
+    (idealScaleFactors, realScaleFactors, scaledImages)
   }
 
+  /**
+   * Get the pixel sampling point for a given KeyPoint at a given scale
+   * and angle.
+   */
+  def samplePoint(
+    samplingRadius: Double,
+    numAngles: Int,
+    realScaleFactorX: Double,
+    realScaleFactorY: Double,
+    angleIndex: Int,
+    keyPoint: KeyPoint): KeyPoint = {
+    val (scaledX, scaledY) = (
+      realScaleFactorX * keyPoint.pt.x,
+      realScaleFactorY * keyPoint.pt.y)
+
+    val angle = 2 * math.Pi * angleIndex.toDouble / numAngles
+    val pixelOffset = DenseVector(
+      samplingRadius * math.cos(angle),
+      samplingRadius * math.sin(angle))
+
+    val (x, y) = (scaledX + pixelOffset(0), scaledY + pixelOffset(1))
+    KeyPointUtil(x.toFloat, y.toFloat)
+  }
+
+  /**
+   * Samples a log polar pattern at each keypoint in the provided image.
+   * The sampled pattern is represented as a 2D array, of size numScales
+   * by numAngles.
+   * It may fail to extract keypoints near borders.
+   */
   def rawLogPolarSeq(
     normalizeScale: Boolean,
     minRadius: Double,
@@ -83,7 +140,7 @@ object LogPolar {
     // but the larger the largest resized image.
     val samplingRadius = 4.0
 
-    val (idealScaleFactors, realScaleFactors, scaledImages) = scaleImage(
+    val (_, realScaleFactors, scaledImages) = scaleImage(
       samplingRadius,
       minRadius,
       maxRadius,
@@ -109,19 +166,17 @@ object LogPolar {
         val matrix = DenseMatrix.fill(numScales, numAngles)(0)
         for (scaleIndex <- 0 until numScales; angleIndex <- 0 until numAngles) {
           val scaledImage = scaledImages(scaleIndex)
-          val (scaleFactorX, scaleFactorY) = realScaleFactors(scaleIndex)
+          val (realScaleFactorX, realScaleFactorY) = realScaleFactors(scaleIndex)
 
-          val (scaledX, scaledY) = (
-            scaleFactorX * keyPoint.pt.x,
-            scaleFactorY * keyPoint.pt.y)
-
-          val angle = 2 * math.Pi * angleIndex.toDouble / numAngles
-          val pixelOffset = DenseVector(
-            samplingRadius * math.sin(angle),
-            samplingRadius * math.cos(angle))
-
-          val (x, y) = (scaledX + pixelOffset(0), scaledY + pixelOffset(1))
-          val pixel = scaledImage.getSubPixel(x, y).get
+          val point = samplePoint(
+            samplingRadius,
+            numAngles,
+            realScaleFactorX,
+            realScaleFactorY,
+            angleIndex,
+            keyPoint)
+            
+          val Some(pixel) = scaledImage.getSubPixel(point.pt.x, point.pt.y)
 
           matrix(scaleIndex, angleIndex) = pixel.gray.head
         }
@@ -150,25 +205,6 @@ object LogPolar {
         Seq(keyPoint)).head
   }
 
-  //  // Pad with |cols| - 1 columns of zeros on either side, and replicate
-  //  // once vertically, dropping the last row.
-  //  def prepareMatrixForConvolution(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
-  //    val seqSeq = matrix.toSeqSeq
-  //
-  //    val zeroPadding = IndexedSeq.fill(matrix.cols - 1)(0.0)
-  //    val padded = seqSeq.map(zeroPadding ++ _ ++ zeroPadding)
-  //
-  //    val replicated = (padded ++ padded.init).toMatrix
-  //    asserty(replicated.cols == 3 * matrix.cols - 2)
-  //    asserty(replicated.rows == 2 * matrix.rows - 1)
-  //    replicated
-  //  }
-
-  //  def stackVertical(matrix: DenseMatrix[Double]): DenseMatrix[Double] = {
-  //    val seqSeq = matrix.toSeqSeq
-  //    (seqSeq ++ seqSeq.init).toMatrix
-  //  }
-
   def getResponseMap[N <% Normalizer[DenseMatrix[Int], DenseMatrix[F2]], M <% Matcher[DenseMatrix[F2]], F2](
     normalizer: N,
     normalizeByOverlap: Boolean,
@@ -185,9 +221,9 @@ object LogPolar {
     requirey(scaleIndices.min >= -kernel.rows + 1)
     requirey(scaleIndices.max < kernel.rows)
 
-//    printlns(base)
-//    printlns(kernel)
-    
+    //    printlns(base)
+    //    printlns(kernel)
+
     val response = DenseMatrix.fill(scaleIndices.size, angleIndices.size)(0.0)
     for (scaleIndex <- scaleIndices; angleIndex <- angleIndices) {
       val baseScaleRange =
@@ -202,10 +238,10 @@ object LogPolar {
         kernelScaleRange,
         ::))
 
-//      printlns(baseMatrixUnnormalized)
-//      printlns(kernelMatrixUnnormalized)
-//      printlns(MathUtil.dotProduct(baseMatrixUnnormalized, kernelMatrixUnnormalized))
-        
+      //      printlns(baseMatrixUnnormalized)
+      //      printlns(kernelMatrixUnnormalized)
+      //      printlns(MathUtil.dotProduct(baseMatrixUnnormalized, kernelMatrixUnnormalized))
+
       val baseMatrix = normalizer.normalize(baseMatrixUnnormalized)
       val kernelMatrix = normalizer.normalize(kernelMatrixUnnormalized)
 

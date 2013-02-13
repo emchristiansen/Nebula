@@ -19,23 +19,33 @@ object ImageUtil {
   import RichImage._
 
   def scale(
-      scaleFactor: Double, 
-      image: BufferedImage): Tuple2[Tuple2[Double, Double], BufferedImage] = {
+    targetSize: (Int, Int),
+    image: BufferedImage): BufferedImage = {
+    val (width, height) = targetSize
+    requirey(width > 0)
+    requirey(height > 0)
+
+    Scalr.resize(
+      image,
+      Scalr.Method.ULTRA_QUALITY,
+      Scalr.Mode.FIT_EXACT,
+      width,
+      height);
+  }
+
+  def scale(
+    scaleFactor: Double,
+    image: BufferedImage): Tuple2[Tuple2[Double, Double], BufferedImage] = {
     if (scaleFactor == 1) ((1, 1), image)
     else {
       val scaledWidth = (scaleFactor * image.getWidth).round.toInt
       val scaledHeight = (scaleFactor * image.getHeight).round.toInt
 
-      val scaled = Scalr.resize(
-        image,
-        Scalr.Method.ULTRA_QUALITY,
-        Scalr.Mode.FIT_EXACT,
-        scaledWidth,
-        scaledHeight);
-      
+      val scaled = scale((scaledWidth, scaledHeight), image)
+
       val realFactorX = scaledWidth.toDouble / image.getWidth
       val realFactorY = scaledHeight.toDouble / image.getHeight
-      
+
       ((realFactorX, realFactorY), scaled)
     }
 
@@ -67,10 +77,10 @@ object ImageUtil {
 
   // A subpixel version of |BufferedImage.getSubimage|.
   def getSubimage(image: BufferedImage,
-                  x: Double,
-                  y: Double,
-                  width: Int,
-                  height: Int): BufferedImage = {
+    x: Double,
+    y: Double,
+    width: Int,
+    height: Int): BufferedImage = {
     requirey(x >= 0)
     requirey(x + width < image.getWidth)
     requirey(y >= 0)
@@ -96,20 +106,20 @@ object ImageUtil {
   }
 
   def getSubimageCenteredAtPoint(
-      image: BufferedImage,
-      x: Double,
-      y: Double,
-      xRadius: Int,
-      yRadius: Int): BufferedImage = getSubimage(
-          image,
-          x - xRadius,
-          y - yRadius,
-          2 * xRadius,
-          2 * yRadius)
-  
+    image: BufferedImage,
+    x: Double,
+    y: Double,
+    xRadius: Int,
+    yRadius: Int): BufferedImage = getSubimage(
+    image,
+    x - xRadius,
+    y - yRadius,
+    2 * xRadius,
+    2 * yRadius)
+
   def extractPatch(image: BufferedImage,
-                   patchWidth: Int,
-                   keyPoint: KeyPoint): Option[BufferedImage] = {
+    patchWidth: Int,
+    keyPoint: KeyPoint): Option[BufferedImage] = {
     try {
       val x = keyPoint.pt.x - patchWidth / 2.0
       val y = keyPoint.pt.y - patchWidth / 2.0

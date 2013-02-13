@@ -17,7 +17,7 @@ import scala.math.BigInt.int2bigInt
 import org.apache.commons.math3.linear.{ Array2DRowRealMatrix, ArrayRealVector, LUDecomposition, RealVector }
 import org.opencv.core.Mat
 import org.opencv.features2d.{ DMatch, KeyPoint }
-import org.opencv.highgui.Highgui.imread
+import org.opencv.highgui.Highgui._
 
 import javax.imageio.ImageIO
 
@@ -143,6 +143,16 @@ object OpenCVUtil {
     file.delete
     asserty(mat != null)
     mat
+  }
+  
+  def matToBufferedImage(image: Mat): BufferedImage = {
+    // TODO: Figure out how to do this without IO.
+    val file = File.createTempFile("cvMatToBufferedImage", ".bmp")
+    imwrite(file.toString, image)
+    val bufferedImage = ImageIO.read(file)
+    file.delete
+    asserty(bufferedImage != null)
+    bufferedImage    
   }
 }
 
