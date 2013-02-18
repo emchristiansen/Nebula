@@ -16,10 +16,7 @@ class TestAnything extends FunSuite {
   val image = ImageIO.read(new File(
     getClass.getResource("/iSpy.png").getFile))  
     
-  test("blah", FastTest) {
-    val m = Matcher.L1
-    m.to[Matcher[IndexedSeq[Int]]]
-  }
+  
 }
 
 

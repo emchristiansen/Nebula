@@ -16,16 +16,11 @@ import spray.json.JsValue
 import spray.json.JsNumber
 import spray.json.JsString
 
-import wideBaseline._
-import smallBaseline._
-
 import spray.json._
 
 import nebula.util.Memoize._
 
 import breeze.linalg._
-
-import JsonProtocols._
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -52,12 +47,8 @@ import java.awt.geom.AffineTransform
 import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
 
 import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
 import nebula.util._
 import nebula.imageProcessing._
-import nebula.wideBaseline._
 import nebula._
 
 import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }

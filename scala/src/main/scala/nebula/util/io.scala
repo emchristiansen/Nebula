@@ -10,7 +10,6 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
 import javax.imageio.ImageIO
-import nebula.RuntimeConfig
 import nebula.eval
 import nebula.typeTag2TypeName
 import nebula._
@@ -154,18 +153,5 @@ object IO {
     java.lang.Runtime.getRuntime.exec(executable)
     println("waiting for file: %s".format(path))
     while (!(new File(path).exists)) Thread.sleep(100) // 100 milliseconds
-  }
-
-  def createTempFile(
-      prefix: String, 
-      suffix: String)(
-      implicit runtime: RuntimeConfig) = {
-    val file = runtime.tempDirectory match {
-      case Some(file) => File.createTempFile(prefix, suffix, file)
-      case None => File.createTempFile(prefix, suffix)
-    }
-
-    if (runtime.deleteTemporaryFiles) file.deleteOnExit
-    file
   }
 }

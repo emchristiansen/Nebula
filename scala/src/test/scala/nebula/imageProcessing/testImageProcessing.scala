@@ -40,12 +40,8 @@ import java.awt.geom.AffineTransform
 import java.awt.image.{ AffineTransformOp, BufferedImage, ColorConvertOp, ConvolveOp, DataBufferInt, Kernel }
 
 import nebula.graveyard._
-import nebula.mpie._
-import nebula.summary._
-import nebula.smallBaseline._
 import nebula.util._
 import nebula.imageProcessing._
-import nebula.wideBaseline._
 import nebula._
 
 import scala.Array.{ canBuildFrom, fallbackCanBuildFrom }

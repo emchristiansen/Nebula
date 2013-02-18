@@ -10,8 +10,6 @@ import nebula._
 import scala.util.Random
 
 import nebula.util.Util._
-import nebula.Matcher._
-import nebula.wideBaseline.WideBaselineExperiment
 
 
 import spray.json._
@@ -109,12 +107,12 @@ object CheckMisc extends Properties("Util") {
     list: List[Int] => list.tails.size == prefixes(list).size
   }
 
-  val randomPermutation = for (
-    list <- Arbitrary.arbitrary[List[Int]]
-  ) yield SortDescriptor.fromUnsorted(list)
-
-  implicit lazy val arbitraryPermutation: Arbitrary[SortDescriptor] =
-    Arbitrary(randomPermutation)
+//  val randomPermutation = for (
+//    list <- Arbitrary.arbitrary[List[Int]]
+//  ) yield SortDescriptor.fromUnsorted(list)
+//
+//  implicit lazy val arbitraryPermutation: Arbitrary[SortDescriptor] =
+//    Arbitrary(randomPermutation)
 
 //  property("numTranspositionsToSort is general Cayley") = forAll {
 //    s: SortDescriptor =>
