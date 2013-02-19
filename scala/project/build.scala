@@ -39,8 +39,8 @@ object SFSPipelineBuild extends Build {
       "org.scala-lang" % "scala-compiler" % "2.10.0",
       "org.apache.commons" % "commons-math3" % "3.1.1",
       "commons-io" % "commons-io" % "2.4",
-      "org.scalatest" %% "scalatest" % "2.0.M5b" % "test",
-      "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
+      "org.scalatest" %% "scalatest" % "2.0.M5b",
+      "org.scalacheck" %% "scalacheck" % "1.10.0",
       "org.scala-stm" %% "scala-stm" % "0.7",
       "com.chuusai" %% "shapeless" % "1.2.3",
       "org.clapper" %% "grizzled-scala" % "1.1.3",
@@ -49,7 +49,7 @@ object SFSPipelineBuild extends Build {
       "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
       "io.spray" %%  "spray-json" % "1.2.3",
       "org.rogach" %% "scallop" % "0.8.0",
-      "junit" % "junit" % "4.11" % "test",
+      "junit" % "junit" % "4.11",
       "org.imgscalr" % "imgscalr-lib" % "4.2"
     )
   )
