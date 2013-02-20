@@ -99,4 +99,16 @@ object Generators {
         right <- genMatrixNM(rows, cols, genElement).sample
       ) yield (left, right)
     }
+
+  /**
+   * Generates a KeyPoint located somewhere inside the specified rectangle.
+   * A buffer can be specified to ensure the point is not near an edge.
+   */
+  def genKeyPoint(width: Int, height: Int, buffer: Int) = Gen {
+    case Params(_, random) =>
+      val x = random.nextFloat * (width - 2 * buffer) + buffer
+      val y = random.nextFloat * (height - 2 * buffer) + buffer
+      // TODO: I've forgotten why this next line is like this.
+      Some(KeyPointUtil(x.floor + 0.5.toFloat, y.floor + 0.5.toFloat))
+  }
 }

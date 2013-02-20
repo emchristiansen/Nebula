@@ -23,36 +23,38 @@ import reflect._
 ///////////////////////////////////////////////////////////
 
 @RunWith(classOf[JUnitRunner])
-class TestGenerators extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMatchers {
+@WrapWith(classOf[ConfigMapWrapperSuite])
+class TestGenerators(
+  override val configMap: Map[String, Any]) extends StandardSuite {
   import TestUtil._
-  
+
   test("genNum generates negative and positive numbers", FastTest) {
     forAll(Gen.listOfN(1000, Generators.genNum[Int])) { numbers =>
       asserty(numbers.count(_ < 0) > 0)
       asserty(numbers.count(_ > 0) > 0)
     }
   }
-  
-  test("genPowerOfTwo", FastTest) {
+
+  test("genPowerOfTwo generates powers of 2", FastTest) {
     forAll(Generators.genPowerOfTwo(10)) { x =>
       asserty(FFT.isPowerOf2(x))
     }
   }
-  
+
   test("genSeqPair generates nontrivial seqs", FastTest) {
     forAll(Gen.listOfN(1000, Generators.genSeqPair(4, Gen.posNum[Int]))) {
-      seqPairs => 
+      seqPairs =>
         asserty(seqPairs.map(_._1.size).max > 0)
     }
   }
-  
+
   test("genSeqPair generates balanced pairs", FastTest) {
     forAll(Generators.genSeqPair(100, Gen.posNum[Int])) {
       case (left, right) => asserty(left.size == right.size)
     }
   }
-  
-  test("genPowerOfTwoPair", FastTest) {
+
+  test("genPowerOfTwoPair generates powers of 2 whose product is properly bounded", FastTest) {
     val maxProductPower = 10
     forAll(Generators.genPowerOfTwoPair(maxProductPower)) {
       case (left, right) =>
@@ -61,8 +63,8 @@ class TestGenerators extends FunSuite with GeneratorDrivenPropertyChecks with Sh
         asserty(left * right <= math.pow(2, maxProductPower))
     }
   }
-  
-  test("genMatrixPair", FastTest) {
+
+  test("genMatrixPair generates matrices of the same (legal) size", FastTest) {
     val genSize = Generators.genPowerOfTwoPair(10)
     forAll(Generators.genMatrixPair(genSize, Gen.posNum[Int])) {
       case (left, right) =>
@@ -70,6 +72,15 @@ class TestGenerators extends FunSuite with GeneratorDrivenPropertyChecks with Sh
         requirey(left.cols > 0)
         requirey(left.rows == right.rows)
         requirey(left.cols == right.cols)
+    }
+  }
+  
+  test("genKeyPoint generates KeyPoints in the correct area", FastTest) {
+    forAll(Generators.genKeyPoint(100, 200, 10)) { keyPoint =>
+      asserty(keyPoint.pt.x >= 10)
+      asserty(keyPoint.pt.x <= 90)
+      asserty(keyPoint.pt.y >= 10)
+      asserty(keyPoint.pt.y <= 190)
     }
   }
 }
