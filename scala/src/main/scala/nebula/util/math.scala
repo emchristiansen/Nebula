@@ -22,6 +22,15 @@ object MathUtil {
   
   def log2(x: Double) = math.log(x) / math.log(2)
   
+  /**
+   * The input must be a power of two.
+   */
+  def log2Exact(x: Int) = {
+    val approximate = log2(x)
+    requirey(approximate == approximate.round)
+    approximate.round.toInt
+  }
+  
   // TODO: Clean this crap up with typeclasses.
   def l2Norm[A : Ring](values: Array[A]): Double = new DenseVector(values).norm(2.0)
   
