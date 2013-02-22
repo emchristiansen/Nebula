@@ -74,9 +74,17 @@ trait GeneratorFunSuite extends FunSuite with GeneratorDrivenPropertyChecks with
  * Requires the @WrapWith(classOf[ConfigMapWrapperSuite]) annotation and that
  * configMap be initialized.
  */
-trait StandardSuite extends ConfigMapFunSuite with GeneratorFunSuite
+trait StandardSuite extends ConfigMapFunSuite with GeneratorFunSuite with TestUtil
 
-object TestUtil {
+/**
+ * StandardSuite with OpenCV automatically loaded.
+ * This will fail if OpenCV isn't in the native path.
+ */
+trait OpenCVStandardSuite extends StandardSuite {
+  loadOpenCV
+}
+
+trait TestUtil {
   def dumpImage(name: String, image: BufferedImage) {
     val tempDirectory = File.createTempFile("temp", "").getParentFile
     asserty(tempDirectory != null)
@@ -176,3 +184,5 @@ object TestUtil {
     Gen(_ => next)
   }
 }
+
+object TestUtil extends TestUtil

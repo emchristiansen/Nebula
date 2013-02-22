@@ -1,9 +1,14 @@
 package nebula
+
 import scala.reflect.runtime._
 import scala.reflect._
 import spray.json._
 import breeze.linalg.DenseMatrix
 import breeze.math.Complex
+import spire.algebra._
+import spire.math._
+import spire.implicits._
+import nebula.util._
 
 ///////////////////////////////////////////////////////////
 
@@ -32,9 +37,22 @@ trait IsNearImplicits {
       (self - other).abs <= threshold
   }
 
-  implicit class Complex2IsNear(self: Complex) extends IsNear[Complex] {
-    override def isNear(other: Complex)(implicit threshold: Epsilon) =
+  implicit class SpireComplex2IsNear[A <% IsNear[A]: SpireNumeric](
+    self: SpireComplex[A]) extends IsNear[SpireComplex[A]] {
+    override def isNear(other: SpireComplex[A])(implicit threshold: Epsilon) =
       (self - other).abs <= threshold
+  }
+
+  implicit class ApacheComplex2IsNear(
+    self: ApacheComplex) extends IsNear[ApacheComplex] {
+    override def isNear(other: ApacheComplex)(implicit threshold: Epsilon) =
+      ComplexUtil.apacheToSpire(self).isNear(ComplexUtil.apacheToSpire(other))
+  }
+  
+  implicit class BreezeComplex2IsNear(
+      self: BreezeComplex) extends IsNear[BreezeComplex] {
+    override def isNear(other: BreezeComplex)(implicit threshold: Epsilon) =
+      ComplexUtil.breezeToSpire(self).isNear(ComplexUtil.breezeToSpire(other))
   }
 
   // TODO: Currently the more general code (see below) crashes the compiler.

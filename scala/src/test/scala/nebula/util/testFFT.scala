@@ -23,8 +23,9 @@ import reflect._
 ///////////////////////////////////////////////////////////
 
 @RunWith(classOf[JUnitRunner])
-class TestFFT extends FunSuite with GeneratorDrivenPropertyChecks with ShouldMatchers {
-  import TestUtil._
+@WrapWith(classOf[ConfigMapWrapperSuite])
+class TestFFT(
+  override val configMap: Map[String, Any]) extends StandardSuite {
 
   def complexToApache(complex: Complex) =
     new org.apache.commons.math3.complex.Complex(complex.real, complex.imag)

@@ -38,8 +38,8 @@ object ExistingDirectory {
 trait IO {
   val homeDirectory = new File(System.getProperty("user.home"))
 
-  def getResource(path: String): File =
-    new File(getClass.getResource(path).getFile).mustExist
+  def getResource(path: String): ExistingFile =
+    ExistingFile(getClass.getResource(path).getFile)
 
   implicit class PimpFile(file: File) {
     def mustExist: File = {
@@ -55,3 +55,5 @@ trait IO {
     def +(that: String): File = new File(file, that)
   }
 }
+
+object IO extends IO

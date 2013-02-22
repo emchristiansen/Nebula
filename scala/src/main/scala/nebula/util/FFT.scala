@@ -13,22 +13,18 @@ import nebula._
 ///////////////////////////////////////////////////////////
 
 object FFT {
+  @deprecated("", "")
   def complexToApache(complex: Complex) =
     new org.apache.commons.math3.complex.Complex(complex.real, complex.imag)
 
+  @deprecated("", "")
   def apacheToComplex(apache: org.apache.commons.math3.complex.Complex) =
     Complex(apache.getReal, apache.getImaginary)
-
-  def isPowerOf2(size: Int): Boolean =
-    MathUtil.log2(size) == MathUtil.log2(size).round
-    
-  def isZeroOrPowerOf2(size: Int): Boolean =
-    size == 0 || isPowerOf2(size)
 
   def fftWrapper(
     transform: TransformType)(
       data: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-    requirey(isZeroOrPowerOf2(data.size))
+    requirey(MathUtil.isZeroOrPowerOf2(data.size))
     data.size match {
       case 0 => IndexedSeq()
       case _ => new FastFourierTransformer(DftNormalization.STANDARD).transform(
@@ -44,8 +40,8 @@ object FFT {
   def fft2Wrapper(
     transform: TransformType)(
       data: DenseMatrix[Complex]): DenseMatrix[Complex] = {
-    requirey(isZeroOrPowerOf2(data.rows))
-    requirey(isZeroOrPowerOf2(data.cols))
+    requirey(MathUtil.isZeroOrPowerOf2(data.rows))
+    requirey(MathUtil.isZeroOrPowerOf2(data.cols))
 
     val seqSeq = data.toSeqSeq
 
@@ -79,7 +75,7 @@ object FFT {
     left: DenseMatrix[Complex],
     right: DenseMatrix[Complex]): DenseMatrix[Complex] = {
 
-    val leftConjugate = left mapValues (_.conjugate) 
+    val leftConjugate = left mapValues (_.conjugate)
 
     // I wasn't able to get the built in :* operator to work.
     val dotTimes = DenseMatrix.zeros[Complex](left.rows, left.cols)
@@ -213,25 +209,25 @@ object FFT {
     convolution
   }
 
-  // Based on http://rosettacode.org/wiki/Fast_Fourier_transform#Scala
-  //  def fft(data: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-  //    requirey(data.size == 0 || MathUtil.log2(data.size) == MathUtil.log2(data.size).round)
-  //    data.size match {
-  //      case 0 => IndexedSeq()
-  //      case 1 => data
-  //      case n => {
-  //        val cis: Double => Complex = phi => Complex(cos(phi), sin(phi))
-  //
-  //        val e = fft(data.zipWithIndex.filter(_._2 % 2 == 0).map(_._1))
-  //        val o = fft(data.zipWithIndex.filter(_._2 % 2 != 0).map(_._1))
-  //
-  //        val unsorted = for (k <- 0 until n / 2) yield IndexedSeq(
-  //          (k, e(k) + o(k) * cis(-2 * Pi * k / n)),
-  //          (k + n / 2, e(k) - o(k) * cis(-2 * Pi * k / n)))
-  //
-  //        //        unsorted.flatten.sortBy(_._1).map(_._2 / math.sqrt(data.size))
-  //        unsorted.flatten.sortBy(_._1).map(_._2)
-  //      }
-  //    }
-  //  }
+  //   Based on http://rosettacode.org/wiki/Fast_Fourier_transform#Scala
+  def ericFFT(data: IndexedSeq[Complex]): IndexedSeq[Complex] = {
+    requirey(data.size == 0 || MathUtil.log2(data.size) == MathUtil.log2(data.size).round)
+    data.size match {
+      case 0 => IndexedSeq()
+      case 1 => data
+      case n => {
+        val cis: Double => Complex = phi => Complex(cos(phi), sin(phi))
+
+        val e = fft(data.zipWithIndex.filter(_._2 % 2 == 0).map(_._1))
+        val o = fft(data.zipWithIndex.filter(_._2 % 2 != 0).map(_._1))
+
+        val unsorted = for (k <- 0 until n / 2) yield IndexedSeq(
+          (k, e(k) + o(k) * cis(-2 * Pi * k / n)),
+          (k + n / 2, e(k) - o(k) * cis(-2 * Pi * k / n)))
+
+        //        unsorted.flatten.sortBy(_._1).map(_._2 / math.sqrt(data.size))
+        unsorted.flatten.sortBy(_._1).map(_._2)
+      }
+    }
+  }
 }

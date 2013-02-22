@@ -8,6 +8,12 @@ import grizzled.math.stats
 ///////////////////////////////////////////////////////////
 
 object MathUtil {
+  def isPowerOf2(size: Int): Boolean =
+    MathUtil.log2(size) == MathUtil.log2(size).round
+
+  def isZeroOrPowerOf2(size: Int): Boolean =
+    size == 0 || isPowerOf2(size)  
+  
   def doubleToComplex(double: Double): Complex = Complex(double, 0)
   def complexToDouble(complex: Complex): Double = {
     assertNear(complex.imag, 0)

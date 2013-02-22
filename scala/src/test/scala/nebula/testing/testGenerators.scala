@@ -37,7 +37,7 @@ class TestGenerators(
 
   test("genPowerOfTwo generates powers of 2", FastTest) {
     forAll(Generators.genPowerOfTwo(10)) { x =>
-      asserty(FFT.isPowerOf2(x))
+      asserty(MathUtil.isPowerOf2(x))
     }
   }
 
@@ -58,8 +58,8 @@ class TestGenerators(
     val maxProductPower = 10
     forAll(Generators.genPowerOfTwoPair(maxProductPower)) {
       case (left, right) =>
-        asserty(FFT.isPowerOf2(left))
-        asserty(FFT.isPowerOf2(right))
+        asserty(MathUtil.isPowerOf2(left))
+        asserty(MathUtil.isPowerOf2(right))
         asserty(left * right <= math.pow(2, maxProductPower))
     }
   }
