@@ -96,7 +96,7 @@ object DenseMatrixUtil {
     val complex = new Mat
     Core.merge(planes, complex)
     complex
-  }
+  }  
   
   def matrixDoubleToMat(matrix: DenseMatrix[Double]): Mat = {
     val mat = new Mat(matrix.rows, matrix.cols, CvType.CV_64FC1);

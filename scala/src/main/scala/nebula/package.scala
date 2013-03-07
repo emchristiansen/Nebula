@@ -63,7 +63,9 @@ package object nebula extends IO with Near with Eval {
       (0 until int).map(_ => function)
   }
 
-  lazy val loadOpenCV = System.loadLibrary("opencv_java")
+//  lazy val loadOpenCV = System.loadLibrary("opencv_java")
+  lazy val loadOpenCV = 
+    System.load("/usr/local/share/OpenCV/java/libopencv_java.so")
 
   /**
    * Quick syntax for implicit conversions.
