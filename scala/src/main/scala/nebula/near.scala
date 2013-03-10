@@ -31,75 +31,19 @@ trait IsNear[A] {
   def isNear(that: A)(implicit threshold: Epsilon): Boolean
 }
 
-trait IsNearImplicits {
-  implicit class Double2IsNear[A <% Double](self: A) extends IsNear[A] {
-    override def isNear(other: A)(implicit threshold: Epsilon) =
-      (self - other).abs <= threshold
-  }
-
-  implicit class SpireComplex2IsNear[A <% IsNear[A]: SpireNumeric](
-    self: SpireComplex[A]) extends IsNear[SpireComplex[A]] {
-    override def isNear(other: SpireComplex[A])(implicit threshold: Epsilon) =
-      (self - other).abs <= threshold
-  }
-
-  implicit class ApacheComplex2IsNear(
-    self: ApacheComplex) extends IsNear[ApacheComplex] {
-    override def isNear(other: ApacheComplex)(implicit threshold: Epsilon) =
-      ComplexUtil.apacheToSpire(self).isNear(ComplexUtil.apacheToSpire(other))
-  }
-  
-  implicit class BreezeComplex2IsNear(
-      self: BreezeComplex) extends IsNear[BreezeComplex] {
-    override def isNear(other: BreezeComplex)(implicit threshold: Epsilon) =
-      ComplexUtil.breezeToSpire(self).isNear(ComplexUtil.breezeToSpire(other))
-  }
-
-  // TODO: Currently the more general code (see below) crashes the compiler.
-  implicit class IndexedSeq2IsNear[A <% IsNear[A]](
-    self: IndexedSeq[A]) extends IsNear[IndexedSeq[A]] {
-    override def isNear(other: IndexedSeq[A])(implicit threshold: Epsilon) = {
-      self.size == other.size && (self.zip(other).count {
-        case (left, right) => left.isNear(right)
-      }) == self.size
-    }
-  }
-
-  implicit class DenseMatrix2IsNear[A <% IsNear[A]](
-    self: DenseMatrix[A]) extends IsNear[DenseMatrix[A]] {
-    override def isNear(other: DenseMatrix[A])(implicit threshold: Epsilon) = {
-      self.rows == other.rows &&
-        self.cols == other.cols &&
-        (self.data.toIndexedSeq.zip(other.data.toIndexedSeq).count {
-          case (left, right) => left.isNear(right)
-        }) == self.size
-    }
-  }
-
-  // This code crashes the compiler.
-  // TODO: Uncomment
-  //  implicit class Seq2IsNear[C[_] <: Iterable[_], A <% IsNear[A]](self: C[A]) extends IsNear[C[A]] {
-  //    override def isNear(other: C[A])(implicit threshold: Epsilon) = {
-  //      self.size == other.size && (self.zip(other).count {
-  //        case (left, right) => left.isNear(right)
-  //      }) == self.size
-  //    }
-  //  }  
-}
-
 trait IsNearMethods {
-  def assertNear[A <% IsNear[A]](
+  def assertNear[A <% MachineError[A]](
     left: => A,
     right: => A)(implicit threshold: Epsilon): Unit = {
     Predef.assert(
-      left.isNear(right),
-      s"\nleft: ${left}\nright: ${right}")
+      (left machineError right) <= threshold,
+      s"\nleft: ${left}\nright: ${right}")    
   }
 }
 
-object IsNear extends IsNearImplicits with IsNearMethods
+object IsNear extends IsNearMethods
 
-trait Near extends IsNearImplicits with IsNearMethods {
+trait Near extends IsNearMethods {
   implicit val epsilon = Epsilon(0.0001)
 
   /**

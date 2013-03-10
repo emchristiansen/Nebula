@@ -27,24 +27,18 @@ import reflect._
 class TestFFT(
   override val configMap: Map[String, Any]) extends StandardSuite {
 
-  def complexToApache(complex: Complex) =
-    new org.apache.commons.math3.complex.Complex(complex.real, complex.imag)
-
-  def apacheToComplex(apache: org.apache.commons.math3.complex.Complex) =
-    Complex(apache.getReal, apache.getImaginary)
-
   test("apache's ifft should be the inverse of fft", FastTest) {
     forAll(TestUtil.genPowerOfTwoSeq[Complex]) { complex =>
       whenever(complex.size > 0) {
         val fourier =
           new FastFourierTransformer(DftNormalization.STANDARD).transform(
-            complex.map(complexToApache).toArray,
+            complex.map(ComplexUtil.breezeToApache).toArray,
             TransformType.FORWARD)
 
         val estimate =
           new FastFourierTransformer(DftNormalization.STANDARD).transform(
             fourier,
-            TransformType.INVERSE) map apacheToComplex toIndexedSeq
+            TransformType.INVERSE) map ComplexUtil.apacheToBreeze toIndexedSeq
 
         assertNear(complex: IndexedSeq[Complex], estimate)
       }
@@ -58,8 +52,8 @@ class TestFFT(
 
         val golden =
           new FastFourierTransformer(DftNormalization.STANDARD).transform(
-            complex.map(complexToApache).toArray,
-            TransformType.FORWARD) map apacheToComplex toIndexedSeq
+            complex.map(ComplexUtil.breezeToApache).toArray,
+            TransformType.FORWARD) map ComplexUtil.apacheToBreeze toIndexedSeq
 
         assertNear(estimated, golden)
       }
@@ -72,8 +66,8 @@ class TestFFT(
         val estimated = FFT.ifft(complex)
 
         val golden = new FastFourierTransformer(DftNormalization.STANDARD).transform(
-          complex.map(complexToApache).toArray,
-          TransformType.INVERSE) map apacheToComplex toIndexedSeq
+          complex.map(ComplexUtil.breezeToApache).toArray,
+          TransformType.INVERSE) map ComplexUtil.apacheToBreeze toIndexedSeq
 
         assertNear(estimated, golden)
       }

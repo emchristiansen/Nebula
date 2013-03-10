@@ -24,6 +24,7 @@ object SFSPipelineBuild extends Build {
   )
 
   val slf4jVersion = "1.7.2"
+  val scalaVersionName = "2.10.1-SNAPSHOT"
 
   def extraLibraryDependencies = Seq(
     libraryDependencies ++= Seq(
@@ -35,8 +36,8 @@ object SFSPipelineBuild extends Build {
       "org.slf4j" % "slf4j-log4j12" % slf4jVersion,
       "org.expecty" % "expecty" % "0.9",
       "commons-lang" % "commons-lang" % "2.6",
-      "org.scala-lang" % "scala-reflect" % "2.10.0",
-      "org.scala-lang" % "scala-compiler" % "2.10.0",
+      "org.scala-lang" % "scala-reflect" % scalaVersionName,
+      "org.scala-lang" % "scala-compiler" % scalaVersionName,
       "org.apache.commons" % "commons-math3" % "3.1.1",
       "commons-io" % "commons-io" % "2.4",
       "org.scalatest" %% "scalatest" % "2.0.M5b",
@@ -55,7 +56,9 @@ object SFSPipelineBuild extends Build {
   )
 
   def scalaSettings = Seq(
-    scalaVersion := "2.10.0",
+//    scalaVersion := "2.10.0",
+    scalaVersion := scalaVersionName,
+//    scalaVersion := "2.11.0-SNAPSHOT",
     scalacOptions ++= Seq(
       "-optimize",
       "-unchecked",
@@ -64,6 +67,7 @@ object SFSPipelineBuild extends Build {
       "-language:implicitConversions",
       "-language:postfixOps",
       "-language:existentials",
+      "-language:higherKinds",
       "-Yinline-warnings"
     )
   )
