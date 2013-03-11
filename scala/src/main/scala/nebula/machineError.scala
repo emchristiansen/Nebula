@@ -13,6 +13,35 @@ import nebula.util._
 ///////////////////////////////////////////////////////////
 
 /**
+ * Anything Seq-like on which it is valid to compute machine error.
+ * The purpose of this trait is to avoid polluting the implicit
+ * path with views from weird structs to Seq.
+ */
+trait MachineErrorSeq[A] {
+  def seq: Seq[A]
+}
+
+trait MachineErrorSeqImplicitConstructors {
+  implicit def seqToMachineErrorSeq[A](seq: Seq[A]): MachineErrorSeq[A] =
+    MachineErrorSeq(seq)
+
+  implicit def denseMatrixToMachineErrorSeq[A](
+    matrix: DenseMatrix[A]): MachineErrorSeq[A] =
+    MachineErrorSeq(matrix.copy.data)
+}
+
+object MachineErrorSeq extends MachineErrorSeqImplicitConstructors {
+  def apply[A](self: Seq[A]): MachineErrorSeq[A] = new MachineErrorSeq[A] {
+    override def seq = self
+  }
+
+  implicit def machineErrorSeqToSeq[A](self: MachineErrorSeq[A]): Seq[A] =
+    self.seq
+}
+
+///////////////////////////////////////////////////////////
+
+/**
  * A measure of the difference between two objects when that difference is
  * caused by machine error, eg floating point error.
  * This will normally be defined as the maximum pairwise difference between
@@ -51,19 +80,20 @@ trait MachineErrorImplicits {
   implicit def breezeComplex2MachineError: MachineErrorPimp[BreezeComplex] =
     apply((left: BreezeComplex, right: BreezeComplex) =>
       ComplexUtil.breezeToSpire(left) machineError ComplexUtil.breezeToSpire(right))
-
+  
   /**
-   * MachineError for any container type that can be viewed as a Seq.
-   */
-  implicit def seq2MachineError[A <% MachineError[A], C[_]](implicit cToSeq: C[A] => Seq[A]): MachineErrorPimp[C[A]] =
-    apply((left: C[A], right: C[A]) =>
-      if (left.size != right.size) Double.PositiveInfinity
+   * MachineError for any container type that can be viewed as a MachineErrorSeq.
+   */     
+  implicit def machineErrorSeq2MachineError2[
+    C <% MachineErrorSeq[A], A <% MachineError[A]]: MachineErrorPimp[C] =
+    apply((left: C, right: C) =>
+      if (left.seq.size != right.seq.size) Double.PositiveInfinity
       else {
-        val errors = (left zip right) map {
+        val errors = (left.seq zip right.seq) map {
           case (l, r) => l machineError r
         }
         errors.max
-      })  
+      })
 }
 
 object MachineError extends MachineErrorImplicits

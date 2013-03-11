@@ -30,12 +30,6 @@ package object nebula extends IO with Near with Eval {
   type SpireNumeric[A] = spire.math.Numeric[A]
 
   /**
-   * A DenseMatrix is a Seq.
-   */
-  implicit def denseMatrixToSeq[A](matrix: DenseMatrix[A]): Seq[A] =
-    matrix.copy.data
-
-  /**
    * Prints a string in a clearly delimited block.
    */
   def printBlock[S](string: S) = {
@@ -76,6 +70,7 @@ package object nebula extends IO with Near with Eval {
   /**
    * Quick syntax for implicit conversions.
    */
+  @deprecated("", "")
   implicit class AddTo[A](obj: A) {
     def to[B](implicit conversion: A => B): B = conversion(obj)
   }
