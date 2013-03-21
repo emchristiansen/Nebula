@@ -7,6 +7,7 @@ import scala.util.Try
 import spray.json._
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.runtime.universe.typeTag
+import scala.concurrent.stm._
 
 ///////////////////////////////////////////////////////////
 
@@ -16,9 +17,25 @@ import scala.reflect.runtime.universe.typeTag
 case class Imports(packages: Set[String])
 
 object Imports {
-  def apply(packages: String*): Imports = Imports(packages.toSet)
+  def stringToImports(importString: String): Imports = {
+    val lines =
+      importString.replace("import ", "").replace(";", "\n").split("\n")
+
+    def stripWhitespace(string: String): String =
+      string.replaceAll("""^\s+|\s+$""", "")
+
+    val nonEmpty = lines.map(stripWhitespace).filter(_.size > 0)
+    val packages = nonEmpty.filter(_.split(" ").size == 1)
+    Imports(packages.toSet)
+  }
 
   implicit def toSetString(self: Imports): Set[String] = self.packages
+
+  def apply(packages: String*): Imports = {
+    val sets = (packages map stringToImports) map (_.toSet)
+    val combined = sets.foldLeft(Set[String]())(_ ++ _)
+    Imports(combined)
+  }
 }
 
 /**
@@ -65,11 +82,27 @@ trait Eval {
   ///////////////////////////////////////////////////////////
 
   /**
+   * We can generate the Scala source for anything that supports JsonFormat.
+   */
+  def getSource[A: JsonFormat: TypeTag](a: A): String = s"""
+{
+  val json = \"\"\"${a.toJson}\"\"\".asJson 
+  val value = json.convertTo[${typeName[A]}]
+  value
+}
+  """
+
+  ///////////////////////////////////////////////////////////
+
+  /**
    * Convenience function to get the name of a type.
    */
   def typeName[A: TypeName] = implicitly[TypeName[A]]
 
   implicit def typeTag2TypeName[A: TypeTag]: TypeName[A] =
+    TypeName(typeTag[A].tpe.toString)
+
+  def instanceToTypeName[A: TypeTag](a: A): TypeName[A] =
     TypeName(typeTag[A].tpe.toString)
 
   ///////////////////////////////////////////////////////////
@@ -85,12 +118,16 @@ val result: ${typeName[A]} = {${expression}}
 result
     """
 
-    // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
-    val cm = universe.runtimeMirror(getClass.getClassLoader)
-    val toolbox = cm.mkToolBox()
-
     try {
-      toolbox.compile(toolbox.parse(source)).asInstanceOf[() => A]
+      // The Scala compiler isn't thread-safe.
+      // Soo many heisenbug-headaches before I finally figured this out.
+//      atomic { implicit txn =>
+        // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
+        val cm = universe.runtimeMirror(getClass.getClassLoader)
+        val toolbox = cm.mkToolBox()
+
+        toolbox.compile(toolbox.parse(source)).asInstanceOf[() => A]
+      
     } catch {
       case e: Any => {
         val sourceHeader = "// BEGIN: THIS SOURCE FAILED TO COMPILE"
@@ -102,6 +139,7 @@ result
         throw e
       }
     }
+
   }
 
   def hasType[A: TypeName](expression: String): Boolean =

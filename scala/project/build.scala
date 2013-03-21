@@ -15,7 +15,8 @@ object SFSPipelineBuild extends Build {
       "maven.twttr.com" at "http://maven.twttr.com",
       "spray-io" at "http://repo.spray.io/",
       "typesafe-releases" at "http://repo.typesafe.com/typesafe/repo",
-      "Expecty Repository" at "https://raw.github.com/pniederw/expecty/master/m2repo/"
+      "Expecty Repository" at "https://raw.github.com/pniederw/expecty/master/m2repo/",
+      "Local Maven Repository" at Path.userHome.asFile.toURI.toURL+"/.m2/repository"
     )
   )
 
@@ -24,13 +25,15 @@ object SFSPipelineBuild extends Build {
   )
 
   val slf4jVersion = "1.7.2"
-  val scalaVersionName = "2.10.1-SNAPSHOT"
+  val scalaVersionName = "2.10.1"
 
   def extraLibraryDependencies = Seq(
     libraryDependencies ++= Seq(
 //      "com.nativelibs4java" % "scalacl" % "0.3-SNAPSHOT",
 //      "com.nativelibs4java" % "javacl" % "1.0-SNAPSHOT",
 //      "com.github.axel22" %% "scalameter" % "0.2",
+      "org.apache.commons" % "commons-compress" % "1.5",
+      "opencv" % "opencv" % "2.4.9",
       "log4j" % "log4j" % "1.2.17",
       "org.slf4j" % "slf4j-api" % slf4jVersion,
       "org.slf4j" % "slf4j-log4j12" % slf4jVersion,

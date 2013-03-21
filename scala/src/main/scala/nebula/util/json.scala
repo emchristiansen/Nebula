@@ -36,12 +36,10 @@ object JSONUtil extends Logging {
   def singletonObject[A: TypeTag](a: A): RootJsonFormat[A] = {
     val typeName = typeTag[A].tpe.toString
     val objectName = {
+      // We assume the type name looks like "org.foo.bar.type", and we
+      // return "bar".
       asserty(typeName.endsWith(".type"))
-      // Remove the ".type" from the end of the object type.
-      val noType = typeName.take(typeName.size - 5)
-      // Remove the "nebula." from the beginning of the object type.
-      asserty(noType.startsWith("nebula."))
-      noType.drop(7)
+      typeName.split("""\.""").init.last
     }
     
     val noTypeName = new RootJsonFormat[A] {
