@@ -58,6 +58,9 @@ object SFSPipelineBuild extends Build {
     )
   )
 
+  def updateOnDependencyChange = Seq(
+    watchSources <++= (managedClasspath in Test) map { cp => cp.files })
+
   def scalaSettings = Seq(
 //    scalaVersion := "2.10.0",
     scalaVersion := scalaVersionName,
@@ -75,11 +78,20 @@ object SFSPipelineBuild extends Build {
     )
   )
 
-  def libSettings = Project.defaultSettings ++ extraResolvers ++ extraLibraryDependencies ++ scalaSettings ++ extraTestFrameworks ++ assemblySettings// ++ extraAssemblySettings
+  def extraSettings = 
+    Project.defaultSettings ++ 
+    extraResolvers ++ 
+    extraLibraryDependencies ++ 
+    scalaSettings ++ 
+    extraTestFrameworks ++ 
+    assemblySettings //++
+//    updateOnDependencyChange
+
+// ++ extraAssemblySettings
 
   val projectName = "nebula"
   lazy val root = {
-    val settings = libSettings ++ Seq(name := projectName)
+    val settings = extraSettings ++ Seq(name := projectName)
 //    val settings = libSettings ++ Seq(name := "nebula", fork := true)
     Project(id = projectName, base = file("."), settings = settings)
   }

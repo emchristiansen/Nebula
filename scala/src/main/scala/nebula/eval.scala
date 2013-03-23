@@ -107,39 +107,47 @@ trait Eval {
 
   ///////////////////////////////////////////////////////////
 
+  def typeCheckHelper[A: TypeName](expression: String): () => A = {
+      val source = s"""
+val result: ${typeName[A]} = {${expression}}
+result
+    """
+
+      try {
+        // The Scala compiler isn't thread-safe.
+        // Soo many heisenbug-headaches before I finally figured this out.
+        //      atomic { implicit txn =>
+        // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
+//        val cm = universe.runtimeMirror(getClass.getClassLoader)
+        val cm = reflect.runtime.currentMirror
+        val toolbox = cm.mkToolBox()
+        
+        
+        toolbox.compile(toolbox.parse(source)).asInstanceOf[() => A]
+
+      } catch {
+        case e: Any => {
+          val sourceHeader = "// BEGIN: THIS SOURCE FAILED TO COMPILE"
+          val sourceFooter = "// END: THIS SOURCE FAILED TO COMPILE"
+          println(Seq(
+            sourceHeader,
+            source,
+            sourceFooter) mkString ("\n"))
+          throw e
+        }
+      }
+  }
+    
   /**
    * Checks the type of the given expression.
    * If the type check passes, returns a closure that can be run to evaluate
    * the expression.
    */
   def typeCheck[A: TypeName](expression: String): () => A = {
-    val source = s"""
-val result: ${typeName[A]} = {${expression}}
-result
-    """
-
-    try {
-      // The Scala compiler isn't thread-safe.
-      // Soo many heisenbug-headaches before I finally figured this out.
-//      atomic { implicit txn =>
-        // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
-        val cm = universe.runtimeMirror(getClass.getClassLoader)
-        val toolbox = cm.mkToolBox()
-
-        toolbox.compile(toolbox.parse(source)).asInstanceOf[() => A]
-      
-    } catch {
-      case e: Any => {
-        val sourceHeader = "// BEGIN: THIS SOURCE FAILED TO COMPILE"
-        val sourceFooter = "// END: THIS SOURCE FAILED TO COMPILE"
-        println(Seq(
-          sourceHeader,
-          source,
-          sourceFooter) mkString ("\n"))
-        throw e
-      }
-    }
-
+//     This weird wrapping seems to help, no idea why.
+//    GlobalLock.synchronized {
+      typeCheckHelper[A](expression)
+//    }
   }
 
   def hasType[A: TypeName](expression: String): Boolean =
