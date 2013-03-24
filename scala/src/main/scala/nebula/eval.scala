@@ -51,6 +51,24 @@ object TypeName {
 }
 
 /**
+ * Represents Scala source code with the specified type.
+ */
+case class ScalaSource[A: TypeName](source: String) {
+  //  typeCheck[A](source)
+}
+
+object ScalaSource {
+  implicit class ScalaSourceOps[A: TypeName](self: ScalaSource[A]) {
+    def eval = {
+      val closure = GlobalLock.synchronized {
+        typeCheck[A](self.source)
+      }
+      closure()
+    }
+  }
+}
+
+/**
  * Tools for evaluating Scala source code at runtime.
  */
 trait Eval {
@@ -84,7 +102,7 @@ trait Eval {
   /**
    * We can generate the Scala source for anything that supports JsonFormat.
    */
-  def getSource[A: JsonFormat: TypeTag](a: A): String = s"""
+  def getSource[A: JsonFormat: TypeName](a: A): String = s"""
 {
   val json = \"\"\"${a.toJson}\"\"\".asJson 
   val value = json.convertTo[${typeName[A]}]
@@ -108,46 +126,45 @@ trait Eval {
   ///////////////////////////////////////////////////////////
 
   def typeCheckHelper[A: TypeName](expression: String): () => A = {
-      val source = s"""
+    val source = s"""
 val result: ${typeName[A]} = {${expression}}
 result
     """
 
-      try {
-        // The Scala compiler isn't thread-safe.
-        // Soo many heisenbug-headaches before I finally figured this out.
-        //      atomic { implicit txn =>
-        // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
-//        val cm = universe.runtimeMirror(getClass.getClassLoader)
-        val cm = reflect.runtime.currentMirror
-        val toolbox = cm.mkToolBox()
-        
-        
-        toolbox.compile(toolbox.parse(source)).asInstanceOf[() => A]
+    try {
+      // The Scala compiler isn't thread-safe.
+      // Soo many heisenbug-headaches before I finally figured this out.
+      //      atomic { implicit txn =>
+      // From http://stackoverflow.com/questions/12122939/generating-a-class-from-string-and-instantiating-it-in-scala-2-10/12123609#12123609
+      //        val cm = universe.runtimeMirror(getClass.getClassLoader)
+      val cm = reflect.runtime.currentMirror
+      val toolbox = cm.mkToolBox()
 
-      } catch {
-        case e: Any => {
-          val sourceHeader = "// BEGIN: THIS SOURCE FAILED TO COMPILE"
-          val sourceFooter = "// END: THIS SOURCE FAILED TO COMPILE"
-          println(Seq(
-            sourceHeader,
-            source,
-            sourceFooter) mkString ("\n"))
-          throw e
-        }
+      toolbox.compile(toolbox.parse(source)).asInstanceOf[() => A]
+
+    } catch {
+      case e: Any => {
+        val sourceHeader = "// BEGIN: THIS SOURCE FAILED TO COMPILE"
+        val sourceFooter = "// END: THIS SOURCE FAILED TO COMPILE"
+        println(Seq(
+          sourceHeader,
+          source,
+          sourceFooter) mkString ("\n"))
+        throw e
       }
+    }
   }
-    
+
   /**
    * Checks the type of the given expression.
    * If the type check passes, returns a closure that can be run to evaluate
    * the expression.
    */
   def typeCheck[A: TypeName](expression: String): () => A = {
-//     This weird wrapping seems to help, no idea why.
-//    GlobalLock.synchronized {
-      typeCheckHelper[A](expression)
-//    }
+    //     This weird wrapping seems to help, no idea why.
+    //    GlobalLock.synchronized {
+    typeCheckHelper[A](expression)
+    //    }
   }
 
   def hasType[A: TypeName](expression: String): Boolean =

@@ -30,13 +30,43 @@ import spray.json._
 import JSONUtil._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import nebula._
+import nebula.util._
+import org.scalatest._
+import org.scalatest.prop._
+import javax.imageio.ImageIO
+import java.io.File
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+import scala.util.Random
+import breeze.linalg._
+
+import org.scalacheck._
+import breeze.math._
+
+import org.apache.commons.math3.transform.DftNormalization
+import org.apache.commons.math3.transform.FastFourierTransformer
+import org.apache.commons.math3.transform.TransformType
+import DenseMatrixUtil._
+import reflect._
 
 ///////////////////////////////////////////////////////////
 
 case class Person(firstName: String, lastName: String, int: Int, double: Double)
 
 @RunWith(classOf[JUnitRunner])
-class TestMisc extends FunSuite {
+@WrapWith(classOf[ConfigMapWrapperSuite])
+class TestMisc(
+  override val configMap: Map[String, Any]) extends StandardSuite {
+  test("makeShufflers", FastTest) {
+    forAll(Gen.listOf(Gen.alphaChar)) { list =>
+      val seq = list.toIndexedSeq
+      val (shuffle, unshuffle) = Util.makeShufflers[Char, Char](seq)
+      
+      asserty(unshuffle(shuffle(seq)) == seq)
+    }
+  }
+  
   test("caseClassToStringMap", InstantTest) {
 //    val person = Person("Arthur", "Dent", 42, 3.14)
 //    

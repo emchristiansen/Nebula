@@ -29,6 +29,23 @@ import reflect._
 ///////////////////////////////////////////////////////////
 
 object Util extends Logging {
+  def makeShufflers[A, B](seq: IndexedSeq[A]): (IndexedSeq[A] => IndexedSeq[A], IndexedSeq[B] => IndexedSeq[B]) = { 
+    val indices = new scala.util.Random().shuffle(
+        0 until seq.size: IndexedSeq[Int])
+    
+    def shuffle(seq: IndexedSeq[A]) = {
+      indices map seq.apply
+    }
+    
+    val invertedIndices = indices.zipWithIndex.sortBy(_._1).map(_._2)
+    
+    def unshuffle(seq: IndexedSeq[B]) = {
+      invertedIndices map seq.apply
+    }
+    
+    (shuffle _, unshuffle _)
+  }
+  
   def sortMap[A, B](map: Map[A, B])(implicit ordering: Ordering[A]): collection.immutable.SortedMap[A, B] = {
     val treeMap = new collection.immutable.TreeMap[A, B]
     map.toList.foldLeft(treeMap) {
