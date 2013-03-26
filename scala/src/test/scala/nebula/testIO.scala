@@ -26,20 +26,20 @@ import reflect._
 class TestIO(
   override val configMap: Map[String, Any]) extends StandardSuite {
 
-  test("bz2", FastTest) {
-    val file = File.createTempFile("testIO_bz2", ".bz2")
+  test("gz", FastTest) {
+    val file = File.createTempFile("testIO_bz2", ".gz")
 
     val text = "hello" * 1000
-    file.bz2WriteString(text)
+    file.compressedWriteString(text)
 
     val compressedText = file.readString
     asserty(compressedText.size < 0.2 * text.size)
 
-    val recoveredText = file.bz2ReadString
+    val recoveredText = file.compressedReadString
     asserty(text == recoveredText)
   }
 
-  test("bz2 on String", FastTest) {
+  test("gz on String", FastTest) {
     forAll(Gen.listOf(Gen.alphaNumChar)) { chars =>
       val string = chars.mkString
 

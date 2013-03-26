@@ -22,6 +22,7 @@ import org.apache.commons.io.IOUtils
 import java.io.OutputStream
 import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
+import nebula.util._
 
 ///////////////////////////////////////////////////////////
 
@@ -33,13 +34,25 @@ import java.io.ByteArrayInputStream
 //  }
 //}
 
-case class BZ2String(bz2: Array[Byte])
+case class CompressedString(bytes: Array[Byte])
 
-trait BZ2StringOps {
-  implicit class AddDecompress(self: BZ2String) {
-    def decompress: String = {     
+trait CompressedStringOps {
+  implicit class AddDecompress(self: CompressedString) {
+    def decompress: String = {
+      //      // Commons Compress doesn't seem to work well.
+      //      val compressedFile = File.createTempFile("decompress", ".gz")
+      //      FileUtils.writeByteArrayToFile(compressedFile, self.bytes)
+      //      nebula.util.IO.runSystemCommand(s"gunzip ${compressedFile}", false)
+      //      val uncompressedFile =
+      //        new File(compressedFile.getPath.reverse.drop(3).reverse)
+      //
+      //      compressedFile.deleteOnExit
+      //      uncompressedFile.deleteOnExit
+      //
+      //      FileUtils.readFileToString(uncompressedFile)
+
       val compressed = {
-        val byteArrayInput = new ByteArrayInputStream(self.bz2)
+        val byteArrayInput = new ByteArrayInputStream(self.bytes)
         new BufferedInputStream(byteArrayInput)
       }
 
@@ -51,7 +64,9 @@ trait BZ2StringOps {
   }
 }
 
-object BZ2String extends BZ2StringOps
+object CompressedString extends CompressedStringOps
+
+////////////////////////////////////////////
 
 /**
  * Holds files that exist and are actual files (not directories).
@@ -89,18 +104,31 @@ trait IO {
     ExistingFile(getClass.getResource(path).getFile)
 
   implicit class AddCompress(self: String) {
-    def compress: BZ2String = {
-      val outputStream = new ByteArrayOutputStream
+    def compress: CompressedString = {
+//      // Commons Compress doesn't work well.
+//      
+//      val uncompressedFile = File.createTempFile("compress", "")
+//      FileUtils.writeStringToFile(uncompressedFile, self)
+//      nebula.util.IO.runSystemCommand(s"gzip ${uncompressedFile}", false)
+//      val compressedFile =
+//        new File(uncompressedFile.getPath + ".gz")
+//
+//      compressedFile.deleteOnExit
+//      uncompressedFile.deleteOnExit
+//
+//      CompressedString(FileUtils.readFileToByteArray(compressedFile))      
       
+      val outputStream = new ByteArrayOutputStream
+
       val compressor =
         new CompressorStreamFactory().createCompressorOutputStream(
-          CompressorStreamFactory.BZIP2,
+          CompressorStreamFactory.GZIP,
           outputStream)
 
       IOUtils.write(self, compressor)
-      compressor.close      
-      
-      BZ2String(outputStream.toByteArray)
+      compressor.close
+
+      CompressedString(outputStream.toByteArray)
     }
   }
 
@@ -122,39 +150,39 @@ trait IO {
     def writeString(string: String): Unit =
       FileUtils.writeStringToFile(file, string)
 
-    def bz2ReadString: String = {
-      asserty(file.toString.endsWith(".bz2"))
+    def compressedReadString: String = {
+      asserty(file.toString.endsWith(".gz"))
 
       val bytes = FileUtils.readFileToByteArray(file)
-      BZ2String(bytes).decompress
-      
-//      val compressed = {
-//        val fis = new FileInputStream(file)
-//        new BufferedInputStream(fis)
-//      }
-//
-//      val uncompressed =
-//        new CompressorStreamFactory().createCompressorInputStream(compressed)
-//
-//      IOUtils.toString(uncompressed)
+      CompressedString(bytes).decompress
+
+      //      val compressed = {
+      //        val fis = new FileInputStream(file)
+      //        new BufferedInputStream(fis)
+      //      }
+      //
+      //      val uncompressed =
+      //        new CompressorStreamFactory().createCompressorInputStream(compressed)
+      //
+      //      IOUtils.toString(uncompressed)
     }
 
-    def bz2WriteString(string: String) {
-      asserty(file.toString.endsWith(".bz2"))
+    def compressedWriteString(string: String) {
+      asserty(file.toString.endsWith(".gz"))
 
-      val BZ2String(bytes) = string.compress
-      
+      val CompressedString(bytes) = string.compress
+
       FileUtils.writeByteArrayToFile(file, bytes)
-      
-//      val outputStream = new FileOutputStream(file)
-//
-//      val compressor =
-//        new CompressorStreamFactory().createCompressorOutputStream(
-//          CompressorStreamFactory.BZIP2,
-//          outputStream)
-//
-//      IOUtils.write(string, compressor)
-//      compressor.close
+
+      //      val outputStream = new FileOutputStream(file)
+      //
+      //      val compressor =
+      //        new CompressorStreamFactory().createCompressorOutputStream(
+      //          CompressorStreamFactory.BZIP2,
+      //          outputStream)
+      //
+      //      IOUtils.write(string, compressor)
+      //      compressor.close
     }
   }
 }

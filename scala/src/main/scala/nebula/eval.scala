@@ -60,9 +60,10 @@ case class ScalaSource[A: TypeName](source: String) {
 object ScalaSource {
   implicit class ScalaSourceOps[A: TypeName](self: ScalaSource[A]) {
     def eval = {
-      val closure = GlobalLock.synchronized {
+//      val closure = GlobalLock.synchronized {
         typeCheck[A](self.source)
-      }
+//      }
+      val closure = typeCheck[A](self.source)
       closure()
     }
   }
@@ -160,11 +161,12 @@ result
    * If the type check passes, returns a closure that can be run to evaluate
    * the expression.
    */
+  object TypeCheckLock
   def typeCheck[A: TypeName](expression: String): () => A = {
     //     This weird wrapping seems to help, no idea why.
-    //    GlobalLock.synchronized {
+        TypeCheckLock.synchronized {
     typeCheckHelper[A](expression)
-    //    }
+        }
   }
 
   def hasType[A: TypeName](expression: String): Boolean =

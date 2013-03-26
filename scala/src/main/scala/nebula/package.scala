@@ -17,8 +17,8 @@ import org.apache.commons.math3
 ///////////////////////////////////////////////////////////
 
 package object nebula extends IO with Near with Eval {
-  object GlobalLock
-
+//  object GlobalLock
+  
   /**
    * IndexedSeq is too useful a type to have such a long name.
    */

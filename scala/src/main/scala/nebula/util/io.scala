@@ -137,11 +137,11 @@ object IO {
     file
   }
 
-  def runSystemCommand(command: String): String = {
-    println("running system command: %s".format(command))
+  def runSystemCommand(command: String, verbose: Boolean = true): String = {
+    if (verbose) println("running system command: %s".format(command))
     try {
       val out = sys.process.Process(command).!!
-      println("successfully ran system command")
+      if (verbose) println("successfully ran system command")
       out
     } catch {
       case e: Exception => throw new Exception("system command failed: %s\nException was %s\n".format(command, e.toString))

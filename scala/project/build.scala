@@ -84,8 +84,8 @@ object SFSPipelineBuild extends Build {
     extraLibraryDependencies ++ 
     scalaSettings ++ 
     extraTestFrameworks ++ 
-    assemblySettings //++
-//    updateOnDependencyChange
+    assemblySettings ++
+    updateOnDependencyChange
 
 // ++ extraAssemblySettings
 
