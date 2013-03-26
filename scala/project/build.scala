@@ -74,6 +74,7 @@ object SFSPipelineBuild extends Build {
       "-language:postfixOps",
       "-language:existentials",
       "-language:higherKinds",
+      "-language:experimental.macros",
       "-Yinline-warnings"
     )
   )
