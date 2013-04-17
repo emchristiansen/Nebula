@@ -41,14 +41,18 @@ object Imports {
 /**
  * Represents the name of a type as a string.
  */
-case class TypeName[A: TypeTag](name: String) {
-  assert(typeTag[A].tpe.toString == name)
+case class TypeName[A](name: String) {
+  //  assert(typeTag[A].tpe.toString == name)
   override def toString = name
 }
 
 object TypeName {
-  implicit def typeName2String(typeName: TypeName[_]): String = typeName.name
+//  implicit def typeName2String(typeName: TypeName[_]): String = typeName.name
 }
+
+//// TODO: Remove this when implicit macro bug fixed:
+//// http://stackoverflow.com/questions/15869106/implicit-macros-not-found-in-scala-2-10-1
+//case class TypeString(name: String)
 
 /**
  * Represents Scala source code with the specified type.
@@ -60,9 +64,9 @@ case class ScalaSource[A: TypeName](source: String) {
 object ScalaSource {
   implicit class ScalaSourceOps[A: TypeName](self: ScalaSource[A]) {
     def eval = {
-//      val closure = GlobalLock.synchronized {
-        typeCheck[A](self.source)
-//      }
+      //      val closure = GlobalLock.synchronized {
+      //        typeCheck[A](self.source)
+      //      }
       val closure = typeCheck[A](self.source)
       closure()
     }
@@ -117,12 +121,17 @@ trait Eval {
    * Convenience function to get the name of a type.
    */
   def typeName[A: TypeName] = implicitly[TypeName[A]]
-
-  implicit def typeTag2TypeName[A: TypeTag]: TypeName[A] =
-    TypeName(typeTag[A].tpe.toString)
-
-  def instanceToTypeName[A: TypeTag](a: A): TypeName[A] =
-    TypeName(typeTag[A].tpe.toString)
+  
+  /**
+   * Any type can get a TypeName.
+   */
+//  implicit def aToTypeName[A]: TypeName[A] = ???
+  
+  //  implicit def typeTag2TypeName[A: TypeTag]: TypeName[A] =
+  //    TypeName(typeTag[A].tpe.toString)
+  //
+  //  def instanceToTypeName[A: TypeTag](a: A): TypeName[A] =
+  //    TypeName(typeTag[A].tpe.toString)
 
   ///////////////////////////////////////////////////////////
 
@@ -164,9 +173,9 @@ result
   object TypeCheckLock
   def typeCheck[A: TypeName](expression: String): () => A = {
     //     This weird wrapping seems to help, no idea why.
-        TypeCheckLock.synchronized {
-    typeCheckHelper[A](expression)
-        }
+    TypeCheckLock.synchronized {
+      typeCheckHelper[A](expression)
+    }
   }
 
   def hasType[A: TypeName](expression: String): Boolean =

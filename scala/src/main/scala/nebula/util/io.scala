@@ -11,7 +11,6 @@ import java.io.ObjectOutputStream
 
 import javax.imageio.ImageIO
 import nebula.eval
-import nebula.typeTag2TypeName
 import nebula._
 
 ///////////////////////////////////////////////////////////
@@ -63,7 +62,7 @@ object AtomicIO {
 ///////////////////////////////////////////////////////////
 
 object IO {
-  def interpretFile[A : Manifest](file: File): A = {
+  def interpretFile[A : TypeName](file: File): A = {
     val source = org.apache.commons.io.FileUtils.readFileToString(file)
     eval[A](source)
   }

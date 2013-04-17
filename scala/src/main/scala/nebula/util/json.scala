@@ -9,7 +9,7 @@ import spray.json.JsValue
 
 import spray.json._
 import scala.util.matching.Regex
-import scala.reflect.runtime.universe._
+//import scala.reflect.runtime.universe._
 
 ///////////////////////////////////////////////////////////
 
@@ -33,13 +33,13 @@ object JSONUtil extends Logging {
 //    }
 
   // Provides a RootJsonFormat for singleton objects.
-  def singletonObject[A: TypeTag](a: A): RootJsonFormat[A] = {
-    val typeName = typeTag[A].tpe.toString
+  def singletonObject[A: TypeName](a: A): RootJsonFormat[A] = {
+    val name = typeName[A].name
     val objectName = {
       // We assume the type name looks like "org.foo.bar.type", and we
       // return "bar".
-      asserty(typeName.endsWith(".type"))
-      typeName.split("""\.""").init.last
+      asserty(name.endsWith(".type"))
+      name.split("""\.""").init.last
     }
     
     val noTypeName = new RootJsonFormat[A] {

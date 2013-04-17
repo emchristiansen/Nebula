@@ -27,10 +27,51 @@ import reflect._
 class TestStaticTypeName(
   override val configMap: Map[String, Any]) extends StandardSuite {
   
-  test("typeName", FastTest) {
+  test("typeName from instance", FastTest) {    
     val x = (List(1, 2), 1.2, ("hi", List(2.2)))
     
-    asserty(StaticTypeName.typeName(x) == 
-      "(List[Int], Double, (String, List[Double]))")
+    val y = null.asInstanceOf[List[Double]]
+    println(StaticTypeName.typeNameFromConcreteInstance(x))
+    
+//    println(StaticTypeName.typeStringNoInstance[List[Float]])
+    
+//    StaticTypeName.printType[List[Char]]
+    
+    println(StaticTypeName.typeNameFromConcrete[List[List[Int]]])
+    
+    import StaticTypeName._
+    
+    println(typeNameFromConcrete[List[String]])
+    
+//    println(typeStringFromConcreteInstanceTODO(List[Int]()))
+//    
+//    val foo = implicitly[List[Int] => TypeString]
+    
+//    implicitly[Int => TypeName[_]]
+    
+//    val foo = implicitly[TypeName[List[Char]]]
+//    println(foo)
+    
+//    implicitly[Int]
+    
+//    implicitly[Foo[Int]]
+    
+//    implicitly[List[String]]
+    
+//    println(typeName2[List[Float]])
+    
+//    def printType[A] = println(StaticTypeName.typeNameNoInstance[A]) 
+//    
+//    printType[List[Float]]
+//    
+//    asserty(StaticTypeName.typeNameFromInstance(x) == 
+//      "(List[Int], Double, (String, List[Double]))")
   }
+  
+//  test("typeName without instance", FastTest) {
+////    println(typeName2[List[Int]])
+//    println(StaticTypeName.typeName(null))
+//    
+////    asserty(typeName2[List[Int]].contains("List[Int]"))
+//  }
 }
