@@ -57,13 +57,28 @@ object DatasetTest extends Tag("nebula.DatasetTest")
 trait ConfigMapFunSuite extends FunSuite {
   val configMap: Map[String, Any]
 
-  def datasetRoot: ExistingFile = {
+  def datasetRoot: ExistingDirectory = {
     require(
       configMap.contains("datasetRoot"),
       "This suite requires a path to external datasets to be passed in the configMap")
 
     val path = configMap("datasetRoot").asInstanceOf[String]
-    ExistingFile(new File(path))
+    ExistingDirectory(path)
+  }
+
+  def logRoot: ExistingDirectory = {
+    if (!configMap.contains("logRoot")) {
+      val tmp = File.createTempFile("temp", "").getParentFile
+      val logRoot = tmp + "nebulaTestLogRoot"
+      logRoot.mkdir
+      ExistingDirectory(logRoot)
+    }
+//    require(
+//      configMap.contains("logRoot"),
+//      "This suite requires a path to external datasets to be passed in the configMap")
+
+    val path = configMap("datasetRoot").asInstanceOf[String]
+    ExistingDirectory(path)
   }
 }
 
@@ -98,8 +113,8 @@ trait TestUtil {
     assert(ImageIO.write(image, "png", file))
   }
 
-  def scale10 = (image: BufferedImage) => ImageUtil.scale(10, image)._2
-  def scale100 = (image: BufferedImage) => ImageUtil.scale(100, image)._2
+  def scale10 = (image: Image) => image.scale(10)._2
+  def scale100 = (image: Image) => image.scale(100)._2
 
   def normalize(matrix: DenseMatrix[Int]): DenseMatrix[Double] = {
     val mean = MathUtil.mean(matrix.data)

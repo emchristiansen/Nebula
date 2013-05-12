@@ -19,8 +19,6 @@ import org.apache.commons.math3.linear.SingularValueDecomposition
 import org.opencv.features2d.KeyPoint
 
 import nebula.graveyard.Point2D
-import nebula.imageProcessing.ImageUtil
-import nebula.imageProcessing.RichImage.bufferedImage
 import nebula._
 import MathUtil._
 import org.apache.commons.math3.linear._
@@ -88,57 +86,6 @@ object Homography {
 }
 
 ///////////////////////////////////////////////////////////
-
-object ImageGeometry {
-  implicit class ImageGeometryOps(image: BufferedImage) {
-    // |theta| is in radians.
-    def rotateAboutPoint(
-      theta: Double,
-      keyPoint: KeyPoint): BufferedImage = {
-      if (theta == 0) image
-      else {
-        val rotateOp = new AffineTransformOp(
-          AffineTransform.getRotateInstance(theta, keyPoint.pt.x, keyPoint.pt.y),
-          AffineTransformOp.TYPE_BICUBIC)
-        val rotated = rotateOp.filter(image, null)
-
-        // Just make sure the point really did stay the same.
-        val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-        val pointAfter = rotated.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-        asserty(pointBefore.isDefined)
-        asserty(pointAfter.isDefined)
-        //        asserty(pointBefore.get.isSimilar(5, pointAfter.get))
-
-        rotated
-      }
-    }
-
-    def scaleAboutPoint(
-      scaleFactor: Double,
-      keyPoint: KeyPoint): BufferedImage = {
-      if (scaleFactor == 1) image
-      else {
-        val ((scaleFactorX, scaleFactorY), scaledImage) = ImageUtil.scale(scaleFactor, image)
-
-        val translateOp = new AffineTransformOp(
-          AffineTransform.getTranslateInstance(
-            keyPoint.pt.x - scaleFactorX * keyPoint.pt.x,
-            keyPoint.pt.y - scaleFactorY * keyPoint.pt.y),
-          AffineTransformOp.TYPE_BICUBIC)
-        val scaled = translateOp.filter(scaledImage, null)
-
-        // Just make sure the point really did stay the same.
-        val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-        val pointAfter = scaled.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-        asserty(pointBefore.isDefined)
-        asserty(pointAfter.isDefined)
-        if (scaleFactor >= 1) asserty(pointBefore.get.isSimilar(20, pointAfter.get))
-
-        scaled
-      }
-    }
-  }
-}
 
 case class ScaleAndRotation(scale: Double, rotation: Double) {
   asserty(scale > 0)

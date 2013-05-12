@@ -12,10 +12,7 @@ import org.scalacheck.Properties
 
 import javax.imageio.ImageIO
 
-import nebula.imageProcessing.ImageUtil._
-
 import nebula.imageProcessing._
-import nebula.imageProcessing.RichImage._
 
 import org.scalatest.FunSuite
 import org.opencv.features2d._
@@ -63,7 +60,8 @@ import TestUtil._
 @RunWith(classOf[JUnitRunner])
 class TestRichImage extends FunSuite {
   val url = getClass.getResource("/goldfish_girl.png")
-  val image = ImageIO.read(new File(url.getFile))
+  val image: Image = ImageIO.read(new File(url.getFile))
+  val center = KeyPointUtil(image.getWidth.toFloat / 2, image.getHeight.toFloat / 2)
 
   test("spot check with a small image", InstantTest) {
     val matrix = DenseMatrix.tabulate(3, 3)((y, x) => 10 * (y * 3 + x))
@@ -89,15 +87,15 @@ class TestRichImage extends FunSuite {
     "it with an AffineOp and linear interpolation", InstantTest) {
     val resizeFactor = 2
 
-    val goldenImage = {
+    val goldenImage: Image = {
       val resizeOp = new AffineTransformOp(
         AffineTransform.getScaleInstance(resizeFactor, resizeFactor),
         AffineTransformOp.TYPE_BILINEAR)
       resizeOp.filter(image, null)
     }
 
-    val estimatedImage = {
-      val resized = new BufferedImage(
+    val estimatedImage: Image = {
+      val resized: Image = new BufferedImage(
         resizeFactor * image.getWidth,
         resizeFactor * image.getHeight,
         image.getType)
@@ -119,6 +117,32 @@ class TestRichImage extends FunSuite {
     //    dumpImage("getSubPixelDifference_shouldBeZeros", difference.toScaledImage)
 
     //    asserty(goldenImage.toMatrix == estimatedImage.toMatrix)
+  }
+
+  ignore("rotateAboutPoint", FastTest, InteractiveTest) {
+    for (theta <- 0.0 until 2 * math.Pi by math.Pi / 16) {
+      val rotated = image.rotateAboutPoint(Radians(theta), center)
+      val patch = rotated.getSubimageCenteredAtPoint(
+        center.pt.x,
+        center.pt.y,
+        20,
+        20)
+      TestUtil.dumpImage(f"rotated_${theta}%.2f.png", TestUtil.scale10(patch))
+    }
+  }
+
+  ignore("scaleAboutPoint", FastTest, InteractiveTest) {
+    val exponents = 0.2 until 3.0 by 0.05
+    val scaleFactors = exponents.map(e => math.pow(2, e))
+    for (scaleFactor <- scaleFactors) {
+      val scaled = image.scaleAboutPoint(scaleFactor, center)
+      val patch = scaled.getSubimageCenteredAtPoint(
+        center.pt.x,
+        center.pt.y,
+        20,
+        20)
+      TestUtil.dumpImage(f"scaled_${scaleFactor}%.2f.png", TestUtil.scale10(patch))
+    }
   }
 }
 

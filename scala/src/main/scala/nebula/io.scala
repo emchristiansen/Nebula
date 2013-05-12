@@ -85,6 +85,7 @@ object ExistingFile {
 /**
  * Holds directories that exist and are actual directories (not files).
  */
+// TODO: Add method "get" to these wrapper classes.
 case class ExistingDirectory(directory: File) {
   require(directory.isDirectory, s"${directory} is not an existing directory.")
 }

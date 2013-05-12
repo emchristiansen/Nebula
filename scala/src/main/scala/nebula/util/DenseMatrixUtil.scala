@@ -20,7 +20,6 @@ import nebula._
 
 import breeze.linalg._
 
-import RichImage._
 import MathUtil._
 import nebula.util._
 
@@ -158,7 +157,7 @@ object DenseMatrixUtil {
     //      image
     //    }
 
-    def toImage: BufferedImage = {
+    def toImage: Image = {
       requirey((self mapValues (_.toDouble)).max <= 255)
       requirey((self mapValues (_.toDouble)).min >= 0)
       val image = new BufferedImage(self.cols, self.rows, TYPE_INT_ARGB)
@@ -184,7 +183,7 @@ object DenseMatrixUtil {
     def toScaledImage: BufferedImage = self.map(_.toDouble).toScaledImage
   }
 
-  implicit class BufferedImageToDenseMatrix(self: BufferedImage) {
+  implicit class ImageToDenseMatrix(self: Image) {
     def toMatrix: DenseMatrix[Int] = {
       val matrix = new DenseMatrix[Int](self.getHeight, self.getWidth)
       for (y <- 0 until self.getHeight; x <- 0 until self.getWidth) {
