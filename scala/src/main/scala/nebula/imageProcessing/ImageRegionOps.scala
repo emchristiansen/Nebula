@@ -1,7 +1,5 @@
 package nebula.imageProcessing
 
-import java.awt.image.BufferedImage
-
 import nebula._
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
@@ -126,7 +124,7 @@ trait ImageRegionOps {
       x: Double,
       y: Double,
       xRadius: Int,
-      yRadius: Int): BufferedImage =
+      yRadius: Int): Image =
       getSubimage(
         x - xRadius,
         y - yRadius,
@@ -201,6 +199,26 @@ trait ImageRegionOps {
       val clipped = maskedImg.getSubimage(overlap.x, overlap.y, overlap.width, overlap.height)
 
       clipped
+    }
+
+    def takePatches(
+      patchWidth: Int,
+      numPatchesOption: Option[Int]): Stream[Image] = {
+      val patchClosures = for (
+        row <- 0 to image.getHeight - patchWidth;
+        col <- 0 to image.getWidth - patchWidth
+      ) yield { () =>
+        image.get.getSubimage(col, row, patchWidth, patchWidth): Image
+      }
+
+      numPatchesOption match {
+        case None => patchClosures.toStream map (_.apply)
+        case Some(numPatches) =>
+          val stride = patchClosures.size / numPatches
+          val strided = patchClosures.grouped(stride).map(_.head).toStream.take(numPatches)
+          asserty(strided.size == numPatches)
+          strided.map(_.apply)
+      }
     }
   }
 }

@@ -59,7 +59,7 @@ trait CompressedStringOps {
       val uncompressed =
         new CompressorStreamFactory().createCompressorInputStream(compressed)
 
-      IOUtils.toString(uncompressed)      
+      IOUtils.toString(uncompressed)
     }
   }
 }
@@ -78,8 +78,12 @@ case class ExistingFile(file: File) {
 object ExistingFile {
   def apply(filename: String): ExistingFile = ExistingFile(new File(filename))
 
+  implicit class ExistingFile2Box(self: ExistingFile) extends Box[File] {
+    override def get = self.file
+  }
+
   implicit def existingFile2File(self: ExistingFile) =
-    self.file
+    self.get
 }
 
 /**
@@ -94,8 +98,12 @@ object ExistingDirectory {
   def apply(filename: String): ExistingDirectory =
     ExistingDirectory(new File(filename))
 
+  implicit class ExistingDirectory2Box(self: ExistingDirectory) extends Box[File] {
+    override def get = self.directory
+  }    
+    
   implicit def existingDirectory2File(self: ExistingDirectory) =
-    self.directory
+    self.get
 }
 
 trait IO {
@@ -106,19 +114,19 @@ trait IO {
 
   implicit class AddCompress(self: String) {
     def compress: CompressedString = {
-//      // Commons Compress doesn't work well.
-//      
-//      val uncompressedFile = File.createTempFile("compress", "")
-//      FileUtils.writeStringToFile(uncompressedFile, self)
-//      nebula.util.IO.runSystemCommand(s"gzip ${uncompressedFile}", false)
-//      val compressedFile =
-//        new File(uncompressedFile.getPath + ".gz")
-//
-//      compressedFile.deleteOnExit
-//      uncompressedFile.deleteOnExit
-//
-//      CompressedString(FileUtils.readFileToByteArray(compressedFile))      
-      
+      //      // Commons Compress doesn't work well.
+      //      
+      //      val uncompressedFile = File.createTempFile("compress", "")
+      //      FileUtils.writeStringToFile(uncompressedFile, self)
+      //      nebula.util.IO.runSystemCommand(s"gzip ${uncompressedFile}", false)
+      //      val compressedFile =
+      //        new File(uncompressedFile.getPath + ".gz")
+      //
+      //      compressedFile.deleteOnExit
+      //      uncompressedFile.deleteOnExit
+      //
+      //      CompressedString(FileUtils.readFileToByteArray(compressedFile))      
+
       val outputStream = new ByteArrayOutputStream
 
       val compressor =

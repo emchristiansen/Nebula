@@ -12,22 +12,22 @@ object MathUtil {
     MathUtil.log2(size) == MathUtil.log2(size).round
 
   def isZeroOrPowerOf2(size: Int): Boolean =
-    size == 0 || isPowerOf2(size)  
-  
+    size == 0 || isPowerOf2(size)
+
   def doubleToComplex(double: Double): Complex = Complex(double, 0)
   def complexToDouble(complex: Complex): Double = {
     assertNear(complex.imag, 0)
     complex.real
-  }  
-  
+  }
+
   def dotProduct(left: DenseMatrix[Int], right: DenseMatrix[Int]): Int = {
     left.data.zip(right.data) map {
       case (l, r) => l * r
     }
   } sum
-  
+
   def log2(x: Double) = math.log(x) / math.log(2)
-  
+
   /**
    * The input must be a power of two.
    */
@@ -36,21 +36,21 @@ object MathUtil {
     requirey(approximate == approximate.round)
     approximate.round.toInt
   }
-  
+
   // TODO: Clean this crap up with typeclasses.
-  def l2Norm[A : Ring](values: Array[A]): Double = new DenseVector(values).norm(2.0)
-  
-  def mean[A : Numeric](values: Seq[A]): Double = stats.mean(values: _*)
-  
+  def l2Norm[A: Ring](values: Array[A]): Double = new DenseVector(values).norm(2.0)
+
+  def mean[A: Numeric](values: Seq[A]): Double = stats.mean(values: _*)
+
   def normalizeL2[A <% Double](values: Seq[A]): Seq[Double] = {
     val doubles = values map (_.toDouble)
-    
+
     val m = mean(doubles)
     val centered = doubles map (_ - m)
     val norm = l2Norm(centered.toArray)
     centered map (_ / norm)
   }
-  
+
   // The correct implementation of a % b.
   implicit class AddMod(self: Double) {
     def mod(that: Double) =
@@ -88,7 +88,7 @@ object MathUtil {
   }
 
   implicit class AddToVector(self: DenseMatrix[Double]) {
-    def toVector: DenseVector[Double] = { 
+    def toVector: DenseVector[Double] = {
       DenseVector(self.data)
     }
   }
@@ -143,4 +143,11 @@ object MathUtil {
       dot(left, right).toDouble,
     base,
     kernel)
+
+  def normalize(matrix: DenseMatrix[Int]): DenseMatrix[Double] = {
+    val mean = MathUtil.mean(matrix.data)
+    val centered = matrix mapValues (_ - mean)
+    val norm = MathUtil.l2Norm(centered.data)
+    centered mapValues (_ / norm)
+  }
 }

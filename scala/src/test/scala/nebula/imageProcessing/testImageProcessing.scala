@@ -54,13 +54,35 @@ import org.opencv.features2d.{ DMatch, KeyPoint }
 import DenseMatrixUtil._
 
 import TestUtil._
+import nebula._
+import nebula.util._
+import org.scalatest._
+import org.scalatest.prop._
+import javax.imageio.ImageIO
+import java.io.File
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+import scala.util.Random
+import breeze.linalg._
+
+import org.scalacheck._
+import breeze.math._
+
+import org.apache.commons.math3.transform.DftNormalization
+import org.apache.commons.math3.transform.FastFourierTransformer
+import org.apache.commons.math3.transform.TransformType
+import DenseMatrixUtil._
+import reflect._
 
 ///////////////////////////////////////////////////////////
 
 @RunWith(classOf[JUnitRunner])
-class TestRichImage extends FunSuite {
-  val url = getClass.getResource("/goldfish_girl.png")
-  val image: Image = ImageIO.read(new File(url.getFile))
+@WrapWith(classOf[ConfigMapWrapperSuite])
+class TestImageProcessing(
+  override val configMap: Map[String, Any]) extends StandardSuite {
+  override val name = "TestImageProcessing"
+  
+  val image: Image = ImageIO.read(getResource("/goldfish_girl.png"))
   val center = KeyPointUtil(image.getWidth.toFloat / 2, image.getHeight.toFloat / 2)
 
   test("spot check with a small image", InstantTest) {
@@ -127,7 +149,7 @@ class TestRichImage extends FunSuite {
         center.pt.y,
         20,
         20)
-      TestUtil.dumpImage(f"rotated_${theta}%.2f.png", TestUtil.scale10(patch))
+      patch.scale10.dumpImage(f"rotated_${theta}%.2f")
     }
   }
 
@@ -141,7 +163,14 @@ class TestRichImage extends FunSuite {
         center.pt.y,
         20,
         20)
-      TestUtil.dumpImage(f"scaled_${scaleFactor}%.2f.png", TestUtil.scale10(patch))
+      patch.scale10.dumpImage(f"scaled_${scaleFactor}%.2f")
+    }
+  }
+  
+  test("takePatches", FastTest, InteractiveTest) {
+    val patches = image.takePatches(64, Some(64))
+    patches.zipWithIndex foreach {
+      case (patch, index) => patch.dumpImage(s"patch_$index")
     }
   }
 }

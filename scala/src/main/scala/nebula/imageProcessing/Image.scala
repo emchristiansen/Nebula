@@ -34,6 +34,7 @@ import java.awt.image.Kernel
 
 import org.imgscalr.Scalr
 import org.opencv.features2d.KeyPoint
+import javax.imageio.ImageIO
 
 ///////////////////////////////////////////////////////
 
@@ -44,27 +45,22 @@ case class Image(image: BufferedImage) {
   asserty(image != null)
 }
 
-/**
- * A quantity measured in radians.
- */
-// TODO: Move
-case class Radians(radians: Double)
-
-object Radians {
-  implicit def radiansToDouble(radians: Radians) = radians.radians
-}
-
-/**
- * A container with one element.
- */
-// TODO: Move
-trait Box[A] {
-  def get: A
-}
-
 object Image extends ImageRegionOps with ImageFilterOps with ImageGeometryOps {
   implicit class Image2Box(image: Image) extends Box[BufferedImage] {
     override def get = image.image
+  }
+  
+  def read(file: ExistingFile): Image = ImageIO.read(file)
+  
+  implicit class CanWrite(image: Image) {
+    def write(file: File, extensionOption: Option[String]) {      
+      val extension = extensionOption match {
+        case None => file.getPath.split("""\.""").last
+        case Some(extension) => extension
+      }
+      
+      asserty(ImageIO.write(image, extension, file))
+    }
   }
 
   implicit def Image2BufferedImage(image: Image): BufferedImage =
