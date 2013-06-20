@@ -35,7 +35,7 @@ package object nebula extends IO with Near with Eval {
   type BreezeComplex = breeze.math.Complex
   type SpireComplex[A] = spire.math.Complex[A]
 
-  type SpireOrder[A] = spire.math.Order[A]
+  type SpireOrder[A] = spire.algebra.Order[A]
   type SpireNumeric[A] = spire.math.Numeric[A]
 
   /**

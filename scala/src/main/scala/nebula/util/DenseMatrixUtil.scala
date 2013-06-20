@@ -27,6 +27,10 @@ import reflect._
 import scalaz._
 import Scalaz._
 
+import spire.algebra._   
+import spire.math._      
+import spire.implicits._ 
+
 ///////////////////////////////////////////////////////////
 
 object DenseMatrixUtil {

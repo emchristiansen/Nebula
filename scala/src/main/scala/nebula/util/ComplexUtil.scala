@@ -31,9 +31,9 @@ object ComplexUtil {
 
   //////////////////////////
 
-  def realToSpire[A: spire.math.Numeric: Fractional: Trig](
+  def realToSpire[A: Fractional: Trig](
     self: A): SpireComplex[A] =
-    new SpireComplex(self, implicitly[Numeric[A]].zero)
+    new SpireComplex(self, implicitly[Fractional[A]].zero)
 
   def realToApache[A <% Double: spire.math.Numeric: Fractional: Trig](
     self: A): ApacheComplex =
