@@ -71,39 +71,29 @@ object CompressedString extends CompressedStringOps
 /**
  * Holds files that exist and are actual files (not directories).
  */
-case class ExistingFile(file: File) {
+case class ExistingFile(file: File) extends Box[File] {
   require(file.isFile, s"${file} is not an existing file.")
+  
+  override def get = file
 }
 
 object ExistingFile {
   def apply(filename: String): ExistingFile = ExistingFile(new File(filename))
-
-  implicit class ExistingFile2Box(self: ExistingFile) extends Box[File] {
-    override def get = self.file
-  }
-
-  implicit def existingFile2File(self: ExistingFile) =
-    self.get
 }
 
 /**
  * Holds directories that exist and are actual directories (not files).
  */
 // TODO: Add method "get" to these wrapper classes.
-case class ExistingDirectory(directory: File) {
+case class ExistingDirectory(directory: File) extends Box[File] {
   require(directory.isDirectory, s"${directory} is not an existing directory.")
+  
+  override def get = directory
 }
 
 object ExistingDirectory {
   def apply(filename: String): ExistingDirectory =
     ExistingDirectory(new File(filename))
-
-  implicit class ExistingDirectory2Box(self: ExistingDirectory) extends Box[File] {
-    override def get = self.directory
-  }    
-    
-  implicit def existingDirectory2File(self: ExistingDirectory) =
-    self.get
 }
 
 trait IO {

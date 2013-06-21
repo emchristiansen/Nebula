@@ -47,7 +47,7 @@ trait ImageGeometryOps {
         val rotateOp = new AffineTransformOp(
           AffineTransform.getRotateInstance(theta, keyPoint.pt.x, keyPoint.pt.y),
           AffineTransformOp.TYPE_BICUBIC)
-        val rotated: Image = rotateOp.filter(image, null)
+        val rotated = Image(rotateOp.filter(image, null))
 
         // Just make sure the point really did stay the same.
         val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
@@ -73,7 +73,7 @@ trait ImageGeometryOps {
             keyPoint.pt.x - scaleFactorX * keyPoint.pt.x,
             keyPoint.pt.y - scaleFactorY * keyPoint.pt.y),
           AffineTransformOp.TYPE_BICUBIC)
-        val scaled: Image = translateOp.filter(scaledImage, null)
+        val scaled = Image(translateOp.filter(scaledImage, null))
 
         // Just make sure the point really did stay the same.
         val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
@@ -91,12 +91,12 @@ trait ImageGeometryOps {
       requirey(width > 0)
       requirey(height > 0)
 
-      Scalr.resize(
+      Image(Scalr.resize(
         image,
         Scalr.Method.ULTRA_QUALITY,
         Scalr.Mode.FIT_EXACT,
         width,
-        height)
+        height))
     }
 
     def scale(

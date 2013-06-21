@@ -171,7 +171,7 @@ object DenseMatrixUtil {
         val pixel = Pixel(255, value, value, value)
         image.setRGB(x, y, pixel.argb)
       }
-      image
+      Image(image)
     }
   }
 

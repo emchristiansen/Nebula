@@ -117,7 +117,7 @@ trait ImageRegionOps {
       val alignedPatch = op.filter(boundingPatch, null)
 
       // Extract the aligned patch.
-      alignedPatch.getSubimage(0, 0, width, height)
+      Image(alignedPatch.getSubimage(0, 0, width, height))
     }
 
     def getSubimageCenteredAtPoint(
@@ -198,7 +198,7 @@ trait ImageRegionOps {
       val overlap = crop_rect.intersection(new Rectangle(image.getWidth(), image.getHeight()))
       val clipped = maskedImg.getSubimage(overlap.x, overlap.y, overlap.width, overlap.height)
 
-      clipped
+      Image(clipped)
     }
 
     def takePatches(
@@ -208,7 +208,7 @@ trait ImageRegionOps {
         row <- 0 to image.getHeight - patchWidth;
         col <- 0 to image.getWidth - patchWidth
       ) yield { () =>
-        image.get.getSubimage(col, row, patchWidth, patchWidth): Image
+        Image(image.get.getSubimage(col, row, patchWidth, patchWidth))
       }
 
       numPatchesOption match {

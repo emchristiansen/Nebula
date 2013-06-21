@@ -82,7 +82,7 @@ class TestImageProcessing(
   override val configMap: Map[String, Any]) extends StandardSuite {
   override val name = "TestImageProcessing"
   
-  val image: Image = ImageIO.read(getResource("/goldfish_girl.png"))
+  val image = Image(ImageIO.read(getResource("/goldfish_girl.png")))
   val center = KeyPointUtil(image.getWidth.toFloat / 2, image.getHeight.toFloat / 2)
 
   test("spot check with a small image", InstantTest) {
@@ -113,14 +113,14 @@ class TestImageProcessing(
       val resizeOp = new AffineTransformOp(
         AffineTransform.getScaleInstance(resizeFactor, resizeFactor),
         AffineTransformOp.TYPE_BILINEAR)
-      resizeOp.filter(image, null)
+      Image(resizeOp.filter(image, null))
     }
 
     val estimatedImage: Image = {
-      val resized: Image = new BufferedImage(
+      val resized = Image(new BufferedImage(
         resizeFactor * image.getWidth,
         resizeFactor * image.getHeight,
-        image.getType)
+        image.getType))
       for (y <- 0 until resized.getHeight; x <- 0 until resized.getWidth) {
         val pixel = image.getSubPixel(
           x / resizeFactor.toDouble,

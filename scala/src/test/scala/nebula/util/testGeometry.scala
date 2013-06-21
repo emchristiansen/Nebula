@@ -28,7 +28,7 @@ import scala.util.Random
 
 @RunWith(classOf[JUnitRunner])
 class TestGeometry extends FunSuite {
-  val image: Image = ImageIO.read(getResource("/iSpy.png"))
+  val image = Image(ImageIO.read(getResource("/iSpy.png")))
 
 //  val genKeyPoint = Generators.genKeyPoint(image.getWidth, image.getHeight, 100)
 

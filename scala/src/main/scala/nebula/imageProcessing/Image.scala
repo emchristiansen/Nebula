@@ -21,7 +21,6 @@ import org.apache.commons.math3.linear.RealVector
 import org.apache.commons.math3.linear.SingularValueDecomposition
 import org.opencv.features2d.KeyPoint
 
-import nebula.graveyard.Point2D
 import nebula._
 import nebula.util.MathUtil._
 import org.apache.commons.math3.linear._
@@ -41,16 +40,14 @@ import javax.imageio.ImageIO
 /**
  * An image which is not null.
  */
-case class Image(image: BufferedImage) {
+case class Image(image: BufferedImage) extends Box[BufferedImage] {
   asserty(image != null)
+  
+  override def get = image
 }
 
-object Image extends ImageRegionOps with ImageFilterOps with ImageGeometryOps {
-  implicit class Image2Box(image: Image) extends Box[BufferedImage] {
-    override def get = image.image
-  }
-  
-  def read(file: ExistingFile): Image = ImageIO.read(file)
+object Image extends ImageRegionOps with ImageFilterOps with ImageGeometryOps { 
+  def read(file: ExistingFile) = Image(ImageIO.read(file))
   
   implicit class CanWrite(image: Image) {
     def write(file: File, extensionOption: Option[String]) {      
@@ -63,9 +60,6 @@ object Image extends ImageRegionOps with ImageFilterOps with ImageGeometryOps {
     }
   }
 
-  implicit def Image2BufferedImage(image: Image): BufferedImage =
-    image.get
-
-  implicit def bufferedImage2Image(image: BufferedImage): Image =
-    Image(image)
+//  implicit def bufferedImage2Image(image: BufferedImage): Image =
+//    Image(image)
 }

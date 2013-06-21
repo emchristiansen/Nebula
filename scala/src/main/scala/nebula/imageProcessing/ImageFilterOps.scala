@@ -49,7 +49,7 @@ trait ImageFilterOps {
       }
       val op = new ConvolveOp(kernel, ConvolveOp.EDGE_ZERO_FILL, null)
 
-      op.filter(image, null)
+      Image(op.filter(image, null))
     }
 
     def transparentToGreen: Image = {
@@ -72,7 +72,7 @@ trait ImageFilterOps {
         val pixel = Pixel.power(Pixel.getPixel(in, x, y), pwr)
         out.setRGB(x, y, pixel.argb)
       }
-      out
+      Image(out)
     }
 
     /* A common value according to http://en.wikipedia.org/wiki/Gamma_compression */
