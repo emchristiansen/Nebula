@@ -61,7 +61,7 @@ object DenseMatrixUtil {
 
   //  def matToMatrixComplex(
   //    mat: Mat): Option[DenseMatrix[SpireComplex[Double]]] = {
-  //    requirey(mat.cols % 2 == 0)
+  //    require(mat.cols % 2 == 0)
   //
   //    val doubleMatrixOption = matToMatrixDouble(mat)
   //    for (doubleMatrix <- doubleMatrixOption) yield {
@@ -75,7 +75,7 @@ object DenseMatrixUtil {
 
   def matToMatrixComplex(
     mat: Mat): Option[DenseMatrix[SpireComplex[Double]]] = {
-    requirey(mat.channels == 2)
+    require(mat.channels == 2)
 
     val doubleMatrixOption = matToMatrixDouble(mat)
     for (doubleMatrix <- doubleMatrixOption) yield {
@@ -113,7 +113,7 @@ object DenseMatrixUtil {
     def toMatrix: DenseMatrix[A] = {
       val rows = seqSeq.size
       val cols = seqSeq.head.size
-      for (row <- seqSeq) asserty(row.size == cols)
+      for (row <- seqSeq) assert(row.size == cols)
 
       val matrix = new DenseMatrix[A](rows, cols)
       for (i <- 0 until rows; j <- 0 until cols) {
@@ -162,8 +162,8 @@ object DenseMatrixUtil {
     //    }
 
     def toImage: Image = {
-      requirey((self mapValues (_.toDouble)).max <= 255)
-      requirey((self mapValues (_.toDouble)).min >= 0)
+      require((self mapValues (_.toDouble)).max <= 255)
+      require((self mapValues (_.toDouble)).min >= 0)
       val image = new BufferedImage(self.cols, self.rows, TYPE_INT_ARGB)
       for (y <- 0 until self.rows; x <- 0 until self.cols) {
         val value = self(y, x).toDouble.round.toInt

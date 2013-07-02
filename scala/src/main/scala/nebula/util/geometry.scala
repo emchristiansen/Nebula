@@ -27,11 +27,11 @@ import org.apache.commons.math3.linear._
 
 // TODO: Use Breeze vectors throughout entire file.
 case class Homography(matrix: RealMatrix) {
-  requirey(matrix.getRowDimension == 3)
-  requirey(matrix.getColumnDimension == 3)
+  require(matrix.getRowDimension == 3)
+  require(matrix.getColumnDimension == 3)
 
   def transform(in: RealVector): RealVector = {
-    requirey(in.getDimension == 2)
+    require(in.getDimension == 2)
     val inHomogeneous = Geometry.homogenize(in)
     val outHomogeneous = matrix.operate(inHomogeneous)
     Geometry.dehomogenize(outHomogeneous)
@@ -88,9 +88,9 @@ object Homography {
 ///////////////////////////////////////////////////////////
 
 case class ScaleAndRotation(scale: Double, rotation: Double) {
-  asserty(scale > 0)
-  asserty(rotation >= 0)
-  asserty(rotation < 2 * math.Pi)
+  assert(scale > 0)
+  assert(rotation >= 0)
+  assert(rotation < 2 * math.Pi)
 }
 
 object Geometry {
@@ -126,7 +126,7 @@ object Geometry {
     leftKeyPoints: Seq[KeyPoint],
     rightKeyPoints: Seq[KeyPoint]): Homography = {
     def validate(keyPoints: Seq[KeyPoint]) {
-      requirey(keyPoints.size == 4)
+      require(keyPoints.size == 4)
     }
     validate(leftKeyPoints)
     validate(rightKeyPoints)
@@ -148,8 +148,8 @@ object Geometry {
         wp * x, wp * y, wp * w, 0, 0, 0, -xp * x, -xp * y, -xp * w).grouped(9).toArray
 
       val matrix = new Array2DRowRealMatrix(data)
-      asserty(matrix.getRowDimension == 2)
-      asserty(matrix.getColumnDimension == 9)
+      assert(matrix.getRowDimension == 2)
+      assert(matrix.getColumnDimension == 9)
       matrix
     }
 
@@ -163,8 +163,8 @@ object Geometry {
     }
 
     val constraint = constraints.reduce(concatenateVertical)
-    asserty(constraint.getRowDimension == 8)
-    asserty(constraint.getColumnDimension == 9)
+    assert(constraint.getRowDimension == 8)
+    assert(constraint.getColumnDimension == 9)
 
     val qr = new QRDecomposition(constraint.transpose)
     val q = qr.getQ
@@ -192,8 +192,8 @@ object Geometry {
     //          0, 0, 0, -x * wp, -y * wp, -w * wp, x * yp, y * yp,
     //          x * wp, y * wp, w * wp, 0, 0, 0, -x * xp, -y * xp).grouped(8).toArray
     //        val matrix = new Array2DRowRealMatrix(data)
-    //        asserty(matrix.getRowDimension == 2)
-    //        asserty(matrix.getColumnDimension == 8)
+    //        assert(matrix.getRowDimension == 2)
+    //        assert(matrix.getColumnDimension == 8)
     //        matrix
     //      }
     //
@@ -202,8 +202,8 @@ object Geometry {
     //          -w * yp,
     //          w * xp).grouped(1).toArray
     //        val matrix = new Array2DRowRealMatrix(data)
-    //        asserty(matrix.getRowDimension == 2)
-    //        asserty(matrix.getColumnDimension == 1)
+    //        assert(matrix.getRowDimension == 2)
+    //        assert(matrix.getColumnDimension == 1)
     //        matrix
     //      }
     //
@@ -220,12 +220,12 @@ object Geometry {
     //    }
     //
     //    val leftConstraint = constraintPairs.map(_._1).reduce(concatenateVertical)
-    //    asserty(leftConstraint.getRowDimension == 8)
-    //    asserty(leftConstraint.getColumnDimension == 8)
+    //    assert(leftConstraint.getRowDimension == 8)
+    //    assert(leftConstraint.getColumnDimension == 8)
     //
     //    val rightConstraint = constraintPairs.map(_._2).reduce(concatenateVertical)
-    //    asserty(rightConstraint.getRowDimension == 8)
-    //    asserty(rightConstraint.getColumnDimension == 1)
+    //    assert(rightConstraint.getRowDimension == 8)
+    //    assert(rightConstraint.getColumnDimension == 1)
     //
     //    val solver = new SingularValueDecomposition(leftConstraint).getSolver
     //    val hStacked = solver.solve(rightConstraint)
@@ -255,11 +255,11 @@ object Geometry {
     left: Seq[KeyPoint],
     right: Seq[KeyPoint]): Homography = {
     def validate(keyPoints: Seq[KeyPoint]) = {
-      asserty(keyPoints.size == 2)
+      assert(keyPoints.size == 2)
       keyPoints foreach { keyPoint =>
-        asserty(keyPoint.size > 0)
-        asserty(keyPoint.angle >= 0)
-        asserty(keyPoint.angle < 2 * math.Pi)
+        assert(keyPoint.size > 0)
+        assert(keyPoint.angle >= 0)
+        assert(keyPoint.angle < 2 * math.Pi)
       }
     }
     validate(left)
@@ -280,14 +280,14 @@ object Geometry {
 
   def dehomogenize(homogeneous: RealVector): RealVector = {
     val homogeneousElement = homogeneous.getEntry(homogeneous.getDimension - 1)
-    requirey(homogeneousElement != 0)
+    require(homogeneousElement != 0)
     val normalized = homogeneous.mapMultiply(1.0 / homogeneousElement)
     normalized.getSubVector(0, homogeneous.getDimension - 1)
   }
 
   def fitAffine(source: List[Point2D], target: List[Point2D]): AffineTransform = {
-    asserty(source.size == target.size)
-    asserty(source.size >= 3)
+    assert(source.size == target.size)
+    assert(source.size >= 3)
 
     val lhs = {
       val data = target.map(_.toList).transpose.map(_.toArray).toArray
@@ -302,8 +302,8 @@ object Geometry {
     val solver = new SingularValueDecomposition(rhs).getSolver
     val transformation = solver.solve(lhs).transpose
 
-    asserty(transformation.getRowDimension == 2)
-    asserty(transformation.getColumnDimension == 3)
+    assert(transformation.getRowDimension == 2)
+    assert(transformation.getColumnDimension == 3)
 
     new AffineTransform(transformation.getData.transpose.flatten)
   }
@@ -314,7 +314,7 @@ object Geometry {
     // "Least-Squares Estimation of Transformation Parameters Between To Point Patterns" by Umeyama.
     // Returns 3x3 homogeneous transformation matrix.
 
-    asserty(xsList.size == ysList.size && xsList.size >= 2)
+    assert(xsList.size == ysList.size && xsList.size >= 2)
 
     def vectorize(v: Tuple2[Double, Double]): RealVector = {
       val (v1, v2) = v

@@ -16,7 +16,7 @@ import nebula.util._
  * Represents a small positive number.
  */
 case class Epsilon(value: Double) {
-  requirey(value > 0)
+  require(value > 0)
 }
 
 object Epsilon {
@@ -50,13 +50,13 @@ trait Near extends IsNearMethods {
    * Checks the ratio of two positive numbers is close to 1.
    */
   def assertRelativelyNear(maxRatio: Double)(left: Double, right: Double) {
-    requirey(maxRatio >= 1)
-    requirey(left > 0)
-    requirey(right > 0)
+    require(maxRatio >= 1)
+    require(left > 0)
+    require(right > 0)
 
-    //    asserty(left / right <= maxRatio, s"${left} / ${right} = ${left / right} > ${maxRatio}")
-    //    asserty(right / left <= maxRatio, s"${right} / ${left} = ${right / left} > ${maxRatio}")
-    asserty(left / right <= maxRatio)
-    asserty(right / left <= maxRatio)
+    //    assert(left / right <= maxRatio, s"${left} / ${right} = ${left / right} > ${maxRatio}")
+    //    assert(right / left <= maxRatio, s"${right} / ${left} = ${right / left} > ${maxRatio}")
+    assert(left / right <= maxRatio)
+    assert(right / left <= maxRatio)
   }
 }

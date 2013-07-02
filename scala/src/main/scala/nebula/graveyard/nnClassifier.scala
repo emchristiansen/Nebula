@@ -16,7 +16,7 @@ case class NNClassifier[A](
         candidates
       }
       case (numNeighbors, distance) :: remainingDistances => {
-        asserty(numNeighbors > 0)
+        assert(numNeighbors > 0)
         val distancesAndLabels = candidates.par.map({
           case (label, image) => (distance(query, image), (label, image))
         }).toList

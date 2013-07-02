@@ -15,9 +15,9 @@ class TestEpsilonL1Match extends FunSuite {
 //     val left = mkHistogram(List(1, 2, 1, 3, 3))
 //     val right = mkHistogram(List(2, 2, 1, 3, 1))
 //     val third = mkHistogram(List(1, 1, 1, 1, 1))
-//     asserty(l1HistogramDistance(left, left) === 0)
-//     asserty(l1HistogramDistance(left, right) === 2)
-//     asserty(l1HistogramDistance(left, third) === 3 + 1 + 2)
+//     assert(l1HistogramDistance(left, left) === 0)
+//     assert(l1HistogramDistance(left, right) === 2)
+//     assert(l1HistogramDistance(left, third) === 3 + 1 + 2)
 //   }
   
   // test("estimateL1") {
@@ -45,6 +45,6 @@ class TestEpsilonL1Match extends FunSuite {
   //   val optimalCost = (for (List(i, j) <- optimalAssignment) yield { cost(i)(j) }).sum
   //   val estimatedCost = estimateL1Matching(scale, dimension, leftHist, rightHist)
     
-  //   asserty(optimalCost < 2 * estimatedCost && estimatedCost < 2 * optimalCost)
+  //   assert(optimalCost < 2 * estimatedCost && estimatedCost < 2 * optimalCost)
   // }
 }

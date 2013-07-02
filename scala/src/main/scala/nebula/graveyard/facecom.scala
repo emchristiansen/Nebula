@@ -107,7 +107,7 @@ case class Point2D(val x: Double, val y: Double) {
 //  }
 //
 //  def fiducials(photo: Photo): FaceComFiducials = {
-//    asserty(goodPhoto(photo))
+//    assert(goodPhoto(photo))
 //
 //    def imageCoords(point: Point): Point2D = {
 //      Point2D(point.x * photo.getWidth / 100.0, point.y * photo.getHeight / 100.0)

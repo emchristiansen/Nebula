@@ -76,7 +76,7 @@ object EpsilonL1Match {
     val newIntersections = (0 :: intersections).sliding(2).map({ 
       case List(l, r) => r - l 
       case _ => sys.error("This code should be unreachable")}).toList
-    asserty(newIntersections.size == scale.size)
+    assert(newIntersections.size == scale.size)
     val distanceConstant = 1.0 / 3.0 // Expected distance between two points in unit interval.
     scale.zip(newIntersections).map({ case (s, i) => s * i * dimension * distanceConstant }).sum
   }

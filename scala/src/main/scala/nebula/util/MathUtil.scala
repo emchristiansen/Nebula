@@ -33,7 +33,7 @@ object MathUtil {
    */
   def log2Exact(x: Int) = {
     val approximate = log2(x)
-    requirey(approximate == approximate.round)
+    require(approximate == approximate.round)
     approximate.round.toInt
   }
 
@@ -94,8 +94,8 @@ object MathUtil {
   }
 
   def dot(left: DenseMatrix[Double], right: DenseMatrix[Double]): Double = {
-    requirey(left.rows == right.rows)
-    requirey(left.cols == right.cols)
+    require(left.rows == right.rows)
+    require(left.cols == right.cols)
 
     left.toVector.dot(right.toVector)
   }

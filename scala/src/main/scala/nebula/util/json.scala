@@ -38,13 +38,13 @@ object JSONUtil extends Logging {
     val objectName = {
       // We assume the type name looks like "org.foo.bar.type", and we
       // return "bar".
-      asserty(name.endsWith(".type"))
+      assert(name.endsWith(".type"))
       name.split("""\.""").init.last
     }
     
     val noTypeName = new RootJsonFormat[A] {
       override def write(e: A) = {
-        asserty(e == a)
+        assert(e == a)
         JsString(objectName)
       }
       
@@ -62,12 +62,12 @@ object JSONUtil extends Logging {
     def addClassInfo(scalaClass: String) = new RootJsonFormat[A] {
       override def write(e: A) = {
         val fields = self.write(e).asJsObject.fields
-        asserty(!fields.contains("scalaClass"))
+        assert(!fields.contains("scalaClass"))
         JsObject(fields + ("scalaClass" -> JsString(scalaClass)))
       }
       override def read(value: JsValue) = {
         val fields = value.asJsObject.fields
-        asserty(fields.contains("scalaClass"))
+        assert(fields.contains("scalaClass"))
         self.read(JsObject(fields - "scalaClass"))
       }
     }
@@ -155,7 +155,7 @@ object JSONUtil extends Logging {
   //      case JsNumber(number) => number.toString
   //      case _ => {
   //        val fields = json.asJsObject.fields
-  //        requirey(fields.keys.toList contains "scalaClass")
+  //        require(fields.keys.toList contains "scalaClass")
   //        
   //        val stringMap = fields filterKeys (_ != "scalaClass") map {
   //          case (key, value) => camelCaseToAbbreviation(key) -> recurse(value, depth + 1)

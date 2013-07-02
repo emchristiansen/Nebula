@@ -102,7 +102,7 @@ class TestImageProcessing(
       Seq(45, 45, 48, 52, 56, 60, 64),
       Seq(57, 57, 60, 64, 68, 72, 76)).toMatrix
 
-    asserty(subsampled == golden)
+    assert(subsampled == golden)
   }
 
   test("resizing the image with getSubPixel should be the same as resizing " +
@@ -125,7 +125,7 @@ class TestImageProcessing(
         val pixel = image.getSubPixel(
           x / resizeFactor.toDouble,
           y / resizeFactor.toDouble)
-        asserty(pixel.isDefined)
+        assert(pixel.isDefined)
         resized.setPixel(x, y, pixel.get)
       }
       resized
@@ -138,7 +138,7 @@ class TestImageProcessing(
     //    dumpImage("getSubPixelEstimated", estimatedImage)
     //    dumpImage("getSubPixelDifference_shouldBeZeros", difference.toScaledImage)
 
-    //    asserty(goldenImage.toMatrix == estimatedImage.toMatrix)
+    //    assert(goldenImage.toMatrix == estimatedImage.toMatrix)
   }
 
   ignore("rotateAboutPoint", FastTest, InteractiveTest) {

@@ -130,7 +130,7 @@ object IO {
 //  }
 
   def writeImage(directory: File, image: BufferedImage): File = {
-    requirey(directory.isDirectory)
+    require(directory.isDirectory)
     val file = File.createTempFile("histogram", ".png", directory)
     ImageIO.write(image, "png", file)
     file

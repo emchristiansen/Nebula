@@ -132,7 +132,7 @@ trait TestUtil {
   def genPowerOfTwo = Gen(_ => {
     val power = (random.nextInt % 8).abs
     val size = math.pow(2, power).toInt
-    asserty(size > 0)
+    assert(size > 0)
     Some(size)
   })
   @deprecated("", "")
@@ -165,7 +165,7 @@ trait TestUtil {
       val cols = genPowerOfTwo.sample.get
 
       for (data <- Gen.listOfN(rows * cols, implicitly[Gen[T]]).sample) yield {
-        asserty(data.size == rows * cols)
+        assert(data.size == rows * cols)
 
         data.toIndexedSeq.grouped(rows).toIndexedSeq.toMatrix
       }
@@ -180,7 +180,7 @@ trait TestUtil {
       val cols = genPowerOfTwo.sample.get
 
       def sample = for (data <- Gen.listOfN(rows * cols, implicitly[Gen[T]]).sample) yield {
-        asserty(data.size == rows * cols)
+        assert(data.size == rows * cols)
 
         data.toIndexedSeq.grouped(rows).toIndexedSeq.toMatrix
       }

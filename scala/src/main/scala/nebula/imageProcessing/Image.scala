@@ -41,7 +41,7 @@ import javax.imageio.ImageIO
  * An image which is not null.
  */
 case class Image(image: BufferedImage) extends Box[BufferedImage] {
-  asserty(image != null)
+  assert(image != null)
   
   override def get = image
 }
@@ -56,7 +56,7 @@ object Image extends ImageRegionOps with ImageFilterOps with ImageGeometryOps {
         case Some(extension) => extension
       }
       
-      asserty(ImageIO.write(image, extension, file))
+      assert(ImageIO.write(image, extension, file))
     }
   }
 

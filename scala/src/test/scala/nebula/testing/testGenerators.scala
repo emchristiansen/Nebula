@@ -30,27 +30,27 @@ class TestGenerators(
 
   test("genNum generates negative and positive numbers", FastTest) {
     forAll(Gen.listOfN(1000, Generators.genNum[Int])) { numbers =>
-      asserty(numbers.count(_ < 0) > 0)
-      asserty(numbers.count(_ > 0) > 0)
+      assert(numbers.count(_ < 0) > 0)
+      assert(numbers.count(_ > 0) > 0)
     }
   }
 
   test("genPowerOfTwo generates powers of 2", FastTest) {
     forAll(Generators.genPowerOfTwo(10)) { x =>
-      asserty(MathUtil.isPowerOf2(x))
+      assert(MathUtil.isPowerOf2(x))
     }
   }
 
   test("genSeqPair generates nontrivial seqs", FastTest) {
     forAll(Gen.listOfN(1000, Generators.genSeqPair(4, Gen.posNum[Int]))) {
       seqPairs =>
-        asserty(seqPairs.map(_._1.size).max > 0)
+        assert(seqPairs.map(_._1.size).max > 0)
     }
   }
 
   test("genSeqPair generates balanced pairs", FastTest) {
     forAll(Generators.genSeqPair(100, Gen.posNum[Int])) {
-      case (left, right) => asserty(left.size == right.size)
+      case (left, right) => assert(left.size == right.size)
     }
   }
 
@@ -58,9 +58,9 @@ class TestGenerators(
     val maxProductPower = 10
     forAll(Generators.genPowerOfTwoPair(maxProductPower)) {
       case (left, right) =>
-        asserty(MathUtil.isPowerOf2(left))
-        asserty(MathUtil.isPowerOf2(right))
-        asserty(left * right <= math.pow(2, maxProductPower))
+        assert(MathUtil.isPowerOf2(left))
+        assert(MathUtil.isPowerOf2(right))
+        assert(left * right <= math.pow(2, maxProductPower))
     }
   }
 
@@ -68,19 +68,19 @@ class TestGenerators(
     val genSize = Generators.genPowerOfTwoPair(10)
     forAll(Generators.genMatrixPair(genSize, Gen.posNum[Int])) {
       case (left, right) =>
-        requirey(left.rows > 0)
-        requirey(left.cols > 0)
-        requirey(left.rows == right.rows)
-        requirey(left.cols == right.cols)
+        require(left.rows > 0)
+        require(left.cols > 0)
+        require(left.rows == right.rows)
+        require(left.cols == right.cols)
     }
   }
   
   test("genKeyPoint generates KeyPoints in the correct area", FastTest) {
     forAll(Generators.genKeyPoint(100, 200, 10)) { keyPoint =>
-      asserty(keyPoint.pt.x >= 10)
-      asserty(keyPoint.pt.x <= 90)
-      asserty(keyPoint.pt.y >= 10)
-      asserty(keyPoint.pt.y <= 190)
+      assert(keyPoint.pt.x >= 10)
+      assert(keyPoint.pt.x <= 90)
+      assert(keyPoint.pt.y >= 10)
+      assert(keyPoint.pt.y <= 190)
     }
   }
 }

@@ -75,7 +75,7 @@
 
 //     val pythonScript = Global.run.sfsRoot + "/src/python/single_roc.py"
 //     val command = "python %s %s %s".format(pythonScript, tempFile, outPath)
-//     asserty(sys.process.Process(command).! == 0)
+//     assert(sys.process.Process(command).! == 0)
 
 //     println("wrote %s".format(outPath))
 //   }
@@ -87,12 +87,12 @@
 //          leftFNR = 1 - leftTPR;
 //          rightFNR = 1 - rightTPR;
 //          if (leftFPR <= leftFNR && rightFPR >= rightFNR)) yield {
-//            asserty(leftFPR <= rightFPR)
-//            asserty(leftTPR <= rightTPR)
+//            assert(leftFPR <= rightFPR)
+//            assert(leftTPR <= rightTPR)
 //            (leftFPR + leftFNR + rightFPR + rightFNR) / 4.0
 //     }
 //     val eer = eers.head
-//     asserty(eer >= 0 && eer <= 1)
+//     assert(eer >= 0 && eer <= 1)
 //     eer
 //   }
 
@@ -132,7 +132,7 @@
 // object TableEntry {
 //   def fromLine(line: String): TableEntry = {
 //     val split = line.split("\t").toList.tail
-//     asserty(split.size == 11)
+//     assert(split.size == 11)
 //     TableEntry(split(0), split(1), split(2), split(3), split(4), split(5), split(6), split(7), split(8), split(9).toDouble, split(10).toDouble)
 //   }
 // }
@@ -143,8 +143,8 @@
 //   }
 
 //   def formatMulticolumnTableLatex(table: List[List[String]]): String = {
-//     asserty(table.size == 6)
-//     asserty(table(0).size == 10)
+//     assert(table.size == 6)
+//     assert(table(0).size == 10)
 //     val strings = table.map(_.mkString(" & "))
 // """
 // \begin{tabular}{cc|c|c|c|c|c|c|c|c|c|c|l}
@@ -397,8 +397,8 @@
 //   }
 
 //   def formatEightRowMulticolumnTableLatex(table: List[List[String]]): String = {
-//     asserty(table.size == 8)
-//     asserty(table(0).size == 10)
+//     assert(table.size == 8)
+//     assert(table(0).size == 10)
 //     val strings = table.map(_.mkString(" & "))
 // """
 // \begin{tabular}{cc|c|c|c|c|c|c|c|c|c|c|l}

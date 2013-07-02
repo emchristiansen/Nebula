@@ -22,13 +22,13 @@
 //
 //  def singleOnKey[A](function: (Node) => A, key: String)(implicit node: Node): A = {
 //    val list = mapOnKey(function, key)
-//    asserty(list.size == 1)
+//    assert(list.size == 1)
 //    list.head
 //  }
 //
 //  def text(node: Node)(key: String): String = {
 //    val list = (node \ key).toList
-//    asserty(list.size == 1)
+//    assert(list.size == 1)
 //    list.head.text
 //  }
 //

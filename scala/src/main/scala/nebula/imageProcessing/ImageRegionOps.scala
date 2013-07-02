@@ -38,8 +38,8 @@ import org.opencv.features2d.KeyPoint
 trait ImageRegionOps {
   implicit class ImageRegionOps(image: Image) {
     def getPixel(x: Int, y: Int): Pixel = {
-      requirey(x >= 0 && x < image.getWidth)
-      requirey(y >= 0 && y < image.getHeight)
+      require(x >= 0 && x < image.getWidth)
+      require(y >= 0 && y < image.getHeight)
       Pixel.getPixel(image, x, y)
     }
 
@@ -59,7 +59,7 @@ trait ImageRegionOps {
             val floorWeight = 1 - (shifted - floor)
             val ceil = shifted.ceil
             val ceilWeight = 1 - floorWeight
-            asserty(floorWeight + ceilWeight == 1)
+            assert(floorWeight + ceilWeight == 1)
             List((floor.toInt, floorWeight), (ceil.toInt, ceilWeight))
           }
         }
@@ -96,10 +96,10 @@ trait ImageRegionOps {
       y: Double,
       width: Int,
       height: Int): Image = {
-      requirey(x >= 0)
-      requirey(x + width < image.getWidth)
-      requirey(y >= 0)
-      requirey(y + height < image.getHeight)
+      require(x >= 0)
+      require(x + width < image.getWidth)
+      require(y >= 0)
+      require(y + height < image.getHeight)
 
       // Crop out enough of the image to just contain the patch.
       val xInt = x.floor.toInt
@@ -216,7 +216,7 @@ trait ImageRegionOps {
         case Some(numPatches) =>
           val stride = patchClosures.size / numPatches
           val strided = patchClosures.grouped(stride).map(_.head).toStream.take(numPatches)
-          asserty(strided.size == numPatches)
+          assert(strided.size == numPatches)
           strided.map(_.apply)
       }
     }

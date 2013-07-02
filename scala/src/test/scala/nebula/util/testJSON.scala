@@ -84,7 +84,7 @@ class TestJSON extends FunSuite {
 //        "Gray"),
 //      Matcher.L1)
 //      
-//    asserty(JSONUtil.flattenJson(wide.toJson) === 
+//    assert(JSONUtil.flattenJson(wide.toJson) === 
 //      "WideBaselineExperiment_D-{OpenCVPairDetector_D-{OpenCVDetector_DT-FAST_MKPO-100}_MKPO-10}_E-{PatchExtractor_BW-5_C-Gray_ET-Rank_NR-false_NS-false_PW-8}_IC-wall_M-L1_OI-2")
 //  }
 }

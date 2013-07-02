@@ -17,7 +17,7 @@ import scala.annotation.elidable.ASSERTION
 case class Pixel(alpha: Int, red: Int, green: Int, blue: Int) {
   private def valid(color: Int): Boolean = color >= 0 && color <= 255
   
-  asserty(valid(alpha) && valid(red) && valid(green) && valid(blue))
+  assert(valid(alpha) && valid(red) && valid(green) && valid(blue))
 
   def isSimilar(threshold: Int, that: Pixel): Boolean = {
     (alpha - that.alpha).abs <= threshold &&
@@ -136,7 +136,7 @@ object Pixel {
   private def clip(pixel: Int): Int = pixel.max(0).min(255)
 
   def add(p1: Pixel, p2: Pixel): Pixel = {
-    asserty(p1.alpha == p2.alpha)
+    assert(p1.alpha == p2.alpha)
 
     fromUnclipped(p1.alpha, p1.red + p2.red, p1.green + p2.green, p1.blue + p2.blue)
   }

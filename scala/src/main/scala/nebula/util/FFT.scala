@@ -24,7 +24,7 @@ object FFT {
   def fftWrapper(
     transform: TransformType)(
       data: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-    requirey(MathUtil.isZeroOrPowerOf2(data.size))
+    require(MathUtil.isZeroOrPowerOf2(data.size))
     data.size match {
       case 0 => IndexedSeq()
       case _ => new FastFourierTransformer(DftNormalization.STANDARD).transform(
@@ -40,8 +40,8 @@ object FFT {
   def fft2Wrapper(
     transform: TransformType)(
       data: DenseMatrix[Complex]): DenseMatrix[Complex] = {
-    requirey(MathUtil.isZeroOrPowerOf2(data.rows))
-    requirey(MathUtil.isZeroOrPowerOf2(data.cols))
+    require(MathUtil.isZeroOrPowerOf2(data.rows))
+    require(MathUtil.isZeroOrPowerOf2(data.cols))
 
     val seqSeq = data.toSeqSeq
 
@@ -90,7 +90,7 @@ object FFT {
   def correlateSameSize(
     left: IndexedSeq[Complex],
     right: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-    requirey(left.size == right.size)
+    require(left.size == right.size)
 
     def shiftLeft[A](seq: IndexedSeq[A]): IndexedSeq[A] = {
       seq.tail :+ seq.head
@@ -109,7 +109,7 @@ object FFT {
   def convolveSameSize(
     left: IndexedSeq[Complex],
     right: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-    requirey(left.size == right.size)
+    require(left.size == right.size)
 
     def shiftLeft[A](seq: IndexedSeq[A]): IndexedSeq[A] = {
       seq.tail :+ seq.head
@@ -128,9 +128,9 @@ object FFT {
   def correlateSameSize(
     left: DenseMatrix[Complex],
     right: DenseMatrix[Complex]): DenseMatrix[Complex] = {
-    requirey(left.size > 0)
-    requirey(left.rows == right.rows)
-    requirey(left.cols == right.cols)
+    require(left.size > 0)
+    require(left.rows == right.rows)
+    require(left.cols == right.cols)
 
     def shiftUp(matrix: DenseMatrix[Complex]): DenseMatrix[Complex] =
       matrix mapActivePairs {
@@ -158,8 +158,8 @@ object FFT {
     })
 
     val correlation = streamStream.map(_.toIndexedSeq).toIndexedSeq.toMatrix
-    asserty(correlation.rows == left.rows)
-    asserty(correlation.cols == left.cols)
+    assert(correlation.rows == left.rows)
+    assert(correlation.cols == left.cols)
 
     correlation
   }
@@ -167,9 +167,9 @@ object FFT {
   def convolveSameSize(
     left: DenseMatrix[Complex],
     right: DenseMatrix[Complex]): DenseMatrix[Complex] = {
-    requirey(left.size > 0)
-    requirey(left.rows == right.rows)
-    requirey(left.cols == right.cols)
+    require(left.size > 0)
+    require(left.rows == right.rows)
+    require(left.cols == right.cols)
 
     val rightFlipped = right mapActivePairs {
       case ((row, column), _) => right(
@@ -203,15 +203,15 @@ object FFT {
     })
 
     val convolution = streamStream.map(_.toIndexedSeq).toIndexedSeq.toMatrix
-    asserty(convolution.rows == left.rows)
-    asserty(convolution.cols == left.cols)
+    assert(convolution.rows == left.rows)
+    assert(convolution.cols == left.cols)
 
     convolution
   }
 
   //   Based on http://rosettacode.org/wiki/Fast_Fourier_transform#Scala
   def ericFFT(data: IndexedSeq[Complex]): IndexedSeq[Complex] = {
-    requirey(data.size == 0 || MathUtil.log2(data.size) == MathUtil.log2(data.size).round)
+    require(data.size == 0 || MathUtil.log2(data.size) == MathUtil.log2(data.size).round)
     data.size match {
       case 0 => IndexedSeq()
       case 1 => data

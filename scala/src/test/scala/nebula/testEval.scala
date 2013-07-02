@@ -36,6 +36,6 @@ bur
 """
     val imports = Imports(importString)
     
-    asserty(imports == Imports(Set("foo", "bar", "bur")))
+    assert(imports == Imports(Set("foo", "bar", "bur")))
   }
 }

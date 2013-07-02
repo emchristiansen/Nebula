@@ -44,7 +44,7 @@ object ComplexUtil {
     spireToBreeze(realToSpire(self))
 
   def spireToReal[A: spire.math.Numeric](self: SpireComplex[A]): A = {
-    requirey(self.imag - implicitly[Numeric[A]].zero <= 0.00001)
+    require(self.imag - implicitly[Numeric[A]].zero <= 0.00001)
     self.real
   }
 

@@ -64,7 +64,7 @@ class TestStaticTypeName(
 //    
 //    printType[List[Float]]
 //    
-//    asserty(StaticTypeName.typeNameFromInstance(x) == 
+//    assert(StaticTypeName.typeNameFromInstance(x) == 
 //      "(List[Int], Double, (String, List[Double]))")
   }
   
@@ -72,6 +72,6 @@ class TestStaticTypeName(
 ////    println(typeName2[List[Int]])
 //    println(StaticTypeName.typeName(null))
 //    
-////    asserty(typeName2[List[Int]].contains("List[Int]"))
+////    assert(typeName2[List[Int]].contains("List[Int]"))
 //  }
 }

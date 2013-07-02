@@ -90,7 +90,7 @@ import java.awt.image._
 // //    
 // //    val imageArray = {
 // //      val pixels = Pixel.getPixels(image)
-// //      asserty(pixels.min >= 0 && pixels.max < 256)
+// //      assert(pixels.min >= 0 && pixels.max < 256)
 // //      pixels.toCLArray 
 // //    }
 // //    val sortArray = new CLArray[Int](sortHeight * sortWidth * descriptorSize)
@@ -121,18 +121,18 @@ import java.awt.image._
 //             left: IndexedSeq[SortDescriptor], 
 //             right: IndexedSeq[SortDescriptor]): IndexedSeq[Int] = {
 //     val numComparisons = indices.size
-//     requirey(numComparisons > 0)
+//     require(numComparisons > 0)
     
 //     val descriptorDepth = left(0).values.size
-//     requirey(descriptorDepth > 0)
-//     requirey(left.map(_.values.size == descriptorDepth).reduce(_ && _))
-//     requirey(right.map(_.values.size == descriptorDepth).reduce(_ && _))  
+//     require(descriptorDepth > 0)
+//     require(left.map(_.values.size == descriptorDepth).reduce(_ && _))
+//     require(right.map(_.values.size == descriptorDepth).reduce(_ && _))  
     
 //     val (leftIndices, rightIndices) = indices.unzip
-//     requirey(leftIndices.min >= 0)
-//     requirey(leftIndices.max < left.size)
-//     requirey(rightIndices.min >= 0)
-//     requirey(rightIndices.max < right.size)
+//     require(leftIndices.min >= 0)
+//     require(leftIndices.max < left.size)
+//     require(rightIndices.min >= 0)
+//     require(rightIndices.max < right.size)
       
 //     import com.nativelibs4java.opencl._
 //     import com.nativelibs4java.opencl.CLMem.Usage
@@ -183,7 +183,7 @@ import java.awt.image._
 //     val distancesCL = distancesBuffer.read(queue, clEvent)
     
 //     val distances = clToArray(numComparisons, distancesCL).toIndexedSeq
-//     asserty(distances.map(_ >= 0).reduce(_ && _))
+//     assert(distances.map(_ >= 0).reduce(_ && _))
 //     distances
 //   }  
 // }

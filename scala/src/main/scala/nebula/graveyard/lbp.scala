@@ -41,8 +41,8 @@ import java.awt.image._
 //   }
 
 //   def distance(left: BufferedImage, right: BufferedImage): Double = {
-//     asserty(left.getHeight == imageShape._1 && left.getWidth == imageShape._2)
-//     asserty(right.getHeight == imageShape._1 && right.getWidth == imageShape._2)
+//     assert(left.getHeight == imageShape._1 && left.getWidth == imageShape._2)
+//     assert(right.getHeight == imageShape._1 && right.getWidth == imageShape._2)
     
 //     val leftDescriptor = descriptor(left)
 //     val rightDescriptor = descriptor(right)

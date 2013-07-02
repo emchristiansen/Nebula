@@ -38,7 +38,7 @@ object Generators {
    * Generates a positive power of 2.
    */
   def genPowerOfTwo(maxPower: Int) = Gen { _ =>
-    requirey(maxPower >= 0)
+    require(maxPower >= 0)
     for (
       power <- Gen.choose[Int](0, maxPower).sample
     ) yield 2 ** power
@@ -48,7 +48,7 @@ object Generators {
    * Generates a pair of powers of two with a maximum product.
    */
   def genPowerOfTwoPair(maxProductPower: Int) = Gen { _ =>
-    requirey(maxProductPower >= 0)
+    require(maxProductPower >= 0)
     for (
       left <- genPowerOfTwo(maxProductPower).sample;
       right <- genPowerOfTwo(maxProductPower - MathUtil.log2Exact(left)).sample
@@ -59,7 +59,7 @@ object Generators {
    * Generates a pair of sequences of the same size.
    */
   def genSeqPair[T](maxSize: Int, gen: Gen[T]) = Gen { _ =>
-    requirey(maxSize >= 0)
+    require(maxSize >= 0)
     for (
       size <- Gen.choose[Int](0, maxSize).sample;
       left <- Gen.listOfN(size, gen).sample;
@@ -71,8 +71,8 @@ object Generators {
    * Generates a DenseMatrix with a given size.
    */
   def genMatrixNM[T: ClassTag](rows: Int, cols: Int, gen: Gen[T]) = Gen { _ =>
-    requirey(rows > 0)
-    requirey(cols > 0)
+    require(rows > 0)
+    require(cols > 0)
     for (elements <- Gen.listOfN(rows * cols, gen).sample) yield new DenseMatrix(rows, elements.toArray)
   }
 

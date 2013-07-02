@@ -150,7 +150,7 @@ trait IO {
       FileUtils.writeStringToFile(file, string)
 
     def compressedReadString: String = {
-      asserty(file.toString.endsWith(".gz"))
+      assert(file.toString.endsWith(".gz"))
 
       val bytes = FileUtils.readFileToByteArray(file)
       CompressedString(bytes).decompress
@@ -167,7 +167,7 @@ trait IO {
     }
 
     def compressedWriteString(string: String) {
-      asserty(file.toString.endsWith(".gz"))
+      assert(file.toString.endsWith(".gz"))
 
       val CompressedString(bytes) = string.compress
 

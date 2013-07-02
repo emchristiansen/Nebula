@@ -28,7 +28,7 @@ class TestOpenCV extends FunSuite {
 //          xyPoint,
 //          1,
 //          0)
-//      asserty(size === 1)
+//      assert(size === 1)
     }
 
     {
@@ -46,7 +46,7 @@ class TestOpenCV extends FunSuite {
 //          xyPoint,
 //          1,
 //          0)
-//      asserty(size === 3.5)
+//      assert(size === 3.5)
     }
   }
 }

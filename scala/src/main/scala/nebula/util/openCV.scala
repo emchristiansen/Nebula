@@ -33,8 +33,8 @@ object KeyPointUtil {
   }
 
   def pairQuality(left: KeyPoint, right: KeyPoint): Double = {
-    requirey(left.response >= 0)
-    requirey(right.response >= 0)
+    require(left.response >= 0)
+    require(right.response >= 0)
     left.response * right.response
   }
   
@@ -45,7 +45,7 @@ object KeyPointUtil {
   }
   
   def scaleFactor(homography: Homography, xyPoint: RealVector): Double = {
-    requirey(xyPoint.getDimension == 2)
+    require(xyPoint.getDimension == 2)
 
     val plusX = xyPoint.add(new ArrayRealVector(Array(1.0, 0.0)))
     val plusY = xyPoint.add(new ArrayRealVector(Array(0.0, 1.0)))
@@ -137,7 +137,7 @@ object OpenCVUtil {
     ImageIO.write(image, "bmp", file)
     val mat = imread(file.toString)
     file.delete
-    asserty(mat != null)
+    assert(mat != null)
     mat
   }
   
@@ -147,7 +147,7 @@ object OpenCVUtil {
     imwrite(file.toString, image)
     val bufferedImage = ImageIO.read(file)
     file.delete
-    asserty(bufferedImage != null)
+    assert(bufferedImage != null)
     bufferedImage    
   }
 }

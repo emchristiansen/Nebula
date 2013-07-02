@@ -33,10 +33,10 @@ class TestIO(
     file.compressedWriteString(text)
 
     val compressedText = file.readString
-    asserty(compressedText.size < 0.2 * text.size)
+    assert(compressedText.size < 0.2 * text.size)
 
     val recoveredText = file.compressedReadString
-    asserty(text == recoveredText)
+    assert(text == recoveredText)
   }
 
   test("gz on String", FastTest) {
@@ -47,7 +47,7 @@ class TestIO(
 
       val decompressed = compressed.decompress
 
-      asserty(string == decompressed)
+      assert(string == decompressed)
     }
   }
 }

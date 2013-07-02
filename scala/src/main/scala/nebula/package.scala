@@ -46,13 +46,6 @@ package object nebula extends IO with Near with Eval {
     println(s"${separator}\n${string}\n${separator}")
   }
 
-  //  def expecty = new Expecty()
-  //  def asserty = new Expecty()
-  //  def requirey = new Expecty()
-  def expecty(x: => Boolean) = scala.Predef.assert(x)
-  def asserty(x: => Boolean) = scala.Predef.assert(x)
-  def requirey(x: => Boolean) = scala.Predef.require(x)
-
   /**
    * Convenience function for asserting something about an expression
    * and then returning the expression.

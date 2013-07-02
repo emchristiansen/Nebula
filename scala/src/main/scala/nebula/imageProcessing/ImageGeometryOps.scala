@@ -55,9 +55,9 @@ trait ImageGeometryOps {
         // Just make sure the point really did stay the same.
         val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
         val pointAfter = rotated.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-        asserty(pointBefore.isDefined)
-        asserty(pointAfter.isDefined)
-        //        asserty(pointBefore.get.isSimilar(5, pointAfter.get))
+        assert(pointBefore.isDefined)
+        assert(pointAfter.isDefined)
+        //        assert(pointBefore.get.isSimilar(5, pointAfter.get))
 
         rotated
       }
@@ -81,10 +81,10 @@ trait ImageGeometryOps {
         // Just make sure the point really did stay the same.
         val pointBefore = image.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
         val pointAfter = scaled.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
-        asserty(pointBefore.isDefined)
-        asserty(pointAfter.isDefined)
+        assert(pointBefore.isDefined)
+        assert(pointAfter.isDefined)
         if (scaleFactor >= 1)
-          asserty(pointBefore.get.isSimilar(20, pointAfter.get))
+          assert(pointBefore.get.isSimilar(20, pointAfter.get))
 
         scaled
       }
@@ -92,8 +92,8 @@ trait ImageGeometryOps {
 
     def scale(targetSize: (Int, Int)): Image = {
       val (width, height) = targetSize
-      requirey(width > 0)
-      requirey(height > 0)
+      require(width > 0)
+      require(height > 0)
 
       Image(Scalr.resize(
         image,

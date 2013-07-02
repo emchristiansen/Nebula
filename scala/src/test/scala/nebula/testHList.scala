@@ -17,7 +17,7 @@ class TestHList extends FunSuite {
     type Result1 = (Int, Int) :: (Int, String) :: (String, Int) :: (String, String) :: HNil
     val out1: Result1 = HListUtil.mkTuple2(list1, list2)
     val out1Golden = (1, 2) :: (1, "two") :: ("one", 2) :: ("one", "two") :: HNil
-    asserty(out1 == out1Golden)
+    assert(out1 == out1Golden)
   }
   
   test("cartesian product of 3 HLists", InstantTest) {
