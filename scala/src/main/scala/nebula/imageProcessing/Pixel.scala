@@ -16,16 +16,16 @@ import scala.annotation.elidable.ASSERTION
 
 case class Pixel(alpha: Int, red: Int, green: Int, blue: Int) {
   private def valid(color: Int): Boolean = color >= 0 && color <= 255
-  
+
   assert(valid(alpha) && valid(red) && valid(green) && valid(blue))
 
   def isSimilar(threshold: Int, that: Pixel): Boolean = {
     (alpha - that.alpha).abs <= threshold &&
-    (red - that.red).abs <= threshold &&
-    (green - that.green).abs <= threshold &&
-    (blue - that.blue).abs <= threshold
+      (red - that.red).abs <= threshold &&
+      (green - that.green).abs <= threshold &&
+      (blue - that.blue).abs <= threshold
   }
-  
+
   def argb: Int = {
     val a: Int = (alpha & 0xff) << 24
     val r: Int = (red & 0xff) << 16
@@ -46,7 +46,8 @@ case class Pixel(alpha: Int, red: Int, green: Int, blue: Int) {
   def sRGB: Seq[Int] = Seq(red, green, blue)
   def lRGB: Seq[Int] = {
     val converter = new LinearRGBConverter
-    converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).map(x => (255 * x).toInt).toSeq
+    converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).map(
+      x => (255 * x).toInt).toSeq
   }
   def hsb: Seq[Int] = {
     Color.RGBtoHSB(red, green, blue, null).map(x => (255 * x).toInt).toSeq
@@ -56,7 +57,8 @@ case class Pixel(alpha: Int, red: Int, green: Int, blue: Int) {
     //    println(List(red, green, blue))
     // println(converter.fromRGB(Array(red, green, blue).map(_.toFloat)).toSeq)
     // println(converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).toSeq)
-    converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).toSeq.map(_.toInt)
+    converter.fromRGB(Array(red, green, blue).map(_.toFloat / 255)).toSeq.map(
+      _.toInt)
   }
   // def luv: Seq[Int] = {
   //   sys.error("Broken")
@@ -67,7 +69,8 @@ case class Pixel(alpha: Int, red: Int, green: Int, blue: Int) {
   // }
   def xyz: Seq[Int] = {
     val sRGB = ColorSpace.getInstance(ColorSpace.CS_sRGB)
-    sRGB.toCIEXYZ(Array(red, green, blue).map(_.toFloat)).map(x => (255 * x).toInt).toSeq
+    sRGB.toCIEXYZ(Array(red, green, blue).map(_.toFloat)).map(
+      x => (255 * x).toInt).toSeq
   }
 }
 
@@ -116,13 +119,18 @@ object Pixel {
     }).toIndexedSeq
   }
 
-  def getPixelsColorSpace(colorSpace: ColorSpace, image: BufferedImage): IndexedSeq[Int] = {
+  def getPixelsColorSpace(
+    colorSpace: ColorSpace,
+    image: BufferedImage): IndexedSeq[Int] = {
     val colorConvertOp = new ColorConvertOp(colorSpace, null)
     val convertedImage = colorConvertOp.filter(image, null)
 
-    val packedPixels = image.getRaster.getDataBuffer.asInstanceOf[DataBufferInt].getData
+    val packedPixels =
+      image.getRaster.getDataBuffer.asInstanceOf[DataBufferInt].getData
 
-    packedPixels.map(breakIntoBytes).flatMap({ case (a, b, c, d) => List(a, b, c, d) })
+    packedPixels.map(breakIntoBytes).flatMap {
+      case (a, b, c, d) => List(a, b, c, d)
+    }
   }
 
   def fromUnclipped(a: Int, r: Int, g: Int, b: Int): Pixel = {
@@ -138,7 +146,11 @@ object Pixel {
   def add(p1: Pixel, p2: Pixel): Pixel = {
     assert(p1.alpha == p2.alpha)
 
-    fromUnclipped(p1.alpha, p1.red + p2.red, p1.green + p2.green, p1.blue + p2.blue)
+    fromUnclipped(
+      p1.alpha,
+      p1.red + p2.red,
+      p1.green + p2.green,
+      p1.blue + p2.blue)
   }
 
   def add(p: Pixel, red: Int, green: Int, blue: Int): Pixel = {

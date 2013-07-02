@@ -37,7 +37,7 @@ trait IsNearMethods {
     right: => A)(implicit threshold: Epsilon): Unit = {
     Predef.assert(
       (left machineError right) <= threshold,
-      s"\nleft: ${left}\nright: ${right}")    
+      s"\nleft: ${left}\nright: ${right}")
   }
 }
 
@@ -54,9 +54,11 @@ trait Near extends IsNearMethods {
     require(left > 0)
     require(right > 0)
 
-    //    assert(left / right <= maxRatio, s"${left} / ${right} = ${left / right} > ${maxRatio}")
-    //    assert(right / left <= maxRatio, s"${right} / ${left} = ${right / left} > ${maxRatio}")
-    assert(left / right <= maxRatio)
-    assert(right / left <= maxRatio)
+    assert(
+      left / right <= maxRatio,
+      s"${left} / ${right} = ${left / right} > ${maxRatio}")
+    assert(
+      right / left <= maxRatio,
+      s"${right} / ${left} = ${right / left} > ${maxRatio}")
   }
 }
