@@ -75,7 +75,8 @@ trait ImageFilterOps {
       Image(out)
     }
 
-    /* A common value according to http://en.wikipedia.org/wiki/Gamma_compression */
+    // A common value according to 
+    // http://en.wikipedia.org/wiki/Gamma_compression
     val gamma = 2.2
 
     def toRaw: Image = powerImage(image, gamma)

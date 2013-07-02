@@ -45,7 +45,10 @@ trait ImageGeometryOps {
       if ((theta: Double) == 0) image
       else {
         val rotateOp = new AffineTransformOp(
-          AffineTransform.getRotateInstance(theta, keyPoint.pt.x, keyPoint.pt.y),
+          AffineTransform.getRotateInstance(
+            theta,
+            keyPoint.pt.x,
+            keyPoint.pt.y),
           AffineTransformOp.TYPE_BICUBIC)
         val rotated = Image(rotateOp.filter(image, null))
 
@@ -80,7 +83,8 @@ trait ImageGeometryOps {
         val pointAfter = scaled.getSubPixel(keyPoint.pt.x, keyPoint.pt.y)
         asserty(pointBefore.isDefined)
         asserty(pointAfter.isDefined)
-        if (scaleFactor >= 1) asserty(pointBefore.get.isSimilar(20, pointAfter.get))
+        if (scaleFactor >= 1)
+          asserty(pointBefore.get.isSimilar(20, pointAfter.get))
 
         scaled
       }
