@@ -17,8 +17,6 @@ import org.opencv.highgui.Highgui._
 
 import javax.imageio.ImageIO
 
-import spray.json._
-import JSONUtil._
 import nebula._
 
 ///////////////////////////////////////////////////////////
@@ -154,39 +152,4 @@ object OpenCVUtil {
 
 ///////////////////////////////////////////////////////////
 
-trait DMatchJsonProtocol extends DefaultJsonProtocol {
-  // This is a do-nothing wrapper, existing only so we can use the automatic
-  // JsonFormat generator for case classes, rather that having to write our
-  // own.
-  private case class DMatchWrapper(queryIdx: Int, trainIdx: Int, distance: Float)
-  
-  private implicit def jsonDMatchWrapper = jsonFormat3(DMatchWrapper.apply)
-  
-  implicit def dmatchJsonProtocol: RootJsonFormat[DMatch] = {
-    object NoScalaClass extends RootJsonFormat[DMatch] {
-      override def write(self: DMatch) = DMatchWrapper(
-          self.queryIdx, 
-          self.trainIdx,
-          self.distance).toJson
-      override def read(value: JsValue) = {
-        val wrapper = value.convertTo[DMatchWrapper]
-        new DMatch(wrapper.queryIdx, wrapper.trainIdx, wrapper.distance)
-      }
-    }
-    
-    NoScalaClass.addClassInfo("DMatch")
-  }
-  
-//  
-//  // TODO: This object should be unnecessary. Try removing it when spray-json
-//  // is updated (currently 1.2.3).
-//  implicit object SeqDMatchJsonProtocol extends RootJsonFormat[Seq[DMatch]] {
-//    override def write(self: Seq[DMatch]) = self.map(_.toJson).toJson
-//    override def read(value: JsValue) = value match {
-//      case JsArray(elements) => elements.map(_.convertTo[DMatch])
-//      case _ => sys.error("Expected JsArray")
-//    }
-//  }
-}
-
-object DMatchJsonProtocol extends DMatchJsonProtocol
+object DMatchJsonProtocol

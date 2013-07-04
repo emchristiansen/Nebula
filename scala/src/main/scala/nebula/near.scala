@@ -2,7 +2,6 @@ package nebula
 
 import scala.reflect.runtime._
 import scala.reflect._
-import spray.json._
 import breeze.linalg.DenseMatrix
 import breeze.math.Complex
 import spire.algebra._

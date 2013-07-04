@@ -47,7 +47,9 @@ case class Image(image: BufferedImage) extends Box[BufferedImage] {
 }
 
 object Image extends ImageRegionOps with ImageFilterOps with ImageGeometryOps { 
-  def read(file: ExistingFile) = Image(ImageIO.read(file))
+  def read(file: ExistingFile): Image = Image(ImageIO.read(file))
+  
+  def read(file: File): Image = read(ExistingFile(file))
   
   implicit class CanWrite(image: Image) {
     def write(file: File, extensionOption: Option[String]) {      

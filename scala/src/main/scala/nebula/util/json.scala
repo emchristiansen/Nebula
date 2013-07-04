@@ -3,18 +3,14 @@ package nebula.util
 import nebula._
 
 import scala.text.{ Document, DocText }
-import spray.json.RootJsonFormat
-import spray.json.JsString
-import spray.json.JsValue
 
-import spray.json._
 import scala.util.matching.Regex
 //import scala.reflect.runtime.universe._
 
 ///////////////////////////////////////////////////////////
 
 
-object JSONUtil extends Logging {
+object JSONUtil {
   // TODO: This function should be implemented with macros.
 //  def enumeration[A](scalaClass: String, deserializeMapping: Map[String, A]): RootJsonFormat[A] =
 //    new RootJsonFormat[A] {
@@ -32,115 +28,115 @@ object JSONUtil extends Logging {
 //      }
 //    }
 
-  // Provides a RootJsonFormat for singleton objects.
-  def singletonObject[A: TypeName](a: A): RootJsonFormat[A] = {
-    val name = typeName[A].name
-    val objectName = {
-      // We assume the type name looks like "org.foo.bar.type", and we
-      // return "bar".
-      assert(name.endsWith(".type"))
-      name.split("""\.""").init.last
-    }
-    
-    val noTypeName = new RootJsonFormat[A] {
-      override def write(e: A) = {
-        assert(e == a)
-        JsString(objectName)
-      }
-      
-      override def read(value: JsValue) = value match {
-        case JsString(string) if string == objectName => a
-      }
-    }
-    
-    noTypeName
-//    noTypeName.addClassInfo(typeName)
-  }
+//  // Provides a RootJsonFormat for singleton objects.
+//  def singletonObject[A: TypeName](a: A): RootJsonFormat[A] = {
+//    val name = typeName[A].name
+//    val objectName = {
+//      // We assume the type name looks like "org.foo.bar.type", and we
+//      // return "bar".
+//      assert(name.endsWith(".type"))
+//      name.split("""\.""").init.last
+//    }
+//    
+//    val noTypeName = new RootJsonFormat[A] {
+//      override def write(e: A) = {
+//        assert(e == a)
+//        JsString(objectName)
+//      }
+//      
+//      override def read(value: JsValue) = value match {
+//        case JsString(string) if string == objectName => a
+//      }
+//    }
+//    
+//    noTypeName
+////    noTypeName.addClassInfo(typeName)
+//  }
   
  
-  implicit class AddClassName[A](self: RootJsonFormat[A]) {
-    def addClassInfo(scalaClass: String) = new RootJsonFormat[A] {
-      override def write(e: A) = {
-        val fields = self.write(e).asJsObject.fields
-        assert(!fields.contains("scalaClass"))
-        JsObject(fields + ("scalaClass" -> JsString(scalaClass)))
-      }
-      override def read(value: JsValue) = {
-        val fields = value.asJsObject.fields
-        assert(fields.contains("scalaClass"))
-        self.read(JsObject(fields - "scalaClass"))
-      }
-    }
-  }
+//  implicit class AddClassName[A](self: RootJsonFormat[A]) {
+//    def addClassInfo(scalaClass: String) = new RootJsonFormat[A] {
+//      override def write(e: A) = {
+//        val fields = self.write(e).asJsObject.fields
+//        assert(!fields.contains("scalaClass"))
+//        JsObject(fields + ("scalaClass" -> JsString(scalaClass)))
+//      }
+//      override def read(value: JsValue) = {
+//        val fields = value.asJsObject.fields
+//        assert(fields.contains("scalaClass"))
+//        self.read(JsObject(fields - "scalaClass"))
+//      }
+//    }
+//  }
 
-  def camelCaseToAbbreviation(camelCase: String): String = {
-    // Assume camelCase for parameter names. Otherwise
-    // the abbreviations will be weird.
-    // Example: "myCoolValue" becomes "MCV".
-    camelCase.head.toUpper + camelCase.filter(_.isUpper)
-  }
+//  def camelCaseToAbbreviation(camelCase: String): String = {
+//    // Assume camelCase for parameter names. Otherwise
+//    // the abbreviations will be weird.
+//    // Example: "myCoolValue" becomes "MCV".
+//    camelCase.head.toUpper + camelCase.filter(_.isUpper)
+//  }
 
-  def sortJson(json: JsValue)(
-    implicit ordering: Ordering[String]): JsValue = json match {
-    case JsObject(json) => {
-      val sortedValues = json.mapValues(sortJson)
-      JsObject(Util.sortMap(sortedValues))
-    }
-    case x => x
-  }
+//  def sortJson(json: JsValue)(
+//    implicit ordering: Ordering[String]): JsValue = json match {
+//    case JsObject(json) => {
+//      val sortedValues = json.mapValues(sortJson)
+//      JsObject(Util.sortMap(sortedValues))
+//    }
+//    case x => x
+//  }
 
-  def jsonToFileString(json: JsValue): String = {
-    val jsonString = json.compactPrint
+//  def jsonToFileString(json: JsValue): String = {
+//    val jsonString = json.compactPrint
+//
+//    // Now we clean it up.
+//    // Remove quotation marks.
+//    val one = jsonString.replace("\"", "")
+//
+//    // Remove "scalaClass".
+//    val two = one.replace("scalaClass:", "")
+//
+//    // Abbreviate parameter names.    
+//    val regex = new Regex("""([A-Za-z]+):""", "parameter")
+//    val three = regex replaceAllIn (
+//      two,
+//      m => camelCaseToAbbreviation(m.group("parameter")) + ":")
+//
+//    // Remove beginning and ending crap.
+//    val four = three.dropWhile(_ == '{').reverse dropWhile (_ == '}') reverse
+//
+//    // Replace some characters.
+//    four.replace(":", "-").replace(",", "_")
+//  }
 
-    // Now we clean it up.
-    // Remove quotation marks.
-    val one = jsonString.replace("\"", "")
-
-    // Remove "scalaClass".
-    val two = one.replace("scalaClass:", "")
-
-    // Abbreviate parameter names.    
-    val regex = new Regex("""([A-Za-z]+):""", "parameter")
-    val three = regex replaceAllIn (
-      two,
-      m => camelCaseToAbbreviation(m.group("parameter")) + ":")
-
-    // Remove beginning and ending crap.
-    val four = three.dropWhile(_ == '{').reverse dropWhile (_ == '}') reverse
-
-    // Replace some characters.
-    four.replace(":", "-").replace(",", "_")
-  }
-
-  def scalaClassSortJson(json: JsValue): JsValue = {
-    // Make an ordering that brings "scalaClass" to front.
-    val ordering: Ordering[String] = new Ordering[String] {
-      override def compare(left: String, right: String) = {
-        if (left == "scalaClass") -1
-        else if (right == "scalaClass") 1
-        else implicitly[Ordering[String]].compare(left, right)
-      }
-    }
-
-    // Get the JSON string with the fields arranged the way we want
-    // them.    
-    sortJson(json)(ordering)
-  }
-
-  // Flattens a JSON tree.
-  def flattenJson(json: JsValue): String = {
-    def sorted = scalaClassSortJson(json)
-    jsonToFileString(sorted)
-  }
-
-  def getParametersFromJson(json: JsValue): Map[String, String] = json match {
-    case JsObject(fields) => {
-      fields filterKeys (_ != "scalaClass") map {
-        case (key, value) => (camelCaseToAbbreviation(key), flattenJson(value))
-      }
-    }
-    case _ => sys.error("Must pass a JsObject")
-  }
+//  def scalaClassSortJson(json: JsValue): JsValue = {
+//    // Make an ordering that brings "scalaClass" to front.
+//    val ordering: Ordering[String] = new Ordering[String] {
+//      override def compare(left: String, right: String) = {
+//        if (left == "scalaClass") -1
+//        else if (right == "scalaClass") 1
+//        else implicitly[Ordering[String]].compare(left, right)
+//      }
+//    }
+//
+//    // Get the JSON string with the fields arranged the way we want
+//    // them.    
+//    sortJson(json)(ordering)
+//  }
+//
+//  // Flattens a JSON tree.
+//  def flattenJson(json: JsValue): String = {
+//    def sorted = scalaClassSortJson(json)
+//    jsonToFileString(sorted)
+//  }
+//
+//  def getParametersFromJson(json: JsValue): Map[String, String] = json match {
+//    case JsObject(fields) => {
+//      fields filterKeys (_ != "scalaClass") map {
+//        case (key, value) => (camelCaseToAbbreviation(key), flattenJson(value))
+//      }
+//    }
+//    case _ => sys.error("Must pass a JsObject")
+//  }
 
   //  // Flattens a JSON tree. Assumes each map has a "scalaClass" field.
   //  def flattenJson(json: JsValue): String = {
@@ -209,14 +205,14 @@ object JSONUtil extends Logging {
   //    parse(write(caseClass))
   //  }
 
-  def caseClassToStringMap[A: RootJsonFormat](caseClass: A): Map[String, String] = {
-    val json = caseClass.toJson
-    val fields = json.asJsObject.fields
-    fields.mapValues {
-      case JsString(string) => string
-      case other => other.toString
-    }
-  }
+//  def caseClassToStringMap[A: RootJsonFormat](caseClass: A): Map[String, String] = {
+//    val json = caseClass.toJson
+//    val fields = json.asJsObject.fields
+//    fields.mapValues {
+//      case JsString(string) => string
+//      case other => other.toString
+//    }
+//  }
 
   //  def abbreviate[A: RootJsonFormat](caseClass: A): String = {
   //    caseClass.toJson match {

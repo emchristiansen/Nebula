@@ -3,7 +3,6 @@ package nebula
 import scala.reflect.runtime._
 import scala.reflect._
 import java.io.File
-import spray.json._
 import org.apache.commons.io.FileUtils
 import java.io.FileInputStream
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream

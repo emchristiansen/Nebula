@@ -5,7 +5,6 @@ import scala.tools.reflect.ToolBox
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.runtime.universe.typeTag
 import scala.util._
-import spray.json._
 import shapeless._
 import java.io.File
 import nebula.util._

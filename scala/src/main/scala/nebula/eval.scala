@@ -4,7 +4,6 @@ import scala.reflect._
 import scala.tools.reflect.ToolBox
 import org.apache.commons.io.FileUtils
 import scala.util.Try
-import spray.json._
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.runtime.universe.typeTag
 import scala.concurrent.stm._
@@ -104,16 +103,16 @@ trait Eval {
 
   ///////////////////////////////////////////////////////////
 
-  /**
-   * We can generate the Scala source for anything that supports JsonFormat.
-   */
-  def getSource[A: JsonFormat: TypeName](a: A): String = s"""
-{
-  val json = \"\"\"${a.toJson}\"\"\".asJson 
-  val value = json.convertTo[${typeName[A]}]
-  value
-}
-  """
+//  /**
+//   * We can generate the Scala source for anything that supports JsonFormat.
+//   */
+//  def getSource[A: JsonFormat: TypeName](a: A): String = s"""
+//{
+//  val json = \"\"\"${a.toJson}\"\"\".asJson 
+//  val value = json.convertTo[${typeName[A]}]
+//  value
+//}
+//  """
 
   ///////////////////////////////////////////////////////////
 
@@ -196,13 +195,13 @@ result
   def runtimeImplicitly[A: TypeName](implicit imports: Imports): A =
     eval[A](implicitlyType[A](typeName).addImports)
 
-  /**
-   * Transforms a value into source that yields that value, for types
-   * supporting JsonFormat.
-   */
-  def generateExpression[A: JsonFormat: TypeName](a: A): String =
-    s"""
-val jsonString: String = \"\"\"${a.toJson.compactPrint}\"\"\"
-jsonString.asJson.convertTo[${typeName[A]}]
-"""
+//  /**
+//   * Transforms a value into source that yields that value, for types
+//   * supporting JsonFormat.
+//   */
+//  def generateExpression[A: JsonFormat: TypeName](a: A): String =
+//    s"""
+//val jsonString: String = \"\"\"${a.toJson.compactPrint}\"\"\"
+//jsonString.asJson.convertTo[${typeName[A]}]
+//"""
 }
