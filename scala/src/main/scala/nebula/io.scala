@@ -72,12 +72,18 @@ object CompressedString extends CompressedStringOps
  */
 case class ExistingFile(file: File) extends Box[File] {
   require(file.isFile, s"${file} is not an existing file.")
-  
+
   override def get = file
 }
 
 object ExistingFile {
-  def apply(filename: String): ExistingFile = ExistingFile(new File(filename))
+  def apply(name: String): ExistingFile = ExistingFile(new File(name))
+
+  def mkIfNeeded(name: String): ExistingFile = {
+    val file = new File(name)
+    if (!file.isFile) org.apache.commons.io.FileUtils.touch(file)
+    ExistingFile(file)
+  }
 }
 
 /**
@@ -86,13 +92,19 @@ object ExistingFile {
 // TODO: Add method "get" to these wrapper classes.
 case class ExistingDirectory(directory: File) extends Box[File] {
   require(directory.isDirectory, s"${directory} is not an existing directory.")
-  
+
   override def get = directory
 }
 
 object ExistingDirectory {
-  def apply(filename: String): ExistingDirectory =
-    ExistingDirectory(new File(filename))
+  def apply(name: String): ExistingDirectory =
+    ExistingDirectory(new File(name))
+    
+  def mkIfNeeded(name: String): ExistingDirectory = {
+    val file = new File(name)
+    if (!file.isDirectory) file.mkdir
+    ExistingDirectory(file)
+  }
 }
 
 trait IO {
